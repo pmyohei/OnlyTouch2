@@ -269,54 +269,22 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * 四角形の物体生成
      */
-    public Body addBox(GL10 gl, float hx, float hy, float x, float y, float angle, BodyType type, float density, int resId, BodyKind kind) {
-        // Body定義
+    public Body addBox(float width, float height, float posx, float posy, float angle, BodyType type) {
+
+        //----------------
+        // Body生成
+        //----------------
+        // 定義
         BodyDef bodyDef = new BodyDef();
         bodyDef.setType(type);
-        bodyDef.setPosition(x, y);
-
-        Body body = mWorld.createBody(bodyDef);
+        bodyDef.setPosition(posx, posy);
+        // 形状
         PolygonShape shape = new PolygonShape();
-        shape.setAsBox(hx, hy, 0, 0, angle);    // para 3,4：ボックスの中心
-        body.createFixture(shape, density);
-
-        // OpenGL用
-        float vertices[] = {
-                -hx, +hy,
-                -hx, -hy,
-                +hx, +hy,
-                +hx, -hy,
-        };
-        // FloatBuffer buffer = makeFloatBuffer(vertices);
-
-        // 画像の四隅
-        float[] uv = {
-                0.0f, 0.0f,// 左上  ←UV座標の原点
-                0.0f, 1.0f,// 左下
-                1.0f, 0.0f,// 右上
-                1.0f, 1.0f,// 右下
-        };
-        // FloatBuffer uvBuffer = makeFloatBuffer(uv);a
-
-        // テクスチャ生成
-        int textureId = makeTexture(gl, resId);
-
-        // 種別に応じて、保存先を切り分け
-//        if (kind == BodyKind.STATIC) {
-//            addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
-//
-//        } else if (kind == BodyKind.MOVE) {
-////            body.setGravityScale(0);
-////            mMenuBody = body;
-//
-//            // debug
-////            bodyDef.setPosition(x - 1, y);
-//
-//            addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
-//        }
-
-        // 生成したbodyを保持
-        addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
+        shape.setAsBox(width, height, 0, 0, angle);    // para 3,4：ボックスの中心
+        // 生成
+        final float DENSITY = 10f;
+        Body body = mWorld.createBody(bodyDef);
+        body.createFixture(shape, DENSITY);
 
         return body;
     }
@@ -833,18 +801,11 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         float[] worldMenuPosTopRight = convPointScreenToWorld(mExpandedMenuRight, mExpandedMenuTop, gl);         // 右上
         float[] worldMenuPosBottomRight = convPointScreenToWorld(mExpandedMenuRight, mExpandedMenuBottom, gl);   // 右下
 
-//        Log.i("デグレ", "mExpandedMenuRect.right=" + mExpandedMenuRect.right);
-//        Log.i("デグレ", "mExpandedMenuRect.top=" + mExpandedMenuRect.top);
-//        Log.i("デグレ", "mExpandedMenuRect.bottom=" + mExpandedMenuRect.bottom);
-
         // !大きさ( 半分にすると適切なサイズに調整させるのは、その内調査 )
         // 物理体再生時には、物体の横幅・縦幅
         // 画面上の位置情報は、 メニュービューの半分のサイズ
         float width = (worldMenuPosTopRight[0] - worldMenuPosTopLeft[0]) / 2;
         float height = (worldMenuPosTopRight[1] - worldMenuPosBottomRight[1]) / 2;
-
-        Log.i("デグレ", "worldMenuPosTopRight[1]=" + worldMenuPosTopRight[1]);
-        Log.i("デグレ", "worldMenuPosBottomRight[1]=" + worldMenuPosBottomRight[1]);
 
         //-------------------------------
         // メニュー下部(展開前)：座標の変換処理
@@ -868,11 +829,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // menu背後の物体を生成（高さ = 本体 + 初期、位置 = 上部のみ初期位置と重なる形で配置）
         float halfTotalHeight = height + height_ini;
         posY = worldMenuPosTopLeft[1] - halfTotalHeight;
-        mMenuBody = addBox(gl, width, halfTotalHeight, posX - 0, posY, 0, BodyType.staticBody, 11, R.drawable.white, BodyKind.MOVE);
-
-        Log.i("デグレ", "height=" + height);
-        Log.i("デグレ", "height_ini=" + height_ini);
-        Log.i("デグレ", "halfTotalHeight=" + halfTotalHeight);
+        mMenuBody = addBox(width, halfTotalHeight, posX - 0, posY, 0, BodyType.staticBody);
 
         // 位置情報を保持
         menuPosX = posX;
@@ -919,13 +876,13 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // 壁の生成
         //---------------
         // 天井
-        addBox(gl, mWorldPosMax[0], 1, mWorldPosMid[0], mWorldPosMax[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);
+        addBox(mWorldPosMax[0], 1, mWorldPosMid[0], mWorldPosMax[1], 0, BodyType.staticBody);
         // 左
-        addBox(gl, 1, mWorldPosMax[1], mWorldPosMin[0] - 1, mWorldPosMid[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);
+        addBox(1, mWorldPosMax[1], mWorldPosMin[0] - 1, mWorldPosMid[1], 0, BodyType.staticBody);
         // 右
-        addBox(gl, 1, mWorldPosMax[1], mWorldPosMax[0] + 1, mWorldPosMid[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);
+        addBox(1, mWorldPosMax[1], mWorldPosMax[0] + 1, mWorldPosMid[1], 0, BodyType.staticBody);
         // 床(メニューの存在を考慮)
-        addBox(gl, bottom_width, 1, bottom_posX, mWorldPosMin[1] - 1, 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);
+        addBox(bottom_width, 1, bottom_posX, mWorldPosMin[1] - 1, 0, BodyType.staticBody);
     }
 
     /*
@@ -1063,7 +1020,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             // 微妙なズレの蓄積を防ぐため、初期位置に移動完了したタイミングで、物体を再生成
             if (menuInitPosY > mMenuBody.getPositionY()) {
                 mWorld.destroyBody(mMenuBody);
-                mMenuBody = addBox(gl, menuWidth, menuHeight, menuPosX - 0, menuPosY, 0, BodyType.staticBody, 11, R.drawable.white, BodyKind.MOVE);
+                mMenuBody = addBox(menuWidth, menuHeight, menuPosX - 0, menuPosY, 0, BodyType.staticBody);
             }
 
             // 移動処理終了
