@@ -6,6 +6,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -13,7 +14,6 @@ import android.view.animation.LinearInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.widget.LinearLayout;
 
-import com.example.onlyTouch.R;
 import com.google.fpl.liquidfun.Vec2;
 
 import java.util.ArrayList;
@@ -26,10 +26,6 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
 
     private FluidGLSurfaceView glView;
     private MyApplication app;
-
-    //アニメーション時間(ms)
-    private static final int MENU_UP_ANIMATION_DURATION = 400;
-    private static final int MENU_DOWN_ANIMATION_DURATION = 200;
 
     //パーティクル画面下部のメニュー状態
     enum FluidMenuState {
@@ -174,12 +170,19 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         //アニメーション(スライドアップ)
         private void slide_up( final View v ){
             v.setVisibility(View.VISIBLE);
+
+            //------------------
+            // animate生成
+            //------------------
+            int duration = getResources().getInteger(R.integer.menu_up_anim_duration);
+
+            // animate生成
             TranslateAnimation animate = new TranslateAnimation(
                     0,
                     0,
                     v.getHeight(),
                     0);
-            animate.setDuration(MENU_UP_ANIMATION_DURATION);
+            animate.setDuration(duration);
             animate.setFillAfter(true);
             animate.setInterpolator(new LinearInterpolator());
             animate.setAnimationListener(new Animation.AnimationListener() {
@@ -205,12 +208,19 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         //アニメーション(スライドダウン)
         private void slide_down( final View v ){
             v.setVisibility(View.INVISIBLE);
+
+            //------------------
+            // animate生成
+            //------------------
+            int duration = getResources().getInteger(R.integer.menu_down_anim_duration);
+
+            // animate生成
             TranslateAnimation animate = new TranslateAnimation(
                     0,
                     0,
                     0,
                     v.getHeight());
-            animate.setDuration(MENU_DOWN_ANIMATION_DURATION);
+            animate.setDuration(duration);
             animate.setFillAfter(true);
             animate.setInterpolator(new LinearInterpolator());
             animate.setAnimationListener(new Animation.AnimationListener() {
@@ -254,15 +264,18 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         findViewById(R.id.container).getGlobalVisibleRect(corners, globalOffset);
         menu_corners.offset(-globalOffset.x, -globalOffset.y);
 
-        FluidWorldRenderer render = glView.getRenderer();
-        render.reqSetMenuSize(FluidMenuState.EXPANDED, menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom, MENU_UP_ANIMATION_DURATION);
+        FluidWorldRenderer fluidRenderer = glView.getRenderer();
+        fluidRenderer.setExpandedMenuRect(menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom);
 
         //メニュー下部
         LinearLayout menu_bottom = findViewById(R.id.bottom_menu_init);
         menu_bottom.getGlobalVisibleRect(menu_corners);
         menu_corners.offset(-globalOffset.x, -globalOffset.y);
 
-        render.reqSetMenuSize(FluidMenuState.COLLAPSED, menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom, MENU_DOWN_ANIMATION_DURATION);
+        fluidRenderer.setCollapsedMenuRect(menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom);
+
+        //メニューのRect情報設定完了
+        fluidRenderer.finishSetMenuRect();
 
         //横幅を取得後、メニュー本体は隠す
         menu_top.setVisibility(View.INVISIBLE);

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- menuアニメーション時間(ms) -->
+    <integer name="menu_up_anim_duration">400</integer>
+    <integer name="menu_down_anim_duration">200</integer>
+
+</resources>

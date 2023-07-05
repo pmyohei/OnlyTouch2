@@ -3,6 +3,7 @@ package com.example.onlyTouch;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Rect;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.opengl.GLUtils;
@@ -29,7 +30,6 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Random;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -73,21 +73,20 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private float[] mWorldPosMid;
     private float[] mWorldPosMin;
 
-    // menu本体ビューの端位置
-    private float menuContentsTop;
-    private float menuContentsLeft;
-    private float menuContentsRight;
-    private float menuContentsBottom;
+    //------------------
+    // menu
+    //------------------
+    // menu展開時のRect情報
+    private float mExpandedMenuTop;
+    private float mExpandedMenuLeft;
+    private float mExpandedMenuRight;
+    private float mExpandedMenuBottom;
 
-    // menu初期ビューの端位置
-    private float menuInitTop;
-    private float menuInitLeft;
-    private float menuInitRight;
-    private float menuInitBottom;
-
-    // menuアニメーション時間
-    private int menuUpAniDuration;
-    private int menuDownAniDuration;
+    // menu折りたたみ時のRect情報
+    private float mCollapsedMenuTop;
+    private float mCollapsedMenuLeft;
+    private float mCollapsedMenuRight;
+    private float mCollapsedMenuBottom;
 
     // 変換後
     private float menuInitPosY;
@@ -98,7 +97,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private float menuHeight;
 
     // メニュー初期位置設定完了フラグ
-    private boolean mIsSetMenuInitPos = false;
+    private boolean mIsSetMenuRect = false;
 
     // アニメーションと一致するmenuの移動速度
     private Vec2 mMenuUpVelocity;
@@ -134,7 +133,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /* その他制御 */
     private boolean mIsCreate = false;                     // createなら、trueに変える
 
-    private Body menuBody;
+    // menuBody
+    private Body mMenuBody;
 
     // OpenGL 描画開始シーケンス
     enum GLInitStatus {
@@ -154,8 +154,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     // 生成する物体の種別
     enum CreateObjectType {
-        PLACEMENT,     // 配置型
-        FLICK,         // フリック型
         BULLET,        // 大砲(弾)型
     }
 
@@ -179,10 +177,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     // 物体の種類
     enum BodyKind {
         STATIC,       // 静的
-        FLICK,        // フリック
         MOVE,         // 移動
-        TOUCH,        // タッチ
-        OVERLAP       // 重複
     }
 
     /*
@@ -272,16 +267,17 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     *
+     * 四角形の物体生成
      */
     public Body addBox(GL10 gl, float hx, float hy, float x, float y, float angle, BodyType type, float density, int resId, BodyKind kind) {
-        // Box2d用
+        // Body定義
         BodyDef bodyDef = new BodyDef();
         bodyDef.setType(type);
         bodyDef.setPosition(x, y);
+
         Body body = mWorld.createBody(bodyDef);
         PolygonShape shape = new PolygonShape();
-        shape.setAsBox(hx, hy, 0, 0, angle);    // para 3/4：ボックスの中心
+        shape.setAsBox(hx, hy, 0, 0, angle);    // para 3,4：ボックスの中心
         body.createFixture(shape, density);
 
         // OpenGL用
@@ -306,25 +302,21 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         int textureId = makeTexture(gl, resId);
 
         // 種別に応じて、保存先を切り分け
-        if (kind == BodyKind.FLICK) {
+//        if (kind == BodyKind.STATIC) {
+//            addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
+//
+//        } else if (kind == BodyKind.MOVE) {
+////            body.setGravityScale(0);
+////            mMenuBody = body;
+//
+//            // debug
+////            bodyDef.setPosition(x - 1, y);
+//
+//            addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
+//        }
 
-        } else if (kind == BodyKind.STATIC) {
-            addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
-
-        } else if (kind == BodyKind.MOVE) {
-            body.setGravityScale(0);
-            menuBody = body;
-
-            // debug
-            bodyDef.setPosition(x - 1, y);
-
-            addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
-
-        } else if (kind == BodyKind.TOUCH) {
-
-        } else if (kind == BodyKind.OVERLAP) {
-
-        }
+        // 生成したbodyを保持
+        addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
 
         return body;
     }
@@ -370,7 +362,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * パーティクルシステムの生成
      */
-    private void creParticleSystem(float particleRadius) {
+    private void createParticleSystem(float particleRadius) {
         // パーティクルシステム定義
         ParticleSystemDef psd = new ParticleSystemDef();
         psd.setRadius(particleRadius);
@@ -394,6 +386,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      */
     private void setParticleGroupDef(ParticleGroupDef pgd, float hx, float hy, float cx, float cy) {
 
+        // !plistなしで固定
         if (true) {
             PolygonShape shape = new PolygonShape();
             shape.setAsBox(hx, hy, 0, 0, 0);
@@ -719,12 +712,16 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // 初期化完了していれば
         if (glInitStatus == GLInitStatus.FinInit) {
             // メニューのサイズが設定されるまで、処理なし
-            if (!mIsSetMenuInitPos && !mIsCreate) {
+            if (!mIsSetMenuRect && !mIsCreate) {
                 return false;
             }
 
+            // world座標の計算
+            calculateWorldPosition(gl);
+
             // 初期配置用の物理体生成
             createPhysicsObject(gl);
+
             // GL初期化状態を描画可能に更新
             glInitStatus = GLInitStatus.Drawable;
 
@@ -779,13 +776,13 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     * 物理体の生成
+     * world座標の計算
      */
-    private void createPhysicsObject(GL10 gl) {
+    private void calculateWorldPosition(GL10 gl) {
 
-        //---------------------
+        //---------------------------
         // 画面サイズ
-        //---------------------
+        //---------------------------
         final int screenWidth = mMainGlView.getWidth();
         final int screenHeight = mMainGlView.getHeight();
 
@@ -796,90 +793,139 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         mWorldPosMax = convPointScreenToWorld(screenWidth, 0, gl);
         mWorldPosMid = convPointScreenToWorld(screenWidth / 2f, screenHeight / 2f, gl);
         mWorldPosMin = convPointScreenToWorld(0, screenHeight, gl);
+    }
 
-        /*  メニュー座標の変換処理 */
-        // メニュー上部(本体)
-        // 四隅の座標を変換
-        float[] worldMenuPosTopLeft = convPointScreenToWorld(menuContentsLeft, menuContentsTop, gl);           // 左上
-        float[] worldMenuPosTopRight = convPointScreenToWorld(menuContentsRight, menuContentsTop, gl);         // 右上
-        float[] worldMenuPosBottomRight = convPointScreenToWorld(menuContentsRight, menuContentsBottom, gl);   // 右下
-        // !大きさ( 半分にすると適切なサイズに調整させるのは、その内調査 )
-        // 物理体再生時には、物体の横幅・縦幅
-        // 画面上の位置情報としては、 メニュービューの半分のサイズ
-        float width = (worldMenuPosTopRight[0] - worldMenuPosTopLeft[0]) / 2;
-        float height = (worldMenuPosTopRight[1] - worldMenuPosBottomRight[1]) / 2;
-        // 位置
-        float posX = worldMenuPosTopLeft[0] + width;            // 中心
-        float posY = worldMenuPosBottomRight[1] + height;       // 中心
+    /*
+     * 各種物体生成
+     */
+    private void createPhysicsObject(GL10 gl) {
 
-        // メニュー下部(初期)
-        // 四隅の座標を変換
-        worldMenuPosTopLeft = convPointScreenToWorld(menuInitLeft, menuInitTop, gl);
-        worldMenuPosTopRight = convPointScreenToWorld(menuInitRight, menuInitTop, gl);
-        worldMenuPosBottomRight = convPointScreenToWorld(menuInitRight, menuInitBottom, gl);
-        // 大きさ( 半分にすると適切なサイズに調整させるのは、その内調査 )
-        float width_ini = (worldMenuPosTopRight[0] - worldMenuPosTopLeft[0]) / 2;
-        float height_ini = (worldMenuPosTopRight[1] - worldMenuPosBottomRight[1]) / 2;
-        // 位置
-        posX = worldMenuPosTopLeft[0] + width_ini;
-        posY = worldMenuPosBottomRight[1] + height_ini;
+        //---------------
+        // メニュー
+        //---------------
+        // メニュー背景の物体生成
+        createMenuBody(gl);
 
-        // menu(▲)の位置
-        menuInitPosY = posY;
-
-        // menu背後の物体を生成（高さ = 本体 + 初期、位置 = 上部のみ初期位置と重なる形で配置）
-        float half_of_total_height = height + height_ini;
-        posY = worldMenuPosTopLeft[1] - half_of_total_height;
-        addBox(gl, width, half_of_total_height, posX - 0, posY, 0, BodyType.staticBody, 11, R.drawable.white, BodyKind.MOVE);
-
-        // 位置情報を保持
-        menuPosX = posX;
-        menuPosY = posY;
-        menuWidth = width;
-        menuHeight = half_of_total_height;
-
-        /* 表示時の速度を保持 */
-        // 上昇
-        float millsecond = (float) menuUpAniDuration / 1000f;
-        float ratioToSecond = 1.0f / millsecond;
-        float speed = height * ratioToSecond * 1.32f;        // @1.32f の理由・妥当性はその内調査。
-        mMenuUpVelocity = new Vec2(0, speed);
-
-        // 下降
-        millsecond = (float) menuDownAniDuration / 1000f;
-        ratioToSecond = 1.0f / millsecond;
-        speed = height * ratioToSecond * 1.32f;         // @1.32f の理由・妥当性はその内調査。
-        mMenuDownVelocity = new Vec2(0, -(speed));
-
-        // 上の壁
-        addBox(gl, mWorldPosMax[0], 1, mWorldPosMid[0], mWorldPosMax[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);
-
+        //---------------
+        // パーティクル
+        //---------------
         // パーティクルシステム生成
-        creParticleSystem(mSetParticleRadius);
+        createParticleSystem(mSetParticleRadius);
         // パーティクル生成
         addFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mSetParticleRadius, R.drawable.kitune_tanuki2);
 
         //---------------
         // 壁
         //---------------
-        // 左の壁
+        createWall(gl);
+    }
+
+    /*
+     * メニュー背後の物体生成
+     */
+    private void createMenuBody(GL10 gl) {
+
+        //-------------------------------
+        // メニュー上部（展開後）：座標の変換処理
+        //-------------------------------
+        // 四隅の座標を変換
+        float[] worldMenuPosTopLeft = convPointScreenToWorld(mExpandedMenuLeft, mExpandedMenuTop, gl);           // 左上
+        float[] worldMenuPosTopRight = convPointScreenToWorld(mExpandedMenuRight, mExpandedMenuTop, gl);         // 右上
+        float[] worldMenuPosBottomRight = convPointScreenToWorld(mExpandedMenuRight, mExpandedMenuBottom, gl);   // 右下
+
+//        Log.i("デグレ", "mExpandedMenuRect.right=" + mExpandedMenuRect.right);
+//        Log.i("デグレ", "mExpandedMenuRect.top=" + mExpandedMenuRect.top);
+//        Log.i("デグレ", "mExpandedMenuRect.bottom=" + mExpandedMenuRect.bottom);
+
+        // !大きさ( 半分にすると適切なサイズに調整させるのは、その内調査 )
+        // 物理体再生時には、物体の横幅・縦幅
+        // 画面上の位置情報は、 メニュービューの半分のサイズ
+        float width = (worldMenuPosTopRight[0] - worldMenuPosTopLeft[0]) / 2;
+        float height = (worldMenuPosTopRight[1] - worldMenuPosBottomRight[1]) / 2;
+
+        Log.i("デグレ", "worldMenuPosTopRight[1]=" + worldMenuPosTopRight[1]);
+        Log.i("デグレ", "worldMenuPosBottomRight[1]=" + worldMenuPosBottomRight[1]);
+
+        //-------------------------------
+        // メニュー下部(展開前)：座標の変換処理
+        //-------------------------------
+        // 四隅の座標をworld座標に変換
+        worldMenuPosTopLeft = convPointScreenToWorld(mCollapsedMenuLeft, mCollapsedMenuTop, gl);
+        worldMenuPosTopRight = convPointScreenToWorld(mCollapsedMenuRight, mCollapsedMenuTop, gl);
+        worldMenuPosBottomRight = convPointScreenToWorld(mCollapsedMenuRight, mCollapsedMenuBottom, gl);
+
+        // 大きさ( 半分にすると適切なサイズに調整させるのは、その内調査 )
+        float width_ini = (worldMenuPosTopRight[0] - worldMenuPosTopLeft[0]) / 2;
+        float height_ini = (worldMenuPosTopRight[1] - worldMenuPosBottomRight[1]) / 2;
+
+        // 位置
+        float posX = worldMenuPosTopLeft[0] + width_ini;
+        float posY = worldMenuPosBottomRight[1] + height_ini;
+
+        // menu(▲)の位置
+        menuInitPosY = posY;
+
+        // menu背後の物体を生成（高さ = 本体 + 初期、位置 = 上部のみ初期位置と重なる形で配置）
+        float halfTotalHeight = height + height_ini;
+        posY = worldMenuPosTopLeft[1] - halfTotalHeight;
+        mMenuBody = addBox(gl, width, halfTotalHeight, posX - 0, posY, 0, BodyType.staticBody, 11, R.drawable.white, BodyKind.MOVE);
+
+        Log.i("デグレ", "height=" + height);
+        Log.i("デグレ", "height_ini=" + height_ini);
+        Log.i("デグレ", "halfTotalHeight=" + halfTotalHeight);
+
+        // 位置情報を保持
+        menuPosX = posX;
+        menuPosY = posY;
+        menuWidth = width;
+        menuHeight = halfTotalHeight;
+
+        // メニュー操作時のアニメーション時間(ms)
+        Resources resources = mMainGlView.getContext().getResources();
+        int upDuration = resources.getInteger(R.integer.menu_up_anim_duration);
+        int downDuration = resources.getInteger(R.integer.menu_down_anim_duration);
+
+        /* 表示時の速度を保持 */
+        // 上昇
+        float millsecond = (float) upDuration / 1000f;
+        float ratioToSecond = 1.0f / millsecond;
+        float speed = height * ratioToSecond * 1.32f;        // @1.32f の理由・妥当性はその内調査。
+        mMenuUpVelocity = new Vec2(0, speed);
+
+        // 下降
+        millsecond = (float) downDuration / 1000f;
+        ratioToSecond = 1.0f / millsecond;
+        speed = height * ratioToSecond * 1.32f;         // @1.32f の理由・妥当性はその内調査。
+        mMenuDownVelocity = new Vec2(0, -(speed));
+    }
+
+    /*
+     * 壁の生成
+     */
+    private void createWall(GL10 gl) {
+
+        //---------------
+        // 床の座標計算
+        //---------------
+        // メニュー下部(初期)の四隅の座標を変換
+        float[] worldMenuPosTopLeft = convPointScreenToWorld(mCollapsedMenuLeft, mCollapsedMenuTop, gl);
+
+        // メニューの存在を考慮した横幅・X座標位置を計算する
+        // ※メニュー物体とちょうどの位置だと下がるときうまくいかない時があるため、少し位置を左にする。
+        float bottom_width = (worldMenuPosTopLeft[0] - mWorldPosMin[0]) / 2;
+        float bottom_posX = mWorldPosMin[0] + bottom_width - 1;
+
+        //---------------
+        // 壁の生成
+        //---------------
+        // 天井
+        addBox(gl, mWorldPosMax[0], 1, mWorldPosMid[0], mWorldPosMax[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);
+        // 左
         addBox(gl, 1, mWorldPosMax[1], mWorldPosMin[0] - 1, mWorldPosMid[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);
-        // 右の壁
+        // 右
         addBox(gl, 1, mWorldPosMax[1], mWorldPosMax[0] + 1, mWorldPosMid[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);
-
-        /* 底(メニューの存在を考慮) */
-        if (mIsCreate) {
-            addBox(gl, mWorldPosMax[0], 1, mWorldPosMid[0], mWorldPosMin[1] - 1, 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);   // 下の壁
-        } else {
-            // Picture
-            // 横幅・X座標位置
-            float bottom_width = (worldMenuPosTopLeft[0] - mWorldPosMin[0]) / 2;
-            float bottom_posX = mWorldPosMin[0] + bottom_width - 1;                  // メニュー物体とちょうどの位置だと下がるときうまくいかない時があるため、少し位置を左にする。
-
-            addBox(gl, bottom_width, 1, bottom_posX, mWorldPosMin[1] - 1, 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);   // 下の壁
-        }
-
-        return;
+        // 床(メニューの存在を考慮)
+        addBox(gl, bottom_width, 1, bottom_posX, mWorldPosMin[1] - 1, 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);
     }
 
     /*
@@ -1012,12 +1058,12 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         } else if (mMenuMove == MenuMoveControl.STOP) {
 
             // 物体を停止
-            menuBody.setType(BodyType.staticBody);
+            mMenuBody.setType(BodyType.staticBody);
 
             // 微妙なズレの蓄積を防ぐため、初期位置に移動完了したタイミングで、物体を再生成
-            if (menuInitPosY > menuBody.getPositionY()) {
-                mWorld.destroyBody(menuBody);
-                addBox(gl, menuWidth, menuHeight, menuPosX - 0, menuPosY, 0, BodyType.staticBody, 11, R.drawable.white, BodyKind.MOVE);
+            if (menuInitPosY > mMenuBody.getPositionY()) {
+                mWorld.destroyBody(mMenuBody);
+                mMenuBody = addBox(gl, menuWidth, menuHeight, menuPosX - 0, menuPosY, 0, BodyType.staticBody, 11, R.drawable.white, BodyKind.MOVE);
             }
 
             // 移動処理終了
@@ -1025,11 +1071,11 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
         } else if (mMenuMove == MenuMoveControl.WAIT) {
             // 停止要求がくるまで、速度を維持し続ける
-            menuBody.setLinearVelocity(mMenuVelocity);
+            mMenuBody.setLinearVelocity(mMenuVelocity);
         } else {
             // 移動開始
-            menuBody.setType(BodyType.dynamicBody);
-            menuBody.setLinearVelocity(mMenuVelocity);
+            mMenuBody.setType(BodyType.dynamicBody);
+            mMenuBody.setLinearVelocity(mMenuVelocity);
 
             // 移動状態更新(停止要求待つ)
             mMenuMove = MenuMoveControl.WAIT;
@@ -1324,13 +1370,13 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         }
 
         // 現在のタッチ状態を判定
-        ParticleTouchStatus status = checkCurrentTouchStatus( gl );
+        ParticleTouchStatus status = checkCurrentTouchStatus(gl);
 
         // タッチ位置にパーティクルを追随させるかどうか
         // 前回の判定結果が、「境界」or「追随」で、かつ、今回の判定結果が「外側」であれば、追随させる
-        if ( ((mParticleTouchData.status == ParticleTouchStatus.BORDER) ||
-              (mParticleTouchData.status == ParticleTouchStatus.TRACE))
-             && (status == ParticleTouchStatus.OUTSIDE)) {
+        if (((mParticleTouchData.status == ParticleTouchStatus.BORDER) ||
+                (mParticleTouchData.status == ParticleTouchStatus.TRACE))
+                && (status == ParticleTouchStatus.OUTSIDE)) {
 
             // タッチ状態を追随に更新
             status = ParticleTouchStatus.TRACE;
@@ -1348,7 +1394,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * 現在のパーティクルに対するタッチ状態を判定
      */
-    private ParticleTouchStatus checkCurrentTouchStatus(GL10 gl){
+    private ParticleTouchStatus checkCurrentTouchStatus(GL10 gl) {
 
         // パーティクルの半径
         float radius = mParticleData.getParticleRadius();
@@ -1379,7 +1425,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
                 status = ParticleTouchStatus.INSIDE;
 
                 // その粒子が境界粒子か判定
-                if ( mParticleData.getBorder().contains(index) ) {
+                if (mParticleData.getBorder().contains(index)) {
                     // タッチ状態 → 境界
                     mParticleTouchData.borderIndex = index;
                     status = ParticleTouchStatus.BORDER;
@@ -1392,35 +1438,33 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     * メニュービュー位置情報の設定
+     * メニューView（展開時）Rect情報の設定
      */
-    public void reqSetMenuSize(CreateFluidWorldMenuActivity.FluidMenuState state, float top, float left, float right, float bottom, int duration ){
+    public void setExpandedMenuRect(float top, float left, float right, float bottom) {
+        // メニューが開いている状態の座標情報
+        mExpandedMenuTop = top;
+        mExpandedMenuLeft = left;
+        mExpandedMenuRight = right;
+        mExpandedMenuBottom = bottom;
+    }
 
-        //-------------------------------
-        // メニューの位置座標を保持
-        //-------------------------------
-        if( state == CreateFluidWorldMenuActivity.FluidMenuState.EXPANDED){
-            // メニューが開いている状態の位置情報
-            menuContentsTop = top;
-            menuContentsLeft = left;
-            menuContentsRight = right;
-            menuContentsBottom = bottom;
-            menuUpAniDuration = duration;
+    /*
+     * メニューView（折りたたみ時）Rect情報の設定
+     */
+    public void setCollapsedMenuRect(float top, float left, float right, float bottom){
+        // メニューが閉じている状態の座標情報
+        mCollapsedMenuTop = top;
+        mCollapsedMenuLeft = left;
+        mCollapsedMenuRight = right;
+        mCollapsedMenuBottom = bottom;
+    }
 
-        } else if( state == CreateFluidWorldMenuActivity.FluidMenuState.COLLAPSED){
-            // メニューが閉じている状態の位置情報
-            menuInitTop = top;
-            menuInitLeft = left;
-            menuInitRight = right;
-            menuInitBottom = bottom;
-            menuDownAniDuration = duration;
-
-            // すべて取得したら、フラグを更新
-            mIsSetMenuInitPos = true;
-
-        }else{
-            // 対象外
-        }
+    /*
+     * メニューViewRect設定完了
+     */
+    public void finishSetMenuRect(){
+        // メニュー座標設定済み
+        mIsSetMenuRect = true;
     }
 
     /*
