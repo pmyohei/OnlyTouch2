@@ -3,7 +3,6 @@ package com.example.onlyTouch;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Rect;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.opengl.GLUtils;
@@ -104,8 +103,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private Vec2 mMenuDownVelocity;
     private Vec2 mMenuVelocity;
 
-    // menu移動制御
-    private MenuMoveControl mMenuMove = MenuMoveControl.NOTHING;
+    // menu移動状態
+    private int mMenuMoveState = MENU_MOVE_STATE_NOTHING;
 
     /* OpenGL */
     private FluidGLSurfaceView mMainGlView;
@@ -165,20 +164,13 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         END,        // 終了
     }
 
-    // パーティクル再生成シーケンス
-    enum MenuMoveControl {
-        NOTHING,    // 処理なし
-        UP,         // 表示（上方向）
-        DOWN,       // 非表示（下方向）
-        WAIT,       // 停止待ち
-        STOP        // 停止
-    }
 
-    // 物体の種類
-    enum BodyKind {
-        STATIC,       // 静的
-        MOVE,         // 移動
-    }
+    // menu背景物体の移動状態
+    public static final int MENU_MOVE_STATE_NOTHING = 0;
+    public static final int MENU_MOVE_STATE_UP = 1;
+    public static final int MENU_MOVE_STATE_DOWN = 2;
+    public static final int MENU_MOVE_STATE_KEEP = 3;
+    public static final int MENU_MOVE_STATE_STOP = 4;
 
     /*
      * コンストラクタ
@@ -733,8 +725,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // パーティクル描画更新
         updateParticleDraw(gl, pg);
 
-        // 移動物体の制御
-        moveBodyControl(gl);
+        //------------------
+        // menu背景物体
+        //------------------
+        menuBodyControl();
 
         // 弾の管理
         bulletBodyManage(gl);
@@ -1005,38 +999,69 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     * 移動物体の制御
+     * menu背景物体の制御
      */
-    private void moveBodyControl(GL10 gl) {
+    private void menuBodyControl() {
 
-        // 制御情報に応じて処理実施
-        if (mMenuMove == MenuMoveControl.NOTHING) {
-            // do nothing
-        } else if (mMenuMove == MenuMoveControl.STOP) {
+        switch (mMenuMoveState){
 
-            // 物体を停止
-            mMenuBody.setType(BodyType.staticBody);
+            //------------
+            // 上／下
+            //------------
+            case MENU_MOVE_STATE_UP:
+            case MENU_MOVE_STATE_DOWN:
+                //----------
+                // 移動開始
+                //----------
+                mMenuBody.setType(BodyType.dynamicBody);
+                mMenuBody.setLinearVelocity(mMenuVelocity);
 
-            // 微妙なズレの蓄積を防ぐため、初期位置に移動完了したタイミングで、物体を再生成
-            if (menuInitPosY > mMenuBody.getPositionY()) {
-                mWorld.destroyBody(mMenuBody);
-                mMenuBody = addBox(menuWidth, menuHeight, menuPosX - 0, menuPosY, 0, BodyType.staticBody);
-            }
+                // 移動状態：移動継続
+                mMenuMoveState = MENU_MOVE_STATE_KEEP;
 
-            // 移動処理終了
-            mMenuMove = MenuMoveControl.NOTHING;
+                break;
 
-        } else if (mMenuMove == MenuMoveControl.WAIT) {
-            // 停止要求がくるまで、速度を維持し続ける
-            mMenuBody.setLinearVelocity(mMenuVelocity);
-        } else {
-            // 移動開始
-            mMenuBody.setType(BodyType.dynamicBody);
-            mMenuBody.setLinearVelocity(mMenuVelocity);
+            //------------
+            // 移動継続
+            //------------
+            case MENU_MOVE_STATE_KEEP:
+                // 停止要求がくるまで、速度を維持し続ける
+                mMenuBody.setLinearVelocity(mMenuVelocity);
 
-            // 移動状態更新(停止要求待つ)
-            mMenuMove = MenuMoveControl.WAIT;
+                break;
+
+            //------------
+            // 停止
+            //------------
+            case MENU_MOVE_STATE_STOP:
+                //----------
+                // 移動終了
+                //----------
+                // bodyをstaticに戻す
+                mMenuBody.setType(BodyType.staticBody);
+
+                //------------
+                // 位置リセット
+                //------------
+                // 微妙なズレの蓄積を防ぐため、初期位置に戻ったタイミングで、menu背景物体を再生成
+                if (menuInitPosY > mMenuBody.getPositionY()) {
+                    mWorld.destroyBody(mMenuBody);
+                    mMenuBody = addBox(menuWidth, menuHeight, menuPosX - 0, menuPosY, 0, BodyType.staticBody);
+                }
+
+                // 移動状態：なし
+                mMenuMoveState = MENU_MOVE_STATE_NOTHING;
+
+                break;
+
+            //------------
+            // なし
+            //------------
+            case MENU_MOVE_STATE_NOTHING:
+            default:
+                break;
         }
+
     }
 
     /*
@@ -1427,22 +1452,19 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * menu動作の制御要求
      */
-    public void reqMenuMove(MenuMoveControl control){
+    public void moveMenuBody(int direction){
 
-        if( control == MenuMoveControl.UP){
+        if( direction == MENU_MOVE_STATE_UP){
             // 上方向を保持
             mMenuVelocity = mMenuUpVelocity;
-        }else if( control == MenuMoveControl.DOWN ){
+        }else if( direction == MENU_MOVE_STATE_DOWN ){
             // 下方向を保持
             mMenuVelocity = mMenuDownVelocity;
-        }else{
-            // do nothing
         }
 
         // 制御情報を保持
-        mMenuMove = control;
+        mMenuMoveState = direction;
     }
-
 
 
     /*

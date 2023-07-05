@@ -6,7 +6,6 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -27,12 +26,6 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
     private FluidGLSurfaceView glView;
     private MyApplication app;
 
-    //パーティクル画面下部のメニュー状態
-    enum FluidMenuState {
-        COLLAPSED,      //閉じている状態
-        EXPANDED        //開いている状態
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,29 +39,17 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             touchList = app.getTouchList();
         }
 
-        //流体レンダリングビューを生成
+        // 流体レンダリングビューを生成
         glView = new FluidGLSurfaceView(this, bitmap, select,  touchList );
-        //レンダリングビューをレイアウトに追加
+        // レンダリングビューをレイアウトに追加
         setContentView(R.layout.activity_fluid_design);
         LinearLayout root = findViewById(R.id.gl_view_root);
         root.addView(glView);
 
-        /*
-        LinearLayout menu = findViewById(R.id.bottom_menu_contents);
-        menu.getViewTreeObserver().addOnGlobalLayoutListener(
-                new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        LinearLayout menu = findViewById(R.id.bottom_menu_contents);
-                    }
-                }
-         );
-         */
+        // 画面下部のメニュー
+        findViewById(R.id.bottom_menu_init).setOnClickListener( new CollapsedMenuListerner() );
 
-        //画面下部のメニュー
-        findViewById(R.id.bottom_menu_init).setOnClickListener( new menuIniListerner() );
-
-        //別画像の選択
+        // 別画像の選択
         findViewById(R.id.other_picture).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -79,7 +60,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             }
         });
 
-        //流体再生成
+        // 流体再生成
         findViewById(R.id.regeneration).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -104,7 +85,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             }
         });
 
-        //メニュー画面に戻る
+        // メニュー画面に戻る
         findViewById(R.id.return_menu).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -114,61 +95,93 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
                 finish();
             }
         });
-
-        //break指定時、タッチ用物体を生成
-        if( select == MenuActivity.PictureButton.Break ){
-//            glView.getRenderer().reqEntryFlickObject(100, 100, 0, 100, 10, FlickFigureFragment.FlickShape.BOX);
-        }
     }
 
     /*
-     * メニュー(初期：▲)のリスナー
+     * メニュー(折りたたみ時)のリスナー
      */
-    private class menuIniListerner implements View.OnClickListener {
+    private class CollapsedMenuListerner implements View.OnClickListener {
 
-        //リスナー受付(初期値は受付OK)
+        // リスナー受付(初期値は受付OK)
         public boolean mIsEnable = true;
 
         @Override
         public void onClick(View view) {
 
-            //リスナー受付中でなければ、なにもしない
-            if(!mIsEnable){
+            //--------------
+            // リスナー受付制御
+            //--------------
+            // リスナー受付中でなければ、なにもしない
+            if (!mIsEnable) {
                 return;
             }
 
-            //リスナーの処理を終えるまでは、受付不可にする
+            // リスナーの処理を終えるまでは、受付不可にする
             mIsEnable = false;
 
-            //メニュー本体
-            LinearLayout menu_contents = findViewById(R.id.bottom_menu_contents);
-            LinearLayout menu_exp = findViewById(R.id.root_explanation);
+            //--------------
+            // menu制御
+            //--------------
+            LinearLayout menu = findViewById(R.id.bottom_menu_contents);
+            LinearLayout explanation = findViewById(R.id.root_explanation);
 
-            //表示非表示を制御
-            if(menu_contents.getVisibility() != View.VISIBLE){
-                //メニュー本体処理
-                slide_up(menu_contents);
-                glView.getRenderer().reqMenuMove(FluidWorldRenderer.MenuMoveControl.UP);
-
-                //説明文のアニメーション表示
-                menu_exp.setVisibility(View.VISIBLE);
-                Animation animation_in = AnimationUtils.loadAnimation(menu_exp.getContext(), R.anim.slide_right);
-                menu_exp.startAnimation(animation_in);
-
-            }else{
-                //メニュー本体処理
-                slide_down(menu_contents);
-                glView.getRenderer().reqMenuMove(FluidWorldRenderer.MenuMoveControl.DOWN);
-
-                //説明文のアニメーション非表示
-                menu_exp.setVisibility(View.INVISIBLE);
-                Animation animation_in = AnimationUtils.loadAnimation(view.getContext(), R.anim.slide_left);
-                menu_exp.startAnimation(animation_in);
+            if (menu.getVisibility() != View.VISIBLE) {
+                // 開く
+                expandMenu( menu, explanation );
+            } else {
+                // 折りたたむ
+                collapseMenu( menu, explanation );
             }
         }
 
-        //アニメーション(スライドアップ)
-        private void slide_up( final View v ){
+        /*
+         * メニューを開く
+         */
+        private void expandMenu( final View menu, final View explanation ){
+
+            //---------------------
+            // メニュー本体制御
+            //---------------------
+            // Viewをアニメーション
+            slideUp(menu);
+            // menu背景物体の移動
+            glView.getRenderer().moveMenuBody(FluidWorldRenderer.MENU_MOVE_STATE_UP);
+
+            //---------------------
+            // 各種メニュー説明文
+            //---------------------
+            // 説明文のアニメーション表示
+            explanation.setVisibility(View.VISIBLE);
+            Animation animation_in = AnimationUtils.loadAnimation(explanation.getContext(), R.anim.slide_right);
+            explanation.startAnimation(animation_in);
+        }
+
+        /*
+         * メニューを折りたたむ
+         */
+        private void collapseMenu( final View menu, final View explanation ){
+
+            //---------------------
+            // メニュー本体制御
+            //---------------------
+            // Viewをアニメーション
+            slideDown(menu);
+            // menu背景物体の移動
+            glView.getRenderer().moveMenuBody(FluidWorldRenderer.MENU_MOVE_STATE_DOWN);
+
+            //---------------------
+            // 各種メニュー説明文
+            //---------------------
+            // 説明文のアニメーション非表示
+            explanation.setVisibility(View.INVISIBLE);
+            Animation animation_in = AnimationUtils.loadAnimation(explanation.getContext(), R.anim.slide_left);
+            explanation.startAnimation(animation_in);
+        }
+
+        /*
+         * アニメーション：スライドアップ
+         */
+        private void slideUp(final View v ){
             v.setVisibility(View.VISIBLE);
 
             //------------------
@@ -192,10 +205,10 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
                 }
                 @Override
                 public void onAnimationEnd(final Animation animation) {
-                    //menuアニメーション停止通知
-                    glView.getRenderer().reqMenuMove(FluidWorldRenderer.MenuMoveControl.STOP);
+                    // menuアニメーション停止通知
+                    glView.getRenderer().moveMenuBody(FluidWorldRenderer.MENU_MOVE_STATE_STOP);
 
-                    //アニメーションが終了すれば、受付可能にする
+                    // アニメーションが終了すれば、受付可能にする
                     mIsEnable = true;
                 }
                 @Override
@@ -205,8 +218,10 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             v.startAnimation(animate);
         }
 
-        //アニメーション(スライドダウン)
-        private void slide_down( final View v ){
+        /*
+         * アニメーション：スライドダウン
+         */
+        private void slideDown(final View v ){
             v.setVisibility(View.INVISIBLE);
 
             //------------------
@@ -230,13 +245,13 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
                 }
                 @Override
                 public void onAnimationEnd(final Animation animation) {
-                    //初期menuと本体が重なった位置にくる。後ろに色があるのが見えてしまうため、透明にしとく
+                    // 初期menuと本体が重なった位置にくる。後ろに色があるのが見えてしまうため、透明にしとく
                     v.setAlpha(0);
 
-                    //menuアニメーション停止通知
-                    glView.getRenderer().reqMenuMove(FluidWorldRenderer.MenuMoveControl.STOP);
+                    // menuアニメーション停止通知
+                    glView.getRenderer().moveMenuBody(FluidWorldRenderer.MENU_MOVE_STATE_STOP);
 
-                    //アニメーションが終了すれば、受付可能にする
+                    // アニメーションが終了すれば、受付可能にする
                     mIsEnable = true;
                 }
                 @Override
@@ -257,7 +272,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         Point globalOffset = new Point();
 
         /* メニューの位置・サイズを渡す( @@四隅の位置取得の方法はその内調査(主にoffset)@@ ) */
-        //メニュー上部
+        // メニュー上部
         LinearLayout menu_top = findViewById(R.id.bottom_menu_contents);
         menu_top.getGlobalVisibleRect(menu_corners);
 
@@ -267,17 +282,17 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         FluidWorldRenderer fluidRenderer = glView.getRenderer();
         fluidRenderer.setExpandedMenuRect(menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom);
 
-        //メニュー下部
+        // メニュー下部
         LinearLayout menu_bottom = findViewById(R.id.bottom_menu_init);
         menu_bottom.getGlobalVisibleRect(menu_corners);
         menu_corners.offset(-globalOffset.x, -globalOffset.y);
 
         fluidRenderer.setCollapsedMenuRect(menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom);
 
-        //メニューのRect情報設定完了
+        // メニューのRect情報設定完了
         fluidRenderer.finishSetMenuRect();
 
-        //横幅を取得後、メニュー本体は隠す
+        // 横幅を取得後、メニュー本体は隠す
         menu_top.setVisibility(View.INVISIBLE);
     }
 
