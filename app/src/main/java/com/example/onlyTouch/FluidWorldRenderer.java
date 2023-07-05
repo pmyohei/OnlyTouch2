@@ -60,14 +60,14 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     // 静的物体
     private HashMap<Long, BodyData> mMapBodyData = new HashMap<Long, BodyData>();
-    private HashMap<Long, BodyData> mMapTouchBodyData = new HashMap<Long, BodyData>();
+//    private HashMap<Long, BodyData> mMapTouchBodyData = new HashMap<Long, BodyData>();
     private long mBodyDataId = 1;
 
 //    private TouchObjectData mTouchObjectData = null;
 //    private boolean mTouchFlg = false;
 //    private int mShapeTranceCount = 0;
 
-    private static final int SHAPE_TRANCE_VALUE = 1000;
+//    private static final int SHAPE_TRANCE_VALUE = 1000;
 
     // フリック物体
 //    private FlickObjectData mFlickObjectData = null;
@@ -112,7 +112,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private int menuDownAniDuration;
 
     // 変換後
-    private float menuContentsPosY;
+//    private float menuContentsPosY;
     private float menuInitPosY;
 
     private float menuPosX;
@@ -133,7 +133,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     /* OpenGL */
     private FluidGLSurfaceView mMainGlView;
-    private Bitmap mUserSelectImage;
+//    private Bitmap mUserSelectImage;
     private GLInitStatus glInitStatus = GLInitStatus.PreInit;
 
     private HashMap<Integer, Integer> mMapResIdToTextureId = new HashMap<Integer, Integer>();
@@ -174,7 +174,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     private Body menuBody;
 //    private Body touchBody;
-    private Body overlapBody;
+//    private Body overlapBody;
 
     // OpenGL 描画開始シーケンス
     enum GLInitStatus {
@@ -230,7 +230,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      */
     public FluidWorldRenderer(FluidGLSurfaceView mainGlView, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
         mMainGlView = mainGlView;
-        mUserSelectImage = bmp;
+//        mUserSelectImage = bmp;
 
         // !リファクタリング
         // bmp未指定の場合、Createモードとみなす
@@ -296,11 +296,11 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * タッチ可能Bodyの追加
      */
-    private void addTouchBodyData(Body body, float[] buffer, float[] uv, int drawMode, int textureId) {
-        long id = mBodyDataId++;
-        BodyData data = new BodyData(id, body, buffer, uv, drawMode, textureId);
-        mMapTouchBodyData.put(id, data);
-    }
+//    private void addTouchBodyData(Body body, float[] buffer, float[] uv, int drawMode, int textureId) {
+//        long id = mBodyDataId++;
+//        BodyData data = new BodyData(id, body, buffer, uv, drawMode, textureId);
+//        mMapTouchBodyData.put(id, data);
+//    }
 
     /*
      * フリック可能Bodyの追加
@@ -470,7 +470,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 //            addTouchBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
 
         } else if (kind == BodyKind.OVERLAP) {
-            overlapBody = body;
+//            overlapBody = body;
         }
 
 
@@ -1012,7 +1012,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         float posY = worldMenuPosBottomRight[1] + height;       // 中心
 
         // menu本体の位置
-        menuContentsPosY = posY;
+//        menuContentsPosY = posY;
 
 //        float upper_menu_posY = worldMenuPosTopLeft[1];
 
@@ -1124,7 +1124,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 //            }
 
             // パーティクルと重複する物体を生成(再生成演出用)
-            addBox(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.OVERLAP);
+//            addBox(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.OVERLAP);
 
             // 再生成シーケンス終了。重複物体を生成した状態。
             mRegenerationState = RegenerationState.OVERLAP;
@@ -1137,7 +1137,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 //            }
 
             // 重複物体はすぐに削除
-            mWorld.destroyBody(overlapBody);
+//            mWorld.destroyBody(overlapBody);
 
             // オーバーラップシーケンス終了。重複物体を削除した状態。
             mRegenerationState = RegenerationState.END;
@@ -1905,10 +1905,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 //                flickBodyTouchClear();
 
                 // createのみ
-                if (mIsCreate) {
-                    touchBodyTouchClear();
+//                if (mIsCreate) {
+//                    touchBodyTouchClear();
 //                    mTouchObjectData = null;
-                }
+//                }
 
                 break;
 
@@ -1948,17 +1948,17 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * タッチ物体：タッチ状態クリア
      */
-    private void touchBodyTouchClear() {
-
-        // 物体を削除
-        for (Long key : mMapTouchBodyData.keySet()) {
-            BodyData bd = mMapTouchBodyData.get(key);
-            mWorld.destroyBody(bd.getBody());
-        }
-
-        // mapクリア
-        mMapTouchBodyData.clear();
-    }
+//    private void touchBodyTouchClear() {
+//
+//        // 物体を削除
+//        for (Long key : mMapTouchBodyData.keySet()) {
+//            BodyData bd = mMapTouchBodyData.get(key);
+//            mWorld.destroyBody(bd.getBody());
+//        }
+//
+//        // mapクリア
+//        mMapTouchBodyData.clear();
+//    }
 
     /*
      * パーティクルタッチ追随処理
