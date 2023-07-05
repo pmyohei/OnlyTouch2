@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/menu_create">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp"
+        android:gravity="center_horizontal|center_vertical"
+        android:background="@android:color/darker_gray"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:text="Trimming"/>
+
+    <!-- トリミング結果 -->
+    <ImageView
+        android:id="@+id/trimming_image"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="64dp"
+        android:layout_marginRight="64dp"
+        android:layout_weight="1"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp"
+        android:gravity="center_horizontal|center_vertical"
+        android:background="@android:color/darker_gray"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:text="Selected Image"/>
+
+    <!-- トリミング画像 -->
+    <com.isseiaoki.simplecropview.CropImageView
+        android:id="@+id/cropImageView"
+        xmlns:custom="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_margin="4dp"
+        android:scaleType="fitCenter"
+        custom:cropMode="ratio_1_1"/>
+
+    <!-- 操作 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/ok"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:background="@android:color/darker_gray"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:text="OK"/>
+
+        <TextView
+            android:id="@+id/other"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:background="@android:color/darker_gray"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:text="Other"/>
+
+    </LinearLayout>
+
+    <!-- 下部にスペースを作る
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="4dp"/>
+       -->
+</LinearLayout>

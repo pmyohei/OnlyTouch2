@@ -1,0 +1,44 @@
+<resources>
+    <string name="app_name">Only Touch</string>
+
+    <string name="action_settings">Settings</string>
+
+    <string name="meun_title_create">Create</string>
+    <string name="meun_title_create_detail">Make animals from soft things.</string>
+    <string name="meun_title_picture">Picture</string>
+    <string name="meun_title_picture_detail">Select saved image.</string>
+    <string name="meun_title_collection">Collection</string>
+    <string name="meun_title_collection_detail">Play with collection.</string>
+    <string name="meun_title_play">Play</string>
+    <string name="meun_title_play_detail">Play with friends.</string>
+    <string name="meun_title_information">Information</string>
+    <string name="meun_title_information_detail">Information on this app.</string>
+
+    <!-- create -->
+    <string name="create_mochi">mochi</string>
+    <string name="create_sakuramochi">sakura\nmochi</string>
+    <string name="create_draw">draw</string>
+    <string name="create_dango">daifuku</string>
+
+    <!-- picture -->
+    <string name="picture_soft">Soft</string>
+    <string name="picture_hard">Hard</string>
+    <string name="picture_veryhard">Very Hard</string>
+    <string name="picture_break">Break</string>
+
+    <!-- FluidPlayActivity -->
+    <string name="flick_figure">Figure</string>
+    <string name="flick_line">Line</string>
+    <string name="flick_control">Control</string>
+
+    <!-- 流体画面下部 -->
+    <string name="fluid_bottom_message">You can touch it！</string>
+    <string name="fluid_bottom_menu_contents_init">▲</string>
+    <string name="fluid_bottom_menu_contents_camera">Select other picture.</string>
+    <string name="fluid_bottom_menu_contents_pin">Set pins.</string>
+    <string name="fluid_bottom_menu_contents_gravity">Falls in the direction of the screen.</string>
+    <string name="fluid_bottom_menu_contents_regeneration">Regenerate to center.</string>
+    <string name="fluid_bottom_menu_contents_return">Return to menu.</string>
+    <string name="title_activity_information">InformationActivity</string>
+
+</resources>

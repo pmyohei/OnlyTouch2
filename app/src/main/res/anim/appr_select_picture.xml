@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- 拡大する感じ -->
+<scale xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:anim/decelerate_interpolator"
+    android:fromXScale="0.0"
+    android:toXScale="1.0"
+    android:fromYScale="1.0"
+    android:toYScale="1.0"
+    android:pivotX="0%"
+    android:pivotY="50%"
+    android:startOffset="100"
+    android:fillAfter="true"
+    android:duration="300" />
+
+<!-- 右から出現
+<translate xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fromXDelta="-100%"
+    android:toXDelta="0%"
+    android:duration="400"
+    android:fillAfter="true">
+</translate>
+ -->

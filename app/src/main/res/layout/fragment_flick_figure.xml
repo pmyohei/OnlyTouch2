@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".FlickFigureFragment">
+
+    <!-- 操作 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal|center_vertical">
+
+        <Button
+            android:id="@+id/box"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_margin="4dp"
+            android:padding="24dp"
+            android:gravity="center_vertical|center_horizontal"
+            style="?android:attr/borderlessButtonStyle"
+            android:background="@drawable/flick_object"
+            android:textSize="20sp"
+            android:textColor="@color/flick_area"
+            android:text="■"/>
+
+        <Button
+            android:id="@+id/triangle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_margin="4dp"
+            android:padding="24dp"
+            android:gravity="center_vertical|center_horizontal"
+            style="?android:attr/borderlessButtonStyle"
+            android:background="@drawable/flick_object"
+            android:textSize="20sp"
+            android:textColor="@color/flick_area"
+            android:text="▲"/>
+
+        <Button
+            android:id="@+id/circle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_margin="4dp"
+            android:padding="24dp"
+            android:gravity="center_vertical|center_horizontal"
+            style="?android:attr/borderlessButtonStyle"
+            android:background="@drawable/flick_object"
+            android:textSize="20sp"
+            android:textColor="@color/flick_area"
+            android:text="●"/>
+
+    </LinearLayout>
+
+</FrameLayout>

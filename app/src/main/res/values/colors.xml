@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#008577</color>
+    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorAccent">#D81B60</color>
+
+    <!-- menu -->
+    <!--
+    <color name="menu_create">#FFA7D3</color>
+    <color name="menu_picture">#8FAADC</color>
+    <color name="menu_collection">#FFD966</color>
+    <color name="menu_play">#9AC46B</color>
+    -->
+    <color name="menu_create">#FEEEDC</color>
+    <color name="menu_picture">#BDE1DA</color>
+    <color name="menu_collection">#F5B5A7</color>
+    <color name="menu_play">#d3d5ec</color>
+    <color name="menu_information">#FFFFFF</color>
+
+    <color name="menu_create_dark">#B9FCC78C</color>
+    <color name="menu_picture_dark">#98D0C5</color>
+    <color name="menu_collection_dark">#F0927C</color>
+    <color name="menu_play_dark">#B9BCE1</color>
+
+    <color name="menu_text">#FEEEDC</color>
+
+
+    <!-- menu touch -->
+    <!--
+    <color name="menu_create_touch">#F8C7E0</color>
+    <color name="menu_picture_touch">#ABC3F1</color>
+    -->
+    <color name="menu_create_touch">#FEEEDC</color>
+    <color name="menu_picture_touch">#BDE1DA</color>
+
+    <!--  -->
+    <color name="flick_area">#EFCEF5</color>
+
+</resources>
