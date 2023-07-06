@@ -58,7 +58,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     ParticleTouchData mParticleTouchData = new ParticleTouchData(-1, -1, ParticleTouchStatus.OUTSIDE, 0xFFFF, 0xFFFF);
 
     // 静的物体
-    private HashMap<Long, BodyData> mMapBodyData = new HashMap<Long, BodyData>();
     private long mBodyDataId = 1;
 
     // バレット
@@ -87,18 +86,17 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private float mCollapsedMenuRight;
     private float mCollapsedMenuBottom;
 
-    // 変換後
-    private float mMenuCollapsedPosY;
-
+    // menu背景物体の情報
     private float mMenuInitPosX;
     private float mMenuInitPosY;
     private float mMenuWidth;
     private float mMenuHeight;
+    private float mMenuCollapsedPosY;
 
-    // メニュー初期位置設定完了フラグ
-    private boolean mIsSetMenuRect = false;
+    // menu初期位置設定完了フラグ
+    private boolean mIsSetMenuRect;
 
-    // アニメーションと一致するmenuの移動速度
+    // アニメーションと一致するmenu背景物体の移動速度
     private Vec2 mMenuUpVelocity;
     private Vec2 mMenuDownVelocity;
     private Vec2 mMenuVelocity;
@@ -106,11 +104,14 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     // menu移動状態
     private int mMenuMoveState = MENU_MOVE_STATE_NOTHING;
 
-    /* OpenGL */
+    //------------------
+    // OpenGL
+    //------------------
     private FluidGLSurfaceView mMainGlView;
-    private GLInitStatus glInitStatus = GLInitStatus.PreInit;
+    private GLInitStatus glInitStatus;
 
     private HashMap<Integer, Integer> mMapResIdToTextureId = new HashMap<Integer, Integer>();
+
 
     PlistDataManager mPlistManage;
 
@@ -203,20 +204,20 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
         mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
 
+        //-----------------
+        // menu
+        //-----------------
+        mIsSetMenuRect = false;
+
+        //------------------
+        // OpenGL
+        //------------------
+        glInitStatus = GLInitStatus.PreInit;
 
         // 物理世界生成
         mWorld = new World(0, -10);
         // plist管理クラス
         mPlistManage = new PlistDataManager();
-    }
-
-    /*
-     *　Bodyの追加
-     */
-    private void addBodyData(Body body, float[] buffer, float[] uv, int drawMode, int textureId) {
-        long id = mBodyDataId++;
-        BodyData data = new BodyData(id, body, buffer, uv, drawMode, textureId);
-        mMapBodyData.put(id, data);
     }
 
     /*
@@ -717,7 +718,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //--------------------------
         // 初期化完了
         //--------------------------
-        // メニューサイズ設定未完了なら、ないもしない
+        // メニューサイズ設定未完了なら、フレーム描画不可
         if ( !mIsSetMenuRect ) {
             return false;
         }
@@ -729,6 +730,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // GL初期化状態を描画可能に更新
         glInitStatus = GLInitStatus.Drawable;
 
+        // フレーム描画可
         return true;
     }
 
@@ -1308,7 +1310,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         Bitmap bmp = BitmapFactory.decodeResource(r, resId);
 
         // テクスチャのメモリ確保
-        int[] textureIds = new int[1];                  // テクスチャは一つ
+        int[] textureIds = new int[1];                // テクスチャは一つ
         gl10.glGenTextures(1, textureIds, 0);   // テクスチャオブジェクトの生成。para2にIDが納められる。
 
         // テクスチャへのビットマップ指定
@@ -1368,7 +1370,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     * タッチコールバック
+     * onTouch
      */
     public synchronized boolean onTouch(View v, MotionEvent event) {
 
