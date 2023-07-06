@@ -168,7 +168,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     public static final int PARTICLE_REGENE_STATE_DELETE = 0;
     public static final int PARTICLE_REGENE_STATE_CREATE = 1;
     public static final int PARTICLE_REGENE_STATE_OVERLAP = 2;
-    public static final int PARTICLE_REGENE_STATE_END = 3;
+    public static final int PARTICLE_REGENE_STATE_NOTHING = 3;
 
 
     // menu背景物体の移動状態
@@ -197,6 +197,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         mSetParticleFlg = ParticleFlag.elasticParticle;
         mSetParticleRadius = 0.2f;  // この値をあげると固くなる
         mSetParticleLifetime = 0;
+
+        mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
 
 
         // 物理世界生成
@@ -710,22 +712,25 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     * 描画のため繰り返し呼ばれる
-     *  @param gl
+     * 現在のフレームを描画するためにコールされる
      */
     @Override
     public void onDrawFrame(GL10 gl) {
+        //--------------------
         // フレーム描画初期化処理
+        //--------------------
         boolean initFin = initDrawFrame(gl);
         if ( !initFin ) {
+            // 初期化未完了なら、何もしない
             return;
         }
-
-        // long startTime = System.nanoTime();
 
         // 物理世界を更新
         mWorld.step(TIME_STEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS, PARTICLE_ITERATIONS);
 
+        //------------------
+        // OpenGL
+        //------------------
         // 背景色を設定
         // ！これは毎回必要？
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
@@ -733,7 +738,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         gl.glMatrixMode(GL10.GL_MODELVIEW);   // マトリクス(4x4の変換行列)の指定
         gl.glLoadIdentity();                   // 初期化
 
-        // パーティクル情報
+        //------------------
+        // パーティクル
+        //------------------
         ParticleGroup pg = mParticleData.getParticleGroup();
         // パーティクル再生成
         regenerationParticle(gl, pg);
@@ -741,15 +748,12 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         updateParticleDraw(gl, pg);
 
         //------------------
-        // menu背景物体
+        // 物体
         //------------------
+        // menu背景物体
         menuBodyControl();
-
-        // 弾の管理
+        // 弾
         bulletBodyManage(gl);
-
-        // long endTime  = System.nanoTime();
-        // Log.d("TIME", "経過時間　" + ((endTime - startTime) / 1000000) + "(ms)");
     }
 
     /*
@@ -901,6 +905,13 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private void regenerationParticle(GL10 gl, ParticleGroup pg) {
 
         switch (mRegenerationState) {
+
+            //-----------------------
+            // 処理なし
+            //-----------------------
+            case PARTICLE_REGENE_STATE_NOTHING:
+                break;
+
             //---------------
             // パーティクル削除
             //---------------
@@ -935,14 +946,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
                 // オーバーラップ物体を削除
                 mWorld.destroyBody(mOverlapBody);
                 // オーバーラップシーケンス終了。重複物体を削除した状態。
-                mRegenerationState = PARTICLE_REGENE_STATE_END;
+                mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
 
                 break;
 
-            //-----------------------
-            // 終了
-            //-----------------------
-            case PARTICLE_REGENE_STATE_END:
             default:
                 break;
         }
