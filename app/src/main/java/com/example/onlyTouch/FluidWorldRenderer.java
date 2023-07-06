@@ -311,10 +311,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         float diameter = particleRadius * 2;
 
         // OpenGLに渡す三角形グルーピングバッファを作成
-//        generateBottomBaseRendererBuff(allParticleLine, diameter);  // 下辺を基準に(下辺が底辺となるように)グルーピング
-//        generateTopBaseRendererBuff(allParticleLine, diameter);     // 上辺を基準に(上辺が底辺となるように)グルーピング
-
-        // OpenGLに渡す三角形グルーピングバッファを作成
         enqueRendererBuff(allParticleLine, diameter);
 
         // 頂点数を保持
@@ -324,8 +320,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         generateUVRendererBuff();
 
         // 境界パーティクルバッファを取得
-        ArrayList<Integer> border = new ArrayList<>();
-        border = generateBorderParticleBuff(allParticleLine);
+        ArrayList<Integer> border = generateBorderParticleBuff(allParticleLine);
 
         int textureId = makeTextureSoftCreate(gl, R.drawable.kitune_tanuki2);
 
@@ -387,28 +382,45 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      */
     private void generateParticleLineBuff(ParticleGroup pg, ArrayList<ArrayList<Integer>> allParticleLine) {
 
+        // 1ライン分格納先
+        ArrayList<Integer> line = new ArrayList<>();
+
         // 対象のパーティクルグループのパーティクル数を算出
         int bufferIndex = pg.getBufferIndex();
         int groupParticleNum = pg.getParticleCount() - bufferIndex;
 
-        // 先頭パーティクルのY座標を保持
-        float py = mParticleSystem.getParticlePositionY(bufferIndex);
-        ArrayList<Integer> line = new ArrayList<>();
+        // 先頭パーティクルのY座標を格納中ラインのY座標とする
+        float linePosY = mParticleSystem.getParticlePositionY(bufferIndex);
 
+        //------------------------
+        // 全パーティクルを格納
+        //------------------------
         for (int i = bufferIndex; i < groupParticleNum; ++i) {
+
+            //-------------------
+            // ライン切り替わり判定
+            //-------------------
             // パーティクルのY座標
             float y = mParticleSystem.getParticlePositionY(i);
 
-            // パーティクルが次のラインのものである場合
-            if ((float) Math.abs(py - y) > 0.01f) {
-                // パーティクル行を全パーティクルラインに追加し、新規ラインを生成
+            // パーティクルが次のラインのものの場合
+            // !0.01fは適当に定めた値（とりあえずこれ以上離れていればラインが変わったと判断する）
+            final float LINE_DIFF = 0.01f;
+            float distanceLines = Math.abs(linePosY - y);
+            if ( distanceLines > LINE_DIFF) {
+                // パーティクルラインを全パーティクルラインに追加
                 allParticleLine.add(line);
+                // 新規ラインを用意
                 line = new ArrayList<>();
+                // 格納中ラインのY座標を更新
+                linePosY = y;
             }
 
+            //-------------------------------
+            // ラインバッファにパーティクルを追加
+            //-------------------------------
             // ラインにパーティクルを追加し、Y座標を更新
             line.add(i);
-            py = y;
         }
 
         // パーティクル行を全パーティクルラインに追加
@@ -592,22 +604,24 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //-------------------------------------------------
         // パーティクルグループ内の粒子で最小位置と最大位置を取得する
         //-------------------------------------------------
-        float minParticleX = 0xFFFF;
-        float maxParticleX = -(0xFFFF);
-        float minParticleY = 0xFFFF;
-        float maxParticleY = -(0xFFFF);
+        // 先頭のパーティクルを暫定で最大値・最小値とする
+        float minParticleX = mParticleSystem.getParticlePositionX(0);
+        float maxParticleX = mParticleSystem.getParticlePositionX(0);
+        float minParticleY = mParticleSystem.getParticlePositionY(0);
+        float maxParticleY = mParticleSystem.getParticlePositionY(0);
 
+        // 全パーティクルの中で、X/Y座標の最大値最小値を算出
         int particleNum = mParticleSystem.getParticleCount();
-        for (int i = 0; i < particleNum; i++) {
+        for (int i = 1; i < particleNum; i++) {
             // X座標
-            float pos = mParticleSystem.getParticlePositionX(i);
-            minParticleX = (Math.min(pos, minParticleX));
-            maxParticleX = (Math.max(pos, maxParticleX));
+            float posX = mParticleSystem.getParticlePositionX(i);
+            minParticleX = (Math.min(posX, minParticleX));
+            maxParticleX = (Math.max(posX, maxParticleX));
 
             // Y座標
-            pos = mParticleSystem.getParticlePositionY(i);
-            minParticleY = (Math.min(pos, minParticleY));
-            maxParticleY = (Math.max(pos, maxParticleY));
+            float posY = mParticleSystem.getParticlePositionY(i);
+            minParticleY = (Math.min(posY, minParticleY));
+            maxParticleY = (Math.max(posY, maxParticleY));
         }
 
         // 横幅・縦幅を算出
@@ -623,11 +637,13 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         float UvMaxWidth = mPlistManage.getUvWidth();
         float UvMaxHeight = mPlistManage.getUvHeight();
 
-        // UV座標を計算し、バッファに保持する
+        // 各パーティクル位置に対応するUV座標を計算し、バッファに保持する
         for (int i : mRenderParticleBuff) {
+            // パーティクル座標
             float x = mParticleSystem.getParticlePositionX(i);
             float y = mParticleSystem.getParticlePositionY(i);
 
+            // UV座標
             float vecx = minUvX + (((x - minParticleX) / particleMaxWidth) * UvMaxWidth);
             float vecy = maxUvY - (((y - minParticleY) / particleMaxHeight) * UvMaxHeight);
 
@@ -638,34 +654,42 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     /*
      * 境界パーティクルバッファを取得
-     *  @para I:なし
+     *   全パーティクルの中で、外側に面しているパーティクルをバッファに格納する
      */
     private ArrayList<Integer> generateBorderParticleBuff(ArrayList<ArrayList<Integer>> allParticleLine) {
         // 境界パーティクルバッファ
-        ArrayList<Integer> border = new ArrayList<>();
+        ArrayList<Integer> borderBuff = new ArrayList<>();
 
         int lineNum = allParticleLine.size();
         int lastLineIndex = lineNum - 1;
 
-        // 下辺と上辺は、全てのパーティクルが境界
-        ArrayList<Integer> line = allParticleLine.get(0);
-        border.addAll(line);
-        line = allParticleLine.get(lastLineIndex);
-        border.addAll(line);
+        //--------------------
+        // 最下ラインと最上ライン
+        //--------------------
+        // 全てのパーティクルが境界
+        ArrayList<Integer> bottomLine = allParticleLine.get(0);
+        ArrayList<Integer> topLine = allParticleLine.get(lastLineIndex);
+        borderBuff.addAll(bottomLine);
+        borderBuff.addAll(topLine);
 
-        // 下辺上辺の間のライン（パーティクルの2ライン目から最終ラインの前のラインまで）
+        //--------------------------------------------
+        // 最下ラインと最上ラインの間のライン
+        // （パーティクルの2ライン目から最終ラインの前のラインまで）
+        //--------------------------------------------
+        // ライン上の両サイドにあるパーティクルが境界パーティクルとなる
         for (int i = 1; i < lastLineIndex; i++) {
-            line = allParticleLine.get(i);
+            ArrayList<Integer> line = allParticleLine.get(i);
+            int lastIndex = line.size() - 1;
 
-            // 両サイドのパーティクル
-            int leftParticleIndex = line.get(0);                   // 左端
-            int rightParticleIndex = line.get(line.size() - 1);    // 右端
-            // 両サイドのパーティクルが境界
-            border.add(leftParticleIndex);
-            border.add(rightParticleIndex);
+            // ラインの両サイドにあるパーティクル
+            int leftParticleIndex = line.get(0);
+            int rightParticleIndex = line.get(lastIndex);
+            // 格納
+            borderBuff.add(leftParticleIndex);
+            borderBuff.add(rightParticleIndex);
         }
 
-        return border;
+        return borderBuff;
     }
 
     /*
