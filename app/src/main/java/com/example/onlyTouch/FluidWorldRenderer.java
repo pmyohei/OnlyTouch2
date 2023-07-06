@@ -88,12 +88,12 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private float mCollapsedMenuBottom;
 
     // 変換後
-    private float menuInitPosY;
+    private float mMenuCollapsedPosY;
 
-    private float menuPosX;
-    private float menuPosY;
-    private float menuWidth;
-    private float menuHeight;
+    private float mMenuPosX;
+    private float mMenuPosY;
+    private float mMenuWidth;
+    private float mMenuHeight;
 
     // メニュー初期位置設定完了フラグ
     private boolean mIsSetMenuRect = false;
@@ -788,65 +788,80 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private void createMenuBody(GL10 gl) {
 
         //-------------------------------
-        // メニュー上部（展開後）：座標の変換処理
+        // メニュー（展開後）：座標の変換処理
         //-------------------------------
         // 四隅の座標を変換
-        float[] worldMenuPosTopLeft = convPointScreenToWorld(mExpandedMenuLeft, mExpandedMenuTop, gl);           // 左上
-        float[] worldMenuPosTopRight = convPointScreenToWorld(mExpandedMenuRight, mExpandedMenuTop, gl);         // 右上
-        float[] worldMenuPosBottomRight = convPointScreenToWorld(mExpandedMenuRight, mExpandedMenuBottom, gl);   // 右下
+        float[] worldExpandedMenuTopLeft     = convPointScreenToWorld(mExpandedMenuLeft, mExpandedMenuTop, gl);       // 左上
+        float[] worldExpandedMenuTopRight    = convPointScreenToWorld(mExpandedMenuRight, mExpandedMenuTop, gl);      // 右上
+        float[] worldExpandedMenuBottomRight = convPointScreenToWorld(mExpandedMenuRight, mExpandedMenuBottom, gl);   // 右下
 
-        // !大きさ( 半分にすると適切なサイズに調整させるのは、その内調査 )
-        // 物理体再生時には、物体の横幅・縦幅
+        // 大きさ !半分にすると適切なサイズに調整されるのは、その内調査
+        // 横幅・縦幅
         // 画面上の位置情報は、 メニュービューの半分のサイズ
-        float width = (worldMenuPosTopRight[0] - worldMenuPosTopLeft[0]) / 2;
-        float height = (worldMenuPosTopRight[1] - worldMenuPosBottomRight[1]) / 2;
+        float menuWidth          = (worldExpandedMenuTopRight[0] - worldExpandedMenuTopLeft[0]) / 2;
+        float expandedMenuHeight = (worldExpandedMenuTopRight[1] - worldExpandedMenuBottomRight[1]) / 2;
 
-        //-------------------------------
-        // メニュー下部(展開前)：座標の変換処理
-        //-------------------------------
+        // expandedMenuHeight：展開＋折りたたみ＝完全な高さ のはず
+
+        // 同じ値
+        Log.i("調査", "worldExpandedMenuTopRight[1]=" + worldExpandedMenuTopRight[1]);
+        Log.i("調査", "worldExpandedMenuBottomRight[1]=" + worldExpandedMenuBottomRight[1]);
+
+        //----------------------------------
+        // メニュー(折りたたみ時)：座標の変換処理
+        //----------------------------------
         // 四隅の座標をworld座標に変換
-        worldMenuPosTopLeft = convPointScreenToWorld(mCollapsedMenuLeft, mCollapsedMenuTop, gl);
-        worldMenuPosTopRight = convPointScreenToWorld(mCollapsedMenuRight, mCollapsedMenuTop, gl);
-        worldMenuPosBottomRight = convPointScreenToWorld(mCollapsedMenuRight, mCollapsedMenuBottom, gl);
+        float[] worldCollapsedMenuTopLeft = convPointScreenToWorld(mCollapsedMenuLeft, mCollapsedMenuTop, gl);
+        float[] worldCollapsedMenuTopRight = convPointScreenToWorld(mCollapsedMenuRight, mCollapsedMenuTop, gl);
+        float[] worldCollapsedMenuBottomRight = convPointScreenToWorld(mCollapsedMenuRight, mCollapsedMenuBottom, gl);
+        // メニュー(折りたたみ時)：Y座標
+        float worldCollapsedMenuTop = worldCollapsedMenuTopLeft[1];
 
-        // 大きさ( 半分にすると適切なサイズに調整させるのは、その内調査 )
-        float width_ini = (worldMenuPosTopRight[0] - worldMenuPosTopLeft[0]) / 2;
-        float height_ini = (worldMenuPosTopRight[1] - worldMenuPosBottomRight[1]) / 2;
+        // 大きさ ！半分にすると適切なサイズに調整させるのは、その内調査
+//        float collapsedWidth = (worldCollapsedMenuTopRight[0] - worldCollapsedMenuTopLeft[0]) / 2;
+        float collapsedHeight = (worldCollapsedMenuTop - worldCollapsedMenuBottomRight[1]) / 2;
 
         // 位置
-        float posX = worldMenuPosTopLeft[0] + width_ini;
-        float posY = worldMenuPosBottomRight[1] + height_ini;
+        float menuPosX = worldCollapsedMenuTopLeft[0] + menuWidth;
+        float menuPosY = worldCollapsedMenuBottomRight[1] + collapsedHeight;
 
-        // menu(▲)の位置
-        menuInitPosY = posY;
+        // 同じ値
+        Log.i("調査", "worldCollapsedMenuTopLeft[1]=" + worldCollapsedMenuTopLeft[1]);
+        Log.i("調査", "worldCollapsedMenuBottomRight[1]=" + worldCollapsedMenuBottomRight[1]);
+        Log.i("調査", "menuPosY=" + menuPosY);
 
-        // menu背後の物体を生成（高さ = 本体 + 初期、位置 = 上部のみ初期位置と重なる形で配置）
-        float halfTotalHeight = height + height_ini;
-        posY = worldMenuPosTopLeft[1] - halfTotalHeight;
-        mMenuBody = addBox(width, halfTotalHeight, posX - 0, posY, 0, BodyType.staticBody);
+        // menu（折りたたみ時）の位置
+        mMenuCollapsedPosY = menuPosY;
+
+        // menu背後の物体を生成（高さ = 本体 + 初期、位置 = 上部のみ折りたたみ時のメニューViewと重なるように配置）
+        float menuHeight = expandedMenuHeight + collapsedHeight;
+        float collapsedPosY = worldCollapsedMenuTop - menuHeight;
+        mMenuBody = addBox(menuWidth, menuHeight, menuPosX, collapsedPosY, 0, BodyType.staticBody);
 
         // 位置情報を保持
-        menuPosX = posX;
-        menuPosY = posY;
-        menuWidth = width;
-        menuHeight = halfTotalHeight;
+        mMenuPosX = menuPosX;
+        mMenuPosY = collapsedPosY;
+        mMenuWidth = menuWidth;
+        mMenuHeight = menuHeight;
 
+        //------------------
+        // メニュー移動速度
+        //------------------
         // メニュー操作時のアニメーション時間(ms)
         Resources resources = mMainGlView.getContext().getResources();
         int upDuration = resources.getInteger(R.integer.menu_up_anim_duration);
         int downDuration = resources.getInteger(R.integer.menu_down_anim_duration);
 
-        /* 表示時の速度を保持 */
-        // 上昇
-        float millsecond = (float) upDuration / 1000f;
-        float ratioToSecond = 1.0f / millsecond;
-        float speed = height * ratioToSecond * 1.32f;        // @1.32f の理由・妥当性はその内調査。
+        // メニュー背景物体の移動速度を計算：Up
+        float millSecond = (float) upDuration / 1000f;
+        float ratioToSecond = 1.0f / millSecond;
+        float speed = expandedMenuHeight * ratioToSecond * 1.32f;        // !1.32f の理由・妥当性はその内調査。
         mMenuUpVelocity = new Vec2(0, speed);
 
-        // 下降
-        millsecond = (float) downDuration / 1000f;
-        ratioToSecond = 1.0f / millsecond;
-        speed = height * ratioToSecond * 1.32f;         // @1.32f の理由・妥当性はその内調査。
+        // メニュー背景物体の移動速度を計算：Down
+        millSecond = (float) downDuration / 1000f;
+        ratioToSecond = 1.0f / millSecond;
+        speed = expandedMenuHeight * ratioToSecond * 1.32f;         // !1.32f の理由・妥当性はその内調査。
         mMenuDownVelocity = new Vec2(0, -(speed));
     }
 
@@ -1044,9 +1059,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
                 // 位置リセット
                 //------------
                 // 微妙なズレの蓄積を防ぐため、初期位置に戻ったタイミングで、menu背景物体を再生成
-                if (menuInitPosY > mMenuBody.getPositionY()) {
+                if (mMenuCollapsedPosY > mMenuBody.getPositionY()) {
                     mWorld.destroyBody(mMenuBody);
-                    mMenuBody = addBox(menuWidth, menuHeight, menuPosX - 0, menuPosY, 0, BodyType.staticBody);
+                    mMenuBody = addBox(mMenuWidth, mMenuHeight, mMenuPosX, mMenuPosY, 0, BodyType.staticBody);
                 }
 
                 // 移動状態：なし
