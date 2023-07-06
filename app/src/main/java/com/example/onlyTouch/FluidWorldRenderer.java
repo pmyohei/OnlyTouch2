@@ -1378,9 +1378,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
         switch (event.getAction()) {
             // タッチ開始
-            case MotionEvent.ACTION_DOWN:
-
-                break;
+//            case MotionEvent.ACTION_DOWN:
+//                break;
 
             // タッチ解除
             case MotionEvent.ACTION_UP:
@@ -1390,10 +1389,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
                 mParticleTouchData.setFollowingIndex(-1);
                 mParticleTouchData.setTouchPosX(0xFFFF);
                 mParticleTouchData.setTouchPosY(0xFFFF);
-
                 break;
 
             // タッチ移動
+            case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:
                 // 粒子用：タッチ中の位置を更新
                 mParticleTouchData.setTouchPosX(event.getX());
@@ -1418,69 +1417,100 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             return;
         }
 
-        // 現在のタッチ状態を判定
-        ParticleTouchStatus status = checkCurrentTouchStatus(gl);
+        //------------------------
+        // パーティクル追随判定
+        //------------------------
+        // 現在のタッチ状態
+        ParticleTouchStatus currentStatus = getCurrentTouchStatus(gl);
 
-        // タッチ位置にパーティクルを追随させるかどうか
-        // 前回の判定結果が、「境界」or「追随」で、かつ、今回の判定結果が「外側」であれば、追随させる
-        if (((mParticleTouchData.status == ParticleTouchStatus.BORDER) ||
-                (mParticleTouchData.status == ParticleTouchStatus.TRACE))
-                && (status == ParticleTouchStatus.OUTSIDE)) {
-
-            // タッチ状態を追随に更新
-            status = ParticleTouchStatus.TRACE;
-
-            // 境界のパーティクルをタッチ位置に付随させる
-            float tracePosX = mParticleTouchData.touchPosWorldX + 0.1f;
-            float tracePosY = mParticleTouchData.touchPosWorldY + 0.1f;
-            mParticleSystem.setParticlePosition(mParticleTouchData.borderIndex, tracePosX, tracePosY);
+        // 前回のタッチ状態が「境界」「追随」でなければ
+        if ((mParticleTouchData.status != ParticleTouchStatus.BORDER) &&
+            (mParticleTouchData.status != ParticleTouchStatus.TRACE)) {
+            // 現状のタッチ状態を更新して終了
+            mParticleTouchData.status = currentStatus;
+            return;
         }
 
+        // 今回のタッチ状態が「外側」以外の場合
+        if (currentStatus != ParticleTouchStatus.OUTSIDE) {
+            // 現状のタッチ状態を更新して終了
+            mParticleTouchData.status = currentStatus;
+            return;
+        }
+
+        //------------------------
+        // パーティクル追随
+        //------------------------
+        // 境界のパーティクルをタッチ位置に追随させる
+        // （タッチ座標から少しずらした位置に、パーティクルの位置を変更する）
+        float tracePosX = mParticleTouchData.touchPosWorldX + 0.1f;
+        float tracePosY = mParticleTouchData.touchPosWorldY + 0.1f;
+        mParticleSystem.setParticlePosition(mParticleTouchData.borderIndex, tracePosX, tracePosY);
+
         // 現状のタッチ状態を更新
-        mParticleTouchData.status = status;
+        mParticleTouchData.status = ParticleTouchStatus.TRACE;
     }
 
     /*
-     * 現在のパーティクルに対するタッチ状態を判定
+     * 現在のパーティクルに対するタッチ状態を更新
      */
-    private ParticleTouchStatus checkCurrentTouchStatus(GL10 gl) {
+    private ParticleTouchStatus getCurrentTouchStatus(GL10 gl) {
 
-        // パーティクルの半径
-        float radius = mParticleData.getParticleRadius();
-
+        //----------------------
         // タッチ判定範囲
-        float[] touchPos = convPointScreenToWorld(mParticleTouchData.touchPosX, mParticleTouchData.touchPosY, gl);
-        float minX = touchPos[0] - radius;
-        float maxX = touchPos[0] + radius;
-        float minY = touchPos[1] - radius;
-        float maxY = touchPos[1] + radius;
+        //----------------------
+        // タッチ範囲
+        // ！パーティクル半径 * 2　としておく（）
+        float range = mParticleData.getParticleRadius() * 2;
 
-        // タッチ位置のworld座標
+        // タッチ判定範囲を算出
+        float[] touchPos = convPointScreenToWorld(mParticleTouchData.touchPosX, mParticleTouchData.touchPosY, gl);
+        float touchMinX = touchPos[0] - range;
+        float touchMaxX = touchPos[0] + range;
+        float touchMinY = touchPos[1] - range;
+        float touchMaxY = touchPos[1] + range;
+
+        // タッチ位置のworld座標を保持
         mParticleTouchData.touchPosWorldX = touchPos[0];
         mParticleTouchData.touchPosWorldY = touchPos[1];
 
+        //----------------------
+        // タッチ判定
+        //----------------------
         // 判定前はパーティクルの外側
         ParticleTouchStatus status = ParticleTouchStatus.OUTSIDE;
 
-        // タッチ判定
+        // 全パーティクルを対象にタッチ判定
         int particleNum = mParticleData.getParticleGroup().getParticleCount();
-        for (int index = 0; index < particleNum; index++) {
+        int index;
+        for (index = 0; index < particleNum; index++) {
+            // パーティクル位置
             float x = mParticleSystem.getParticlePositionX(index);
             float y = mParticleSystem.getParticlePositionY(index);
 
-            // タッチした箇所に粒子があるかを判定
-            if ((x >= minX) && (x <= maxX) && (y >= minY) && (y <= maxY)) {
-                // タッチ状態 → 粒子内部
+            // タッチ範囲にパーティクルあるか
+            if ( (x >= touchMinX) && (x <= touchMaxX) && (y >= touchMinY) && (y <= touchMaxY) ) {
+                // タッチ状態：パーティクル内部
                 status = ParticleTouchStatus.INSIDE;
-
-                // その粒子が境界粒子か判定
-                if (mParticleData.getBorder().contains(index)) {
-                    // タッチ状態 → 境界
-                    mParticleTouchData.borderIndex = index;
-                    status = ParticleTouchStatus.BORDER;
-                }
                 break;
             }
+        }
+
+        //---------------------------
+        // タッチしているパーティクルなし
+        //---------------------------
+        if( status == ParticleTouchStatus.OUTSIDE ){
+            return status;
+        }
+
+        //---------------------------
+        // タッチしているパーティクルあり
+        //---------------------------
+        if (mParticleData.getBorder().contains(index)) {
+            // タッチ中のパーティクルを保持
+            mParticleTouchData.borderIndex = index;
+            // タッチ状態：パーティクル境界
+            status = ParticleTouchStatus.BORDER;
         }
 
         return status;
