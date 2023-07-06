@@ -171,13 +171,15 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     public static final int PARTICLE_REGENE_STATE_OVERLAP = 2;
     public static final int PARTICLE_REGENE_STATE_NOTHING = 3;
 
-
     // menu背景物体の移動状態
     public static final int MENU_MOVE_STATE_NOTHING = 0;
     public static final int MENU_MOVE_STATE_UP = 1;
     public static final int MENU_MOVE_STATE_DOWN = 2;
     public static final int MENU_MOVE_STATE_KEEP = 3;
     public static final int MENU_MOVE_STATE_STOP = 4;
+
+    // レンダリング対象の三角形グループの頂点該当なし
+    private static final int NOT_FOUND_TRIANGLE_APEX = -1;
 
     /*
      * コンストラクタ
@@ -312,7 +314,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 //        generateBottomBaseRendererBuff(allParticleLine, diameter);  // 下辺を基準に(下辺が底辺となるように)グルーピング
 //        generateTopBaseRendererBuff(allParticleLine, diameter);     // 上辺を基準に(上辺が底辺となるように)グルーピング
 
-        generateRendererBuff(allParticleLine, diameter);
+        // OpenGLに渡す三角形グルーピングバッファを作成
+        enqueRendererBuff(allParticleLine, diameter);
 
         // 頂点数を保持
         mRenderPointNum = mRenderParticleBuff.size();
@@ -413,267 +416,26 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     * new
+     * パーティクルをレンダリングバッファに格納
      */
-    private void generateRendererBuff(ArrayList<ArrayList<Integer>> allParticleLine, float diameter) {
+    private void enqueRendererBuff(ArrayList<ArrayList<Integer>> allParticleLine, float diameter) {
 
         // ループ数 = ライン数 - 1
         int lastLineIndex = allParticleLine.size() - 1;
         for (int lineIndex = 0; lineIndex < lastLineIndex; lineIndex++) {
 
-            // 下辺と上辺（ある行とその上の行）
-            ArrayList<Integer> bottom_line = allParticleLine.get(lineIndex);
-            ArrayList<Integer> upper_line = allParticleLine.get(lineIndex + 1);
+            // 下ライン／上ライン
+            ArrayList<Integer> bottomLine = allParticleLine.get(lineIndex);
+            ArrayList<Integer> topLine = allParticleLine.get(lineIndex + 1);
 
-            enqueParticleBaseBottomLine( bottom_line, upper_line, diameter );
-            enqueParticleBaseTopLine( bottom_line, upper_line, diameter );
-
-//            // ライン先頭に格納されている「パーティクルシステム側のIndex」
-//            int bottom_top_ref_index = bottom_line.get(0);
-//            int upper_top_ref_index = upper_line.get(0);
-//
-//            // ライン末尾に格納されている「パーティクルシステム側のIndex」
-//            int bottom_buf_end_index = bottom_line.size() - 1;
-//            int upper_buf_end_index = upper_line.size() - 1;
-//            for (int bottom_offset = 0; bottom_offset < bottom_buf_end_index; bottom_offset++) {
-//
-//                // 参照するIndex（パーティクルシステム側のIndex）
-//                int ref_index = bottom_top_ref_index + bottom_offset;
-//
-//                float bottom_left_x = mParticleSystem.getParticlePositionX(ref_index);
-//                float bottom_right_x = mParticleSystem.getParticlePositionX(ref_index + 1);
-//
-//                // 粒子が隣り合っていないなら、グルーピングしない(描画対象外)
-//                if ((bottom_right_x - bottom_left_x) > diameter) {
-//                    continue;
-//                }
-//
-//                // 上辺側に、三角形の頂点たりうる粒子があるかチェック(左からチェック)
-//                int upper_offset;
-//                float upper_x;
-//                int belongs_col = -1;
-//                int ref_upper_index = 0;
-//                for (upper_offset = 0; upper_offset <= upper_buf_end_index; upper_offset++) {
-//
-//                    // 参照するIndex（パーティクルシステム側のIndex）
-//                    ref_upper_index = upper_top_ref_index + upper_offset;
-//
-//                    upper_x = mParticleSystem.getParticlePositionX(ref_upper_index);
-//
-//                    // 下辺の左側の頂点の直上にあるかチェック
-//                    if (upper_x == bottom_left_x) {
-//                        belongs_col = bottom_offset;
-//                        break;
-//                    }
-//
-//                    // 下辺の右側の頂点の直上にあるかチェック
-//                    if (upper_x == bottom_right_x) {
-//                        belongs_col = bottom_offset + 1;
-//                        break;
-//                    }
-//                }
-//
-//                // 頂点に適した粒子がないなら、グルーピングしない(描画対象外)
-//                if (belongs_col == -1) {
-//                    continue;
-//                }
-//
-//                // 3頂点を描画バッファに格納
-//                mRenderParticleBuff.add(ref_index);        // 底辺-左
-//                mRenderParticleBuff.add(ref_index + 1);    // 底辺-右
-//                mRenderParticleBuff.add(ref_upper_index);  // 頂点
-//            }
-//
-//            // 行の終端に位置するパーティクルIndex
-//            int upper_end_ref_index = upper_line.get(upper_buf_end_index);
-//            int bottom_end_ref_index = bottom_line.get(bottom_buf_end_index);
-//
-//            // 行の右からチェックしていく
-//            for (int upper_offset = 0; upper_offset < upper_buf_end_index; upper_offset++) {
-//
-//                // 参照するIndex（パーティクルシステム側のIndex）右からみていくため、減算していく。
-//                int ref_index = upper_end_ref_index - upper_offset;
-//
-//                float upper_right_x = mParticleSystem.getParticlePositionX(ref_index);
-//                float upper_left_x = mParticleSystem.getParticlePositionX(ref_index - 1);
-//
-//                // 粒子が隣り合っていないなら、グルーピングしない(描画対象外)
-//                if ((upper_right_x - upper_left_x) > diameter) {
-//                    continue;
-//                }
-//
-//                // 下辺側に、三角形の頂点たりうる粒子があるかチェック(右からチェック)
-//                int bottom_offset;
-//                float bottom_x;
-//                int belongs_col = -1;
-//                int ref_bottom_index = 0;
-//                for (bottom_offset = 0; bottom_offset <= bottom_buf_end_index; bottom_offset++) {
-//
-//                    // 参照するIndex（パーティクルシステム側のIndex）
-//                    ref_bottom_index = bottom_end_ref_index - bottom_offset;
-//
-//                    bottom_x = mParticleSystem.getParticlePositionX(ref_bottom_index);
-//
-//                    // 下辺の右側の頂点の直上にあるかチェック
-//                    if (bottom_x == upper_right_x) {
-//                        belongs_col = upper_buf_end_index - upper_offset;
-//                        break;
-//                    }
-//
-//                    // 下辺の左側の頂点の直上にあるかチェック
-//                    if (bottom_x == upper_left_x) {
-//                        belongs_col = upper_buf_end_index - (upper_offset - 1);
-//                        break;
-//                    }
-//                }
-//
-//                // 頂点に適した粒子がないなら、グルーピングしない(描画対象外)
-//                if (belongs_col == -1) {
-//                    continue;
-//                }
-//
-//                // 3頂点をバッファに格納
-//                mRenderParticleBuff.add(ref_index);
-//                mRenderParticleBuff.add(ref_index - 1);
-//                mRenderParticleBuff.add(ref_bottom_index);
-//            }
-
+            // 下ライン／上ラインを底辺とした三角形グループをバッファに格納
+            enqueParticleBaseBottomLine(bottomLine, topLine, diameter);
+            enqueParticleBaseTopLine(bottomLine, topLine, diameter);
         }
     }
 
     /*
      * 下ラインを底辺とする3角形グループバッファの生成
-     */
-    private void enqueParticleBaseBottomLine(ArrayList<Integer> bottom_line, ArrayList<Integer> upper_line, float diameter) {
-
-        // ライン先頭に格納されている「パーティクルシステム側のIndex」
-        int bottom_top_ref_index = bottom_line.get(0);
-        int upper_top_ref_index = upper_line.get(0);
-
-        // ライン末尾に格納されている「パーティクルシステム側のIndex」
-        int bottom_buf_end_index = bottom_line.size() - 1;
-        int upper_buf_end_index = upper_line.size() - 1;
-        for (int bottom_offset = 0; bottom_offset < bottom_buf_end_index; bottom_offset++) {
-
-            // 参照するIndex（パーティクルシステム側のIndex）
-            int ref_index = bottom_top_ref_index + bottom_offset;
-
-            float bottom_left_x = mParticleSystem.getParticlePositionX(ref_index);
-            float bottom_right_x = mParticleSystem.getParticlePositionX(ref_index + 1);
-
-            // 粒子が隣り合っていないなら、グルーピングしない(描画対象外)
-            if ((bottom_right_x - bottom_left_x) > diameter) {
-                continue;
-            }
-
-            // 上辺側に、三角形の頂点たりうる粒子があるかチェック(左からチェック)
-            int upper_offset;
-            float upper_x;
-            int belongs_col = -1;
-            int ref_upper_index = 0;
-            for (upper_offset = 0; upper_offset <= upper_buf_end_index; upper_offset++) {
-
-                // 参照するIndex（パーティクルシステム側のIndex）
-                ref_upper_index = upper_top_ref_index + upper_offset;
-
-                upper_x = mParticleSystem.getParticlePositionX(ref_upper_index);
-
-                // 下辺の左側の頂点の直上にあるかチェック
-                if (upper_x == bottom_left_x) {
-                    belongs_col = bottom_offset;
-                    break;
-                }
-
-                // 下辺の右側の頂点の直上にあるかチェック
-                if (upper_x == bottom_right_x) {
-                    belongs_col = bottom_offset + 1;
-                    break;
-                }
-            }
-
-            // 頂点に適した粒子がないなら、グルーピングしない(描画対象外)
-            if (belongs_col == -1) {
-                continue;
-            }
-
-            // 3頂点を描画バッファに格納
-            mRenderParticleBuff.add(ref_index);        // 底辺-左
-            mRenderParticleBuff.add(ref_index + 1);    // 底辺-右
-            mRenderParticleBuff.add(ref_upper_index);  // 頂点
-        }
-    }
-
-    /*
-     * 上ラインを底辺とする3角形グループバッファの生成
-     */
-    private void enqueParticleBaseTopLine(ArrayList<Integer> bottom_line, ArrayList<Integer> upper_line, float diameter) {
-
-        // ライン末尾に格納されている「パーティクルシステム側のIndex」
-        int bottom_buf_end_index = bottom_line.size() - 1;
-        int upper_buf_end_index = upper_line.size() - 1;
-
-        // 行の終端に位置するパーティクルIndex
-        int upper_end_ref_index = upper_line.get(upper_buf_end_index);
-        int bottom_end_ref_index = bottom_line.get(bottom_buf_end_index);
-
-        // 行の右からチェックしていく
-        for (int upper_offset = 0; upper_offset < upper_buf_end_index; upper_offset++) {
-
-            // 参照するIndex（パーティクルシステム側のIndex）右からみていくため、減算していく。
-            int ref_index = upper_end_ref_index - upper_offset;
-
-            float upper_right_x = mParticleSystem.getParticlePositionX(ref_index);
-            float upper_left_x = mParticleSystem.getParticlePositionX(ref_index - 1);
-
-            // 粒子が隣り合っていないなら、グルーピングしない(描画対象外)
-            if ((upper_right_x - upper_left_x) > diameter) {
-                continue;
-            }
-
-            // 下辺側に、三角形の頂点たりうる粒子があるかチェック(右からチェック)
-            int bottom_offset;
-            float bottom_x;
-            int belongs_col = -1;
-            int ref_bottom_index = 0;
-            for (bottom_offset = 0; bottom_offset <= bottom_buf_end_index; bottom_offset++) {
-
-                // 参照するIndex（パーティクルシステム側のIndex）
-                ref_bottom_index = bottom_end_ref_index - bottom_offset;
-
-                bottom_x = mParticleSystem.getParticlePositionX(ref_bottom_index);
-
-                // 下辺の右側の頂点の直上にあるかチェック
-                if (bottom_x == upper_right_x) {
-                    belongs_col = upper_buf_end_index - upper_offset;
-                    break;
-                }
-
-                // 下辺の左側の頂点の直上にあるかチェック
-                if (bottom_x == upper_left_x) {
-                    belongs_col = upper_buf_end_index - (upper_offset - 1);
-                    break;
-                }
-            }
-
-            // 頂点に適した粒子がないなら、グルーピングしない(描画対象外)
-            if (belongs_col == -1) {
-                continue;
-            }
-
-            // 3頂点をバッファに格納
-            mRenderParticleBuff.add(ref_index);
-            mRenderParticleBuff.add(ref_index - 1);
-            mRenderParticleBuff.add(ref_bottom_index);
-        }
-    }
-
-
-
-
-    /*
-     * レンダリング用バッファ生成：下辺側が底辺
-     *  @para I:ライン毎のパーティクルIndexバッファ
-     *  @para I:パーティクルの直径
      *
      * 　下辺が底辺、上辺が頂点となるように、三角形グループ単位でバッファに格納する
      *
@@ -682,82 +444,50 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      *    ⑩　⑪
      *　　 ①　②　③
      *
-     *  【バッファイメージ】
+     *  【バッファ格納イメージ】
      *    [0] [1] [2] [3] [4] [5]
      *　　 ①  ②  ⑩   ②  ③  ⑪
      */
-    private void generateBottomBaseRendererBuff(ArrayList<ArrayList<Integer>> allParticleLine, float diameter) {
+    private void enqueParticleBaseBottomLine(ArrayList<Integer> bottomLine, ArrayList<Integer> topLine, float diameter) {
 
-        // ループ数 = ライン数 - 1
-        int lastLineIndex = allParticleLine.size() - 1;
-        for (int lineIndex = 0; lineIndex < lastLineIndex; lineIndex++) {
+        // ライン先頭に格納されている「パーティクルシステム側のIndex」
+        int bottomFirstParticleIndex = bottomLine.get(0);
+        // ライン末尾Index「バッファ側のIndex」
+        int bottomLastIndex = bottomLine.size() - 1;
 
-            // 下辺と上辺（ある行とその上の行）
-            ArrayList<Integer> bottom_line = allParticleLine.get(lineIndex);
-            ArrayList<Integer> upper_line = allParticleLine.get(lineIndex + 1);
+        //--------------------------------------
+        // 1ライン分、三角形グループをバッファに格納
+        //--------------------------------------
+        for (int refPosition = 0; refPosition < bottomLastIndex; refPosition++) {
 
-            // ライン先頭に格納されている「パーティクルシステム側のIndex」
-            int bottom_top_ref_index = bottom_line.get(0);
-            int upper_top_ref_index = upper_line.get(0);
+            // 参照Index（パーティクルシステム側のIndex）
+            int refIndex = bottomFirstParticleIndex + refPosition;
 
-            // ラインの最後のIndex（バッファ側のIndex）
-            int bottom_buf_end_index = bottom_line.size() - 1;
-            int upper_buf_end_index = upper_line.size() - 1;
-            for (int bottom_offset = 0; bottom_offset < bottom_buf_end_index; bottom_offset++) {
+            // 参照中パーティクルのX位置
+            float posX = mParticleSystem.getParticlePositionX(refIndex);
+            float nextPosX = mParticleSystem.getParticlePositionX(refIndex + 1);
 
-                // 参照するIndex（パーティクルシステム側のIndex）
-                int ref_index = bottom_top_ref_index + bottom_offset;
-
-                float bottom_left_x = mParticleSystem.getParticlePositionX(ref_index);
-                float bottom_right_x = mParticleSystem.getParticlePositionX(ref_index + 1);
-
-                // 粒子が隣り合っていないなら、グルーピングしない(描画対象外)
-                if ((bottom_right_x - bottom_left_x) > diameter) {
-                    continue;
-                }
-
-                // 上辺側に、三角形の頂点たりうる粒子があるかチェック(左からチェック)
-                int upper_offset;
-                float upper_x;
-                int belongs_col = -1;
-                int ref_upper_index = 0;
-                for (upper_offset = 0; upper_offset <= upper_buf_end_index; upper_offset++) {
-
-                    // 参照するIndex（パーティクルシステム側のIndex）
-                    ref_upper_index = upper_top_ref_index + upper_offset;
-
-                    upper_x = mParticleSystem.getParticlePositionX(ref_upper_index);
-
-                    // 下辺の左側の頂点の直上にあるかチェック
-                    if (upper_x == bottom_left_x) {
-                        belongs_col = bottom_offset;
-                        break;
-                    }
-
-                    // 下辺の右側の頂点の直上にあるかチェック
-                    if (upper_x == bottom_right_x) {
-                        belongs_col = bottom_offset + 1;
-                        break;
-                    }
-                }
-
-                // 頂点に適した粒子がないなら、グルーピングしない(描画対象外)
-                if (belongs_col == -1) {
-                    continue;
-                }
-
-                // 3頂点を描画バッファに格納
-                mRenderParticleBuff.add(ref_index);        // 底辺-左
-                mRenderParticleBuff.add(ref_index + 1);    // 底辺-右
-                mRenderParticleBuff.add(ref_upper_index);  // 頂点
+            // 粒子が隣り合っていない（一定以上の距離がある）なら、グルーピングしない(描画対象外)
+            if ((nextPosX - posX) > diameter) {
+                continue;
             }
+
+            // 上ラインから、三角形の頂点たりうるパーティクルを取得
+            int refTopParticleIndex = getApexInTopLine(topLine, posX, nextPosX);
+            if (refTopParticleIndex == NOT_FOUND_TRIANGLE_APEX) {
+                // 該当なしなら、グルーピングしない(描画対象外)
+                continue;
+            }
+
+            // 3頂点を描画バッファに格納
+            mRenderParticleBuff.add(refIndex);        // 底辺-左
+            mRenderParticleBuff.add(refIndex + 1);    // 底辺-右
+            mRenderParticleBuff.add(refTopParticleIndex);  // 頂点
         }
     }
 
     /*
-     * レンダリング用バッファ生成：上辺側が底辺
-     *  @para I:ライン毎のパーティクルIndexバッファ
-     *  @para I:パーティクルの直径
+     * 上ラインを底辺とする3角形グループバッファの生成
      *
      * 　上辺が底辺、下辺が頂点となるように、三角形グループ単位でバッファに格納する
      *
@@ -766,83 +496,96 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      *    ⑩　⑪  ⑫
      *　　 ①　②　③
      *
-     *  【バッファイメージ】
+     *  【バッファ格納イメージ】
      *    [0] [1] [2] [3] [4] [5]
-     *　　 ⑩  ⑪  ②   ⑪   ⑫  ③
+     *　　 ⑫  ⑪  ③   ⑪  ⑫  ②
      */
-    private void generateTopBaseRendererBuff(ArrayList<ArrayList<Integer>> allParticleLine, float diameter) {
+    private void enqueParticleBaseTopLine(ArrayList<Integer> bottomLine, ArrayList<Integer> topLine, float diameter) {
 
-        // ループ数 = ライン数 - 1
-        int lastLineIndex = allParticleLine.size() - 1;
-        for (int lineIndex = lastLineIndex; lineIndex > 0; lineIndex--) {
+        // ライン末尾に格納されている「パーティクルシステム側のIndex」
+        int topLastIndex = topLine.size() - 1;
+        int topLastParticleIndex = topLine.get(topLastIndex);
 
-            // 下辺と上辺（ある行とその下の行）
-            ArrayList<Integer> upper_line = allParticleLine.get(lineIndex);
-            ArrayList<Integer> bottom_line = allParticleLine.get(lineIndex - 1);
+        //--------------------------------------
+        // 1ライン分、三角形グループをバッファに格納
+        //--------------------------------------
+        for (int refPosition = 0; refPosition < topLastIndex; refPosition++, topLastParticleIndex--) {
 
-            // List最後尾のIndex
-            int upper_buf_end_index = upper_line.size() - 1;
-            int bottom_buf_end_index = bottom_line.size() - 1;
+            // 参照Index（パーティクルシステム側のIndex）
+            float posX = mParticleSystem.getParticlePositionX(topLastParticleIndex - 1);
+            float nextPosX = mParticleSystem.getParticlePositionX(topLastParticleIndex);
 
-            // 行の終端に位置するパーティクルIndex
-            int upper_end_ref_index = upper_line.get(upper_buf_end_index);
-            int bottom_end_ref_index = bottom_line.get(bottom_buf_end_index);
-
-            // 行の右からチェックしていく
-            for (int upper_offset = 0; upper_offset < upper_buf_end_index; upper_offset++) {
-
-                // 参照するIndex（パーティクルシステム側のIndex）右からみていくため、減算していく。
-                int ref_index = upper_end_ref_index - upper_offset;
-
-                float upper_right_x = mParticleSystem.getParticlePositionX(ref_index);
-                float upper_left_x = mParticleSystem.getParticlePositionX(ref_index - 1);
-
-                // 粒子が隣り合っていないなら、グルーピングしない(描画対象外)
-                if ((upper_right_x - upper_left_x) > diameter) {
-                    continue;
-                }
-
-                // 下辺側に、三角形の頂点たりうる粒子があるかチェック(右からチェック)
-                int bottom_offset;
-                float bottom_x;
-                int belongs_col = -1;
-                int ref_bottom_index = 0;
-                for (bottom_offset = 0; bottom_offset <= bottom_buf_end_index; bottom_offset++) {
-
-                    // 参照するIndex（パーティクルシステム側のIndex）
-                    ref_bottom_index = bottom_end_ref_index - bottom_offset;
-
-                    bottom_x = mParticleSystem.getParticlePositionX(ref_bottom_index);
-
-                    // 下辺の右側の頂点の直上にあるかチェック
-                    if (bottom_x == upper_right_x) {
-                        belongs_col = upper_buf_end_index - upper_offset;
-                        break;
-                    }
-
-                    // 下辺の左側の頂点の直上にあるかチェック
-                    if (bottom_x == upper_left_x) {
-                        belongs_col = upper_buf_end_index - (upper_offset - 1);
-                        break;
-                    }
-                }
-
-                // 頂点に適した粒子がないなら、グルーピングしない(描画対象外)
-                if (belongs_col == -1) {
-                    continue;
-                }
-
-                // 3頂点をバッファに格納
-                mRenderParticleBuff.add(ref_index);
-                mRenderParticleBuff.add(ref_index - 1);
-                mRenderParticleBuff.add(ref_bottom_index);
+            // 粒子が隣り合っていないなら、グルーピングしない(描画対象外)
+            if ((nextPosX - posX) > diameter) {
+                continue;
             }
+
+            // 下ラインから、三角形の頂点たりうるパーティクルを取得
+            int refBottomParticleIndex = getApexInBottomLine( bottomLine, posX, nextPosX );
+            if (refBottomParticleIndex == NOT_FOUND_TRIANGLE_APEX) {
+                // 該当なしなら、グルーピングしない(描画対象外)
+                continue;
+            }
+
+            // 3頂点をバッファに格納
+            mRenderParticleBuff.add(topLastParticleIndex);
+            mRenderParticleBuff.add(topLastParticleIndex - 1);
+            mRenderParticleBuff.add(refBottomParticleIndex);
         }
     }
 
     /*
+     * 上ラインから三角形の頂点を取得
+     */
+    private int getApexInTopLine(ArrayList<Integer> topLine, float posX, float nextPosX) {
+
+        int topFirstParticleIndex = topLine.get(0);
+        int upLastIndex = topLine.size() - 1;
+
+        // 上辺側に、三角形の頂点たりうる粒子があるかチェック(左からチェック)
+        for (int topRefPosition = 0; topRefPosition <= upLastIndex; topRefPosition++) {
+
+            // 参照パーティクルのX位置
+            int refTopParticleIndex = topFirstParticleIndex + topRefPosition;
+            float topPosX = mParticleSystem.getParticlePositionX(refTopParticleIndex);
+
+            // 底辺とするパーティクルのどちらかの真上にあれば、三角形の頂点として採用する
+            if ((topPosX == posX) || (topPosX == nextPosX)) {
+                return refTopParticleIndex;
+            }
+        }
+
+        // 該当なし
+        return NOT_FOUND_TRIANGLE_APEX;
+    }
+
+    /*
+     * 下ラインから三角形の頂点を取得
+     */
+    private int getApexInBottomLine(ArrayList<Integer> bottomLine, float posX, float nextPosX){
+
+        // ライン末尾に格納されたパーティクルIndex
+        int lastIndex = bottomLine.size() - 1;
+        int bottomLastIndex = bottomLine.get(lastIndex);
+
+        // 下ライン側に、三角形の頂点たりうる粒子があるかチェック(右からチェック)
+        for (int bottomRefPosition = 0; bottomRefPosition <= lastIndex; bottomRefPosition++, bottomLastIndex--) {
+
+            // 参照中パーティクルIndexのX位置座標
+            float bottomPosX = mParticleSystem.getParticlePositionX(bottomLastIndex);
+
+            // 底辺とするパーティクルのどちらかの真下にあれば、三角形の頂点として採用する
+            if ( (bottomPosX == nextPosX) || (bottomPosX == posX) ) {
+                return bottomLastIndex;
+            }
+        }
+
+        // 該当なし
+        return NOT_FOUND_TRIANGLE_APEX;
+    }
+
+    /*
      * レンダリング用UVバッファの生成
-     *  @para I:なし
      */
     private void generateUVRendererBuff() {
 
