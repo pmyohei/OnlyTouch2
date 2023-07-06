@@ -675,30 +675,39 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      *   false：フレーム描画不可
      */
     private boolean initDrawFrame(GL10 gl) {
-        // 初期化完了していれば
-        if (glInitStatus == GLInitStatus.FinInit) {
-            // メニューのサイズが設定されるまで、処理なし
-            if (!mIsSetMenuRect && !mIsCreate) {
-                return false;
-            }
 
-            // world座標の計算
-            calculateWorldPosition(gl);
-
-            // 初期配置用の物理体生成
-            createPhysicsObject(gl);
-
-            // GL初期化状態を描画可能に更新
-            glInitStatus = GLInitStatus.Drawable;
-
-        } else if (glInitStatus == GLInitStatus.PreInit) {
-            // 初期化コール前なら何もしない(セーフティ)
+        //--------------------------
+        // 初期化コール前
+        //--------------------------
+        if (glInitStatus == GLInitStatus.PreInit) {
+            // 何もしない：セーフティ
             return false;
         }
 
+        //--------------------------
+        // 描画可能
+        //--------------------------
+        if (glInitStatus == GLInitStatus.Drawable) {
+            return true;
+        }
+
+        //--------------------------
+        // 初期化完了
+        //--------------------------
+        // メニューサイズ設定未完了なら、ないもしない
+        if ( !mIsSetMenuRect ) {
+            return false;
+        }
+
+        // world座標の計算
+        calculateWorldPosition(gl);
+        // 初期配置用の物体生成
+        createPhysicsObject(gl);
+        // GL初期化状態を描画可能に更新
+        glInitStatus = GLInitStatus.Drawable;
+
         return true;
     }
-
 
     /*
      * 描画のため繰り返し呼ばれる
@@ -708,7 +717,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     public void onDrawFrame(GL10 gl) {
         // フレーム描画初期化処理
         boolean initFin = initDrawFrame(gl);
-        if (!initFin) {
+        if ( !initFin ) {
             return;
         }
 
