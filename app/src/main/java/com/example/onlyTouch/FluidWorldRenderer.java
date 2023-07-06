@@ -51,7 +51,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     // パーティクル
     private ParticleSystem mParticleSystem;
     private ParticleData mParticleData;
-    private RegenerationState mRegenerationState;
+    private int mRegenerationState;
     private long mSetParticleFlg;
     private float mSetParticleRadius;
     private int mSetParticleLifetime;
@@ -164,6 +164,11 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         OVERLAP,    // 重複物体あり
         END,        // 終了
     }
+    // パーティクル再生成シーケンス
+    public static final int PARTICLE_REGENE_STATE_DELETE = 0;
+    public static final int PARTICLE_REGENE_STATE_CREATE = 1;
+    public static final int PARTICLE_REGENE_STATE_OVERLAP = 2;
+    public static final int PARTICLE_REGENE_STATE_END = 3;
 
 
     // menu背景物体の移動状態
@@ -882,43 +887,55 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     * パーティクルの再生成
+     * パーティクル再生成
      */
     private void regenerationParticle(GL10 gl, ParticleGroup pg) {
 
+        switch (mRegenerationState) {
+            //---------------
+            // パーティクル削除
+            //---------------
+            case PARTICLE_REGENE_STATE_DELETE:
+                // パーティクルグループを削除(粒子とグループは次の周期で削除される)
+                pg.destroyParticles();
+                mRenderParticleBuff.clear();
+                mRenderUVBuff.clear();
 
+                // 再生成のシーケンスを生成に更新(次の周期で生成するため)
+                mRegenerationState = PARTICLE_REGENE_STATE_CREATE;
 
+                break;
 
-        // パーティクル削除
-        if (mRegenerationState == RegenerationState.DELETE) {
-            // Log.i("test", "regeneration delete");
-
-            // パーティクルグループを削除(粒子とグループは次の周期で削除される)
-            pg.destroyParticles();
-            mRenderParticleBuff.clear();
-            mRenderUVBuff.clear();
-
-            // 再生成のシーケンスを生成に更新(次の周期で生成するため)
-            mRegenerationState = RegenerationState.CREATE;
-
-        } else if (mRegenerationState == RegenerationState.CREATE) {
-
+            //---------------
             // パーティクル生成
-            addFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mSetParticleRadius, R.drawable.kitune_tanuki2);
+            //---------------
+            case PARTICLE_REGENE_STATE_CREATE:
+                // パーティクル生成
+                addFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mSetParticleRadius, R.drawable.kitune_tanuki2);
+                // オーバーラップ物体を生成
+                mOverlapBody = addBox(1f, 1f, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody);
+                // オーバーラップ物体ありに更新
+                mRegenerationState = PARTICLE_REGENE_STATE_OVERLAP;
 
-            // オーバーラップ物体を生成
-            mOverlapBody = addBox(1f, 1f, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody);
+                break;
 
-            // 再生成シーケンス終了。重複物体を生成した状態。
-            mRegenerationState = RegenerationState.OVERLAP;
+            //-----------------------
+            // オーバーラップ物体あり
+            //-----------------------
+            case PARTICLE_REGENE_STATE_OVERLAP:
+                // オーバーラップ物体を削除
+                mWorld.destroyBody(mOverlapBody);
+                // オーバーラップシーケンス終了。重複物体を削除した状態。
+                mRegenerationState = PARTICLE_REGENE_STATE_END;
 
-        } else if (mRegenerationState == RegenerationState.OVERLAP) {
+                break;
 
-            // オーバーラップ物体を削除
-            mWorld.destroyBody(mOverlapBody);
-
-            // オーバーラップシーケンス終了。重複物体を削除した状態。
-            mRegenerationState = RegenerationState.END;
+            //-----------------------
+            // 終了
+            //-----------------------
+            case PARTICLE_REGENE_STATE_END:
+            default:
+                break;
         }
     }
 
@@ -1501,7 +1518,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      * パーティクルの再生成要求
      */
     public void reqRegeneration(){
-        mRegenerationState = RegenerationState.DELETE;
+        mRegenerationState = PARTICLE_REGENE_STATE_DELETE;
     }
 
     /*
