@@ -132,8 +132,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /* その他制御 */
     private boolean mIsCreate = false;                     // createなら、trueに変える
 
-    // menuBody
+    // Body
     private Body mMenuBody;
+    private Body mOverlapBody;
 
     // OpenGL 描画開始シーケンス
     enum GLInitStatus {
@@ -885,6 +886,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      */
     private void regenerationParticle(GL10 gl, ParticleGroup pg) {
 
+
+
+
         // パーティクル削除
         if (mRegenerationState == RegenerationState.DELETE) {
             // Log.i("test", "regeneration delete");
@@ -902,10 +906,16 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             // パーティクル生成
             addFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mSetParticleRadius, R.drawable.kitune_tanuki2);
 
+            // オーバーラップ物体を生成
+            mOverlapBody = addBox(1f, 1f, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody);
+
             // 再生成シーケンス終了。重複物体を生成した状態。
             mRegenerationState = RegenerationState.OVERLAP;
 
         } else if (mRegenerationState == RegenerationState.OVERLAP) {
+
+            // オーバーラップ物体を削除
+            mWorld.destroyBody(mOverlapBody);
 
             // オーバーラップシーケンス終了。重複物体を削除した状態。
             mRegenerationState = RegenerationState.END;
