@@ -54,6 +54,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private float[] mWorldPosMax;
     private float[] mWorldPosMid;
     private float[] mWorldPosMin;
+    // 重力の有無
+    private boolean mGravityOn;
+
+    private final int GRAVITY = -10;
 
     // 60fps
     private final float TIME_STEP = 1 / 60f;
@@ -189,8 +193,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //--------------
         // 物理世界生成
         //--------------
-        final int GRAVITY = -10;
         mWorld = new World(0, GRAVITY);
+        mGravityOn = true;
 
         //-----------------
         // パーティクルの設定
@@ -1258,9 +1262,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     /*
      * 主に landscape と portraid の切り替え (縦向き、横向き切り替え) のときに呼ばれる
-     * @param gl
-     * @param width
-     * @param height
      */
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -1596,10 +1597,31 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     * ピン止め
+     * 重力の有無の切り替え
      */
-    public void reqSetPin(boolean pin){
+    public void switchGravity(boolean pin){
 
+        // 有無を切り替え
+        mGravityOn = !mGravityOn;
+
+        //-----------
+        // 重力の設定
+        //-----------
+        int gravity;
+        if ( mGravityOn ){
+            gravity = GRAVITY;
+        } else {
+            gravity = 0;
+        }
+
+        // 重力を変更
+        mWorld.setGravity( 0f, gravity );
+
+        //-----------
+        // 粒子反復
+        //-----------
+        // 適切な粒子反復を算出
+        mParticleIterations = liquidfun.b2CalculateParticleIterations( gravity, mParticleRadius, TIME_STEP );
     }
 
 

@@ -73,7 +73,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 FluidWorldRenderer render = glView.getRenderer();
-                render.reqSetPin(true);
+                render.switchGravity(true);
             }
         });
 
