@@ -69,19 +69,21 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             }
         });
 
+        // 銃弾
         findViewById(R.id.pin).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 FluidWorldRenderer render = glView.getRenderer();
-                render.switchGravity(true);
+                render.reqCannonCtrl(true);
             }
         });
 
+        // 重力OnOff切り替え
         findViewById(R.id.gravity).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 FluidWorldRenderer render = glView.getRenderer();
-                render.reqGravityDirection(true);
+                render.switchGravity(true);
             }
         });
 
