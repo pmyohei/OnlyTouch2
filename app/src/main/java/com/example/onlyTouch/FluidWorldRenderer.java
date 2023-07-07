@@ -45,41 +45,82 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         System.loadLibrary("liquidfun_jni");
     }
 
-    /* 物理関連 */
-    private World mWorld = null;
-
-    // パーティクル
-    private ParticleSystem mParticleSystem;
-    private ParticleData mParticleData;
-    private int mRegenerationState;
-    private long mSetParticleFlg;
-    private float mSetParticleRadius;
-    private int mSetParticleLifetime;
-    ParticleTouchData mParticleTouchData = new ParticleTouchData(-1, -1, ParticleTouchStatus.OUTSIDE, 0xFFFF, 0xFFFF);
-
-    // 静的物体
-    private long mBodyDataId = 1;
-
-    // バレット
-    private boolean mCannonCtrl = false;
-    private HashMap<Long, BodyData> mMapCannonData = new HashMap<Long, BodyData>();
-    private ArrayList<Long> mBulletDeleteList = new ArrayList<Long>();
-    private int mCannonCreateCycle;
-
-    /* 位置管理 */
+    //----------------
+    // world
+    //----------------
+    private World mWorld;
+    // 座標
     private float[] mWorldPosMax;
     private float[] mWorldPosMid;
     private float[] mWorldPosMin;
 
+    // 60fps
+    private static final float TIME_STEP = 1 / 60f;
+    // 速度反復
+    private static final int VELOCITY_ITERATIONS = 6;
+    // 位置反復
+    private static final int POSITION_ITERATIONS = 2;
+    // 粒子反復（小さいほどやわらかくなる。5：固いゼリー）!適切な値は算出する必要あり
+    private static final int PARTICLE_ITERATIONS = 1;
+
+    //----------------
+    // パーティクル
+    //----------------
+    private ParticleSystem mParticleSystem;
+    private ParticleData mParticleData;
+    private int mRegenerationState;
+    private float mParticleRadius;
+    ParticleTouchData mParticleTouchData;
+
+    // パーティクル再生成シーケンス
+    public static final int PARTICLE_REGENE_STATE_DELETE = 0;
+    public static final int PARTICLE_REGENE_STATE_CREATE = 1;
+    public static final int PARTICLE_REGENE_STATE_OVERLAP = 2;
+    public static final int PARTICLE_REGENE_STATE_NOTHING = 3;
+
+    // パーティクル タッチ状態
+    enum ParticleTouchStatus {
+        OUTSIDE,        // 粒子外
+        INSIDE,        // 粒子内
+        BORDER,        // 境界粒子
+        TRACE          // 追随
+    }
+
+    //----------------
+    // Body
+    //----------------
+    // 管理ID
+    private long mBodyDataId;
+    // 弾
+    private boolean mCannonCtrl;
+    private final HashMap<Long, BodyData> mMapCannonData;
+    private final ArrayList<Long> mBulletDeleteList;
+    private int mCannonCreateCycle;
+    // Body
+    private Body mMenuBody;
+    private Body mOverlapBody;
+
+    // 物体種別
+    enum CreateObjectType {
+        BULLET,        // 弾
+    }
+
+    // 弾サイズ
+    private static final int CANNON_BULLET_SIZE = 1;
+    private static final int CANNON_BULLET_HALF_SIZE = CANNON_BULLET_SIZE / 2;
+    private static final int CANNON_BULLET_DOUBLE_SIZE = CANNON_BULLET_SIZE * 2;
+
     //------------------
     // menu
     //------------------
+    // menu初期位置設定完了フラグ
+    private boolean mIsSetMenuRect;
+
     // menu展開時のRect情報
     private float mExpandedMenuTop;
     private float mExpandedMenuLeft;
     private float mExpandedMenuRight;
     private float mExpandedMenuBottom;
-
     // menu折りたたみ時のRect情報
     private float mCollapsedMenuTop;
     private float mCollapsedMenuLeft;
@@ -93,84 +134,13 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private float mMenuHeight;
     private float mMenuCollapsedPosY;
 
-    // menu初期位置設定完了フラグ
-    private boolean mIsSetMenuRect;
-
-    // アニメーションと一致するmenu背景物体の移動速度
+    // アニメーションと連動するmenu背景物体の移動速度
     private Vec2 mMenuUpVelocity;
     private Vec2 mMenuDownVelocity;
     private Vec2 mMenuVelocity;
 
     // menu移動状態
     private int mMenuMoveState = MENU_MOVE_STATE_NOTHING;
-
-    //------------------
-    // OpenGL
-    //------------------
-    private FluidGLSurfaceView mMainGlView;
-    private GLInitStatus glInitStatus;
-
-    private HashMap<Integer, Integer> mMapResIdToTextureId = new HashMap<Integer, Integer>();
-
-
-    PlistDataManager mPlistManage;
-
-    // 描画対象のバッファ
-    private ArrayList<Integer> mRenderParticleBuff = new ArrayList<>();    // パーティクル(頂点)座標配列
-    private ArrayList<Vec2> mRenderUVBuff = new ArrayList<>();             // UV座標配列
-    private int mRenderPointNum;                                           // 描画対象の頂点数
-
-    /* 定数 */
-    private static final float TIME_STEP = 1 / 60f; // 60 fps
-    private static final int VELOCITY_ITERATIONS = 6;       // 
-    private static final int POSITION_ITERATIONS = 2;       // 
-    private static final int PARTICLE_ITERATIONS = 1;       // 粒子シミュレーション 小さいほどやわらかくなる。5→固いゼリー
-
-    private static final int CANNON_BULLET_SIZE = 1;
-    private static final int CANNON_BULLET_HALF_SIZE = CANNON_BULLET_SIZE / 2;
-    private static final int CANNON_BULLET_DOUBLE_SIZE = CANNON_BULLET_SIZE * 2;
-
-    /* その他制御 */
-    private boolean mIsCreate = false;                     // createなら、trueに変える
-
-    // Body
-    private Body mMenuBody;
-    private Body mOverlapBody;
-
-    // OpenGL 描画開始シーケンス
-    enum GLInitStatus {
-        PreInit,       // 初期化前
-        FinInit,       // 初期化完了
-        Drawable       // Draw開始
-    }
-
-    // パーティクル タッチ状態
-    enum ParticleTouchStatus {
-        // None,          // 未タッチ
-        OUTSIDE,        // 粒子外
-        INSIDE,        // 粒子内
-        BORDER,        // 境界粒子
-        TRACE          // 追随
-    }
-
-    // 生成する物体の種別
-    enum CreateObjectType {
-        BULLET,        // 大砲(弾)型
-    }
-
-    // パーティクル再生成シーケンス
-    enum RegenerationState {
-        DELETE,     // 削除
-        CREATE,     // 生成
-        OVERLAP,    // 重複物体あり
-        END,        // 終了
-    }
-
-    // パーティクル再生成シーケンス
-    public static final int PARTICLE_REGENE_STATE_DELETE = 0;
-    public static final int PARTICLE_REGENE_STATE_CREATE = 1;
-    public static final int PARTICLE_REGENE_STATE_OVERLAP = 2;
-    public static final int PARTICLE_REGENE_STATE_NOTHING = 3;
 
     // menu背景物体の移動状態
     public static final int MENU_MOVE_STATE_NOTHING = 0;
@@ -179,30 +149,56 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     public static final int MENU_MOVE_STATE_KEEP = 3;
     public static final int MENU_MOVE_STATE_STOP = 4;
 
+    //------------------
+    // OpenGL
+    //------------------
+    private FluidGLSurfaceView mGLSurfaceView;
+    private GLInitStatus mGlInitStatus;
+    private HashMap<Integer, Integer> mMapResourceTexture;
+    private PlistDataManager mPlistManage;
+
+    // OpenGL 描画開始シーケンス
+    enum GLInitStatus {
+        PreInit,       // 初期化前
+        FinInit,       // 初期化完了
+        Drawable       // Draw開始
+    }
+
+    //--------------------
+    // Rendererバッファ
+    //--------------------
+    // パーティクル(頂点)座標配列
+    private ArrayList<Integer> mRenderParticleBuff;
+    // UV座標配列
+    private ArrayList<Vec2> mRenderUVBuff;
+    // 描画対象の頂点数
+    private int mRenderPointNum;
+
     // レンダリング対象の三角形グループの頂点該当なし
-    private static final int NOT_FOUND_TRIANGLE_APEX = -1;
+    private final int NOT_FOUND_TRIANGLE_APEX = -1;
+
 
     /*
      * コンストラクタ
      */
-    public FluidWorldRenderer(FluidGLSurfaceView mainGlView, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
-        mMainGlView = mainGlView;
-
-        // !リファクタリング
-        // bmp未指定の場合、Createモードとみなす
-        if (bmp == null) {
-            mIsCreate = true;
-        }
+    public FluidWorldRenderer(FluidGLSurfaceView glSurfaceView, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
+        mGLSurfaceView = glSurfaceView;
 
         //-----------------
         // パーティクルの設定
         //-----------------
-        // !とりあえず固定で設定
-        mSetParticleFlg = ParticleFlag.elasticParticle;
-        mSetParticleRadius = 0.2f;  // この値をあげると固くなる
-        mSetParticleLifetime = 0;
-
+        // パーティクル半径：この値をあげると固くなる
+        mParticleRadius = 0.2f;
         mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
+        mParticleTouchData = new ParticleTouchData(-1, -1, ParticleTouchStatus.OUTSIDE, 0xFFFF, 0xFFFF);
+
+        //-----------------
+        // Body
+        //-----------------
+        mBodyDataId = 1;
+        mCannonCtrl = false;
+        mMapCannonData = new HashMap<Long, BodyData>();
+        mBulletDeleteList = new ArrayList<Long>();
 
         //-----------------
         // menu
@@ -212,7 +208,14 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //------------------
         // OpenGL
         //------------------
-        glInitStatus = GLInitStatus.PreInit;
+        mGlInitStatus = GLInitStatus.PreInit;
+        mMapResourceTexture = new HashMap<Integer, Integer>();
+
+        //--------------------
+        // Rendererバッファ
+        //--------------------
+        mRenderParticleBuff = new ArrayList<>();
+        mRenderUVBuff = new ArrayList<>();
 
         // 物理世界生成
         mWorld = new World(0, -10);
@@ -363,17 +366,17 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             pgd.setShape(shape);
         } else {
             // plistにある座標で図形を生成
-            int shapenum = mPlistManage.setPlistBuffer(mMainGlView.getContext(), pgd, PlistDataManager.PLIST_KIND.PLIST_RABBIT);
+            int shapenum = mPlistManage.setPlistBuffer(mGLSurfaceView.getContext(), pgd, PlistDataManager.PLIST_KIND.PLIST_RABBIT);
             if (shapenum == -1) {
                 // 取得エラーなら、終了
                 return;
             }
         }
 
-        pgd.setFlags(mSetParticleFlg);
+        pgd.setFlags(ParticleFlag.elasticParticle);
         pgd.setGroupFlags(ParticleGroupFlag.solidParticleGroup);
         pgd.setPosition(cx, cy);
-        pgd.setLifetime(mSetParticleLifetime);
+        pgd.setLifetime(0);
     }
 
     /*
@@ -703,7 +706,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //--------------------------
         // 初期化コール前
         //--------------------------
-        if (glInitStatus == GLInitStatus.PreInit) {
+        if (mGlInitStatus == GLInitStatus.PreInit) {
             // 何もしない：セーフティ
             return false;
         }
@@ -711,7 +714,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //--------------------------
         // 描画可能
         //--------------------------
-        if (glInitStatus == GLInitStatus.Drawable) {
+        if (mGlInitStatus == GLInitStatus.Drawable) {
             return true;
         }
 
@@ -728,7 +731,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // 初期配置用の物体生成
         createPhysicsObject(gl);
         // GL初期化状態を描画可能に更新
-        glInitStatus = GLInitStatus.Drawable;
+        mGlInitStatus = GLInitStatus.Drawable;
 
         // フレーム描画可
         return true;
@@ -787,8 +790,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //---------------------------
         // 画面サイズ
         //---------------------------
-        final int screenWidth = mMainGlView.getWidth();
-        final int screenHeight = mMainGlView.getHeight();
+        final int screenWidth = mGLSurfaceView.getWidth();
+        final int screenHeight = mGLSurfaceView.getHeight();
 
         //---------------------------
         // 画面端の座標を物理座標に変換
@@ -814,9 +817,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // パーティクル
         //---------------
         // パーティクルシステム生成
-        createParticleSystem(mSetParticleRadius);
+        createParticleSystem(mParticleRadius);
         // パーティクル生成
-        addFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mSetParticleRadius, R.drawable.kitune_tanuki2);
+        addFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.kitune_tanuki2);
 
         //---------------
         // 壁
@@ -876,7 +879,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // メニュー移動速度
         //------------------
         // メニュー操作時のアニメーション時間(ms)
-        Resources resources = mMainGlView.getContext().getResources();
+        Resources resources = mGLSurfaceView.getContext().getResources();
         int upDuration = resources.getInteger(R.integer.menu_up_anim_duration);
         int downDuration = resources.getInteger(R.integer.menu_down_anim_duration);
 
@@ -954,7 +957,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             //---------------
             case PARTICLE_REGENE_STATE_CREATE:
                 // パーティクル生成
-                addFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mSetParticleRadius, R.drawable.kitune_tanuki2);
+                addFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.kitune_tanuki2);
                 // オーバーラップ物体を生成
                 mOverlapBody = addBox(1f, 1f, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody);
                 // オーバーラップ物体ありに更新
@@ -1223,8 +1226,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //---------------------
         // 画面サイズ
         //---------------------
-        final int screenWidth = mMainGlView.getWidth();
-        final int screenHeight = mMainGlView.getHeight();
+        final int screenWidth = mGLSurfaceView.getWidth();
+        final int screenHeight = mGLSurfaceView.getHeight();
 
         //---------------------
         // 座標変換
@@ -1292,38 +1295,54 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         gl.glEnable(GL10.GL_BLEND);
 
         // ステータス更新
-        glInitStatus = GLInitStatus.FinInit;
+        mGlInitStatus = GLInitStatus.FinInit;
     }
 
     /*
-     * テクスチャの生成
-     * テクスチャは引数にて指定する。
+     * テクスチャ生成
      */
-    private int makeTexture(GL10 gl10, int resId) {
-        Integer texId = mMapResIdToTextureId.get(resId);
-        if (texId != null) {
-            return texId;
+    private int makeTexture(GL10 gl10, int resourceId) {
+
+        //------------------
+        // 生成済み判定
+        //------------------
+        // 指定リソースのテクスチャが既にあれば、それを返して終了
+        Integer textureId = mMapResourceTexture.get(resourceId);
+        if (textureId != null) {
+            return textureId;
         }
 
-        // リソースIDから、Bitmapオブジェクトを生成
-        Resources r = mMainGlView.getContext().getResources();
-        Bitmap bmp = BitmapFactory.decodeResource(r, resId);
+        //------------------------------------------------
+        // テクスチャ生成
+        //------------------------------------------------
+        // -- テクスチャオブジェクトの生成 --
+        // テクスチャ用のメモリを確保
+        final int TEXTURE_NUM = 1;
+        int[] textureIds = new int[TEXTURE_NUM];
+        // テクスチャオブジェクトの生成（第2引数にテクスチャIDが格納される）
+        gl10.glGenTextures(TEXTURE_NUM, textureIds, 0);
 
-        // テクスチャのメモリ確保
-        int[] textureIds = new int[1];                // テクスチャは一つ
-        gl10.glGenTextures(1, textureIds, 0);   // テクスチャオブジェクトの生成。para2にIDが納められる。
+        // -- テクスチャへのビットマップ指定 --
+        // 指定リソースのBitmapオブジェクトを生成
+        Resources resource = mGLSurfaceView.getContext().getResources();
+        Bitmap bmp = BitmapFactory.decodeResource(resource, resourceId);
 
-        // テクスチャへのビットマップ指定
-        gl10.glActiveTexture(GL10.GL_TEXTURE0);                                     // テクスチャユニットを選択
-        gl10.glBindTexture(GL10.GL_TEXTURE_2D, textureIds[0]);                      // テクスチャIDとGL_TEXTURE_2Dをバインド
-        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bmp, 0);            // バインドされたテクスチャにBitmapをセットする
+        // テクスチャユニットを選択
+        gl10.glActiveTexture(GL10.GL_TEXTURE0);
+        // テクスチャIDとGL_TEXTURE_2Dをバインド
+        gl10.glBindTexture(GL10.GL_TEXTURE_2D, textureIds[0]);
+        // バインドされたテクスチャにBitmapをセットする
+        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bmp, 0);
 
-        // テクスチャのフィルタ指定
+        // -- テクスチャのフィルタ指定 --
         gl10.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
         gl10.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
 
-        // リソースIDとテクスチャIDを保持
-        mMapResIdToTextureId.put(resId, textureIds[0]);
+        //------------------------------------------------
+        // テクスチャを保持
+        //------------------------------------------------
+        // リソースIDとテクスチャIDをMapとして保持する
+        mMapResourceTexture.put(resourceId, textureIds[0]);
         return textureIds[0];
     }
 
@@ -1332,13 +1351,13 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      *   テクスチャは、引数ではなく画面遷移時に指定されたBitmapを対象にする。
      */
     private int makeTextureSoftCreate(GL10 gl10, int resId) {
-        Integer texId = mMapResIdToTextureId.get(resId);
+        Integer texId = mMapResourceTexture.get(resId);
         if (texId != null) {
             return texId;
         }
 
         // リソースIDから、Bitmapオブジェクトを生成
-        Resources r = mMainGlView.getContext().getResources();
+        Resources r = mGLSurfaceView.getContext().getResources();
         Bitmap bmp = BitmapFactory.decodeResource(r, resId);
 
         // テクスチャのメモリ確保
@@ -1355,7 +1374,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         gl10.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
 
         // リソースIDとテクスチャIDを保持
-        mMapResIdToTextureId.put(resId, textureIds[0]);
+        mMapResourceTexture.put(resId, textureIds[0]);
         return textureIds[0];
     }
 
@@ -1460,7 +1479,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // タッチ判定範囲
         //----------------------
         // タッチ範囲
-        // ！パーティクル半径 * 2　としておく（）
+        // ！パーティクル半径 * 2　としておく（タッチを簡単にできるようにするため）
         float range = mParticleData.getParticleRadius() * 2;
 
         // タッチ判定範囲を算出
