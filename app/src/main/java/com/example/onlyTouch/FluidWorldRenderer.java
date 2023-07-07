@@ -336,7 +336,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // 境界パーティクルバッファを取得
         ArrayList<Integer> border = generateBorderParticleBuff(allParticleLine);
 
-        int textureId = makeTextureSoftCreate(gl, R.drawable.kitune_tanuki2);
+        int textureId = makeTexture(gl, R.drawable.kitune_tanuki2);
 
         // パーティクル情報の追加
         addParticleData(gl, pg, particleRadius, allParticleLine, border, textureId);
@@ -1322,9 +1322,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             return textureId;
         }
 
-        //------------------------------------------------
+        //------------------
         // テクスチャ生成
-        //------------------------------------------------
+        //------------------
         // -- テクスチャオブジェクトの生成 --
         // テクスチャ用のメモリを確保
         final int TEXTURE_NUM = 1;
@@ -1353,6 +1353,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //------------------------------------------------
         // リソースIDとテクスチャIDをMapとして保持する
         mMapResourceTexture.put(resourceId, textureIds[0]);
+
         return textureIds[0];
     }
 
@@ -1360,33 +1361,53 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      * テクスチャの生成(パーティクル用)
      *   テクスチャは、引数ではなく画面遷移時に指定されたBitmapを対象にする。
      */
-    private int makeTextureSoftCreate(GL10 gl10, int resId) {
-        Integer texId = mMapResourceTexture.get(resId);
-        if (texId != null) {
-            return texId;
+/*
+    private int makeTextureSoftCreate(GL10 gl10, int resourceId) {
+
+        //------------------
+        // 生成済み判定
+        //------------------
+        // 指定リソースのテクスチャが既にあれば、それを返して終了
+        Integer textureId = mMapResourceTexture.get(resourceId);
+        if (textureId != null) {
+            return textureId;
         }
 
-        // リソースIDから、Bitmapオブジェクトを生成
-        Resources r = mGLSurfaceView.getContext().getResources();
-        Bitmap bmp = BitmapFactory.decodeResource(r, resId);
+        //------------------
+        // テクスチャ生成
+        //------------------
+        // -- テクスチャオブジェクトの生成 --
+        // テクスチャ用のメモリを確保
+        final int TEXTURE_NUM = 1;
+        int[] textureIds = new int[TEXTURE_NUM];
+        // テクスチャオブジェクトの生成（第2引数にテクスチャIDが格納される）
+        gl10.glGenTextures(TEXTURE_NUM, textureIds, 0);
 
-        // テクスチャのメモリ確保
-        int[] textureIds = new int[1];                  // テクスチャは一つ
-        gl10.glGenTextures(1, textureIds, 0);   // テクスチャオブジェクトの生成。para2にIDが納められる。
+        // -- テクスチャへのビットマップ指定 --
+        // 指定リソースのBitmapオブジェクトを生成
+        Resources resource = mGLSurfaceView.getContext().getResources();
+        Bitmap bmp = BitmapFactory.decodeResource(resource, resourceId);
 
-        // テクスチャへのビットマップ指定
-        gl10.glActiveTexture(GL10.GL_TEXTURE0);                                     // テクスチャユニットを選択
-        gl10.glBindTexture(GL10.GL_TEXTURE_2D, textureIds[0]);                      // テクスチャIDとGL_TEXTURE_2Dをバインド
-        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bmp, 0);            // バインドされたテクスチャにBitmapをセットする
+        // テクスチャユニットを選択
+        gl10.glActiveTexture(GL10.GL_TEXTURE0);
+        // テクスチャIDとGL_TEXTURE_2Dをバインド
+        gl10.glBindTexture(GL10.GL_TEXTURE_2D, textureIds[0]);
+        // バインドされたテクスチャにBitmapをセットする
+        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bmp, 0);
 
-        // テクスチャのフィルタ指定
+        // -- テクスチャのフィルタ指定 --
         gl10.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
         gl10.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
 
-        // リソースIDとテクスチャIDを保持
-        mMapResourceTexture.put(resId, textureIds[0]);
+        //------------------------------------------------
+        // テクスチャを保持
+        //------------------------------------------------
+        // リソースIDとテクスチャIDをMapとして保持する
+        mMapResourceTexture.put(resourceId, textureIds[0]);
+
         return textureIds[0];
     }
+*/
 
     /*
      * float配列をFloatBufferに変換
