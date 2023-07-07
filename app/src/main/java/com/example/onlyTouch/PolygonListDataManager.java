@@ -13,9 +13,9 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 
 /*
- *
+ * ポリゴンdata管理
  */
-public class PlistDataManager {
+public class PolygonListDataManager {
 
     /* plist最大値・最小値 */
     //128PX
@@ -38,7 +38,7 @@ public class PlistDataManager {
         PLIST_CAT
     }
 
-    public PlistDataManager(){
+    public PolygonListDataManager(){
         //初期値はUV座標全体に画像がある場合とする
         this.UvMinX   = 0.0f;
         this.UvMaxY   = 1.0f;

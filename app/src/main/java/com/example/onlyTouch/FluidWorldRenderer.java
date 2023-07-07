@@ -155,7 +155,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private FluidGLSurfaceView mGLSurfaceView;
     private GLInitStatus mGlInitStatus;
     private HashMap<Integer, Integer> mMapResourceTexture;
-    private PlistDataManager mPlistManage;
+    private PolygonListDataManager mPolygonListManage;
 
     // OpenGL 描画開始シーケンス
     enum GLInitStatus {
@@ -184,6 +184,12 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     public FluidWorldRenderer(FluidGLSurfaceView glSurfaceView, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
         mGLSurfaceView = glSurfaceView;
 
+        // 物理世界生成
+        mWorld = new World(0, -10);
+
+        // ポリゴンリストデータ管理クラス
+        mPolygonListManage = new PolygonListDataManager();
+
         //-----------------
         // パーティクルの設定
         //-----------------
@@ -203,6 +209,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //-----------------
         // menu
         //-----------------
+        // 未完了
         mIsSetMenuRect = false;
 
         //------------------
@@ -217,10 +224,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         mRenderParticleBuff = new ArrayList<>();
         mRenderUVBuff = new ArrayList<>();
 
-        // 物理世界生成
-        mWorld = new World(0, -10);
-        // plist管理クラス
-        mPlistManage = new PlistDataManager();
     }
 
     /*
@@ -366,7 +369,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             pgd.setShape(shape);
         } else {
             // plistにある座標で図形を生成
-            int shapenum = mPlistManage.setPlistBuffer(mGLSurfaceView.getContext(), pgd, PlistDataManager.PLIST_KIND.PLIST_RABBIT);
+            int shapenum = mPolygonListManage.setPlistBuffer(mGLSurfaceView.getContext(), pgd, PolygonListDataManager.PLIST_KIND.PLIST_RABBIT);
             if (shapenum == -1) {
                 // 取得エラーなら、終了
                 return;
@@ -636,10 +639,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // UV座標をバッファに格納
         //-------------------------------------------------
         // UV座標の最大・最小・横幅・縦幅
-        float minUvX = mPlistManage.getUvMinX();
-        float maxUvY = mPlistManage.getUvMaxY();
-        float UvMaxWidth = mPlistManage.getUvWidth();
-        float UvMaxHeight = mPlistManage.getUvHeight();
+        float minUvX = mPolygonListManage.getUvMinX();
+        float maxUvY = mPolygonListManage.getUvMaxY();
+        float UvMaxWidth = mPolygonListManage.getUvWidth();
+        float UvMaxHeight = mPolygonListManage.getUvHeight();
 
         // 各パーティクル位置に対応するUV座標を計算し、バッファに保持する
         for (int i : mRenderParticleBuff) {
