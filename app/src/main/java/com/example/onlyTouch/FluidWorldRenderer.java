@@ -23,6 +23,7 @@ import com.google.fpl.liquidfun.ParticleSystemDef;
 import com.google.fpl.liquidfun.PolygonShape;
 import com.google.fpl.liquidfun.Vec2;
 import com.google.fpl.liquidfun.World;
+import com.google.fpl.liquidfun.liquidfun;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -55,13 +56,13 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private float[] mWorldPosMin;
 
     // 60fps
-    private static final float TIME_STEP = 1 / 60f;
+    private final float TIME_STEP = 1 / 60f;
     // 速度反復
-    private static final int VELOCITY_ITERATIONS = 6;
+    private final int VELOCITY_ITERATIONS = 6;
     // 位置反復
-    private static final int POSITION_ITERATIONS = 2;
-    // 粒子反復（小さいほどやわらかくなる。5：固いゼリー）!適切な値は算出する必要あり
-    private static final int PARTICLE_ITERATIONS = 1;
+    private final int POSITION_ITERATIONS = 2;
+    // 粒子反復（適切な値は b2CalculateParticleIterations() で算出）
+    private int mParticleIterations;
 
     //----------------
     // パーティクル
@@ -102,7 +103,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     // 物体種別
     enum CreateObjectType {
-        BULLET,        // 弾
+        // 弾
+        BULLET,
     }
 
     // 弾サイズ
@@ -184,11 +186,11 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     public FluidWorldRenderer(FluidGLSurfaceView glSurfaceView, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
         mGLSurfaceView = glSurfaceView;
 
+        //--------------
         // 物理世界生成
-        mWorld = new World(0, -10);
-
-        // ポリゴンリストデータ管理クラス
-        mPolygonListManage = new PolygonListDataManager();
+        //--------------
+        final int GRAVITY = -10;
+        mWorld = new World(0, GRAVITY);
 
         //-----------------
         // パーティクルの設定
@@ -197,6 +199,12 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         mParticleRadius = 0.2f;
         mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
         mParticleTouchData = new ParticleTouchData(-1, -1, ParticleTouchStatus.OUTSIDE, 0xFFFF, 0xFFFF);
+
+        // ポリゴンリストデータ管理クラス
+        mPolygonListManage = new PolygonListDataManager();
+
+        // 適切な粒子反復を算出
+        mParticleIterations = liquidfun.b2CalculateParticleIterations( GRAVITY, mParticleRadius, TIME_STEP );
 
         //-----------------
         // Body
@@ -223,7 +231,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //--------------------
         mRenderParticleBuff = new ArrayList<>();
         mRenderUVBuff = new ArrayList<>();
-
     }
 
     /*
@@ -243,10 +250,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     *
+     * 円形Bodyの生成
      */
-    public Body addCircle(GL10 gl, float r, float x, float y, float angle, BodyType type, float density, int resId, CreateObjectType object) {
-        // Box2d用
+    public Body createCircleBody(GL10 gl, float r, float x, float y, float angle, BodyType type, float density, int resId, CreateObjectType object) {
+        // Box2d
         BodyDef bodyDef = new BodyDef();
         bodyDef.setType(type);
         bodyDef.setPosition(x, y);
@@ -256,7 +263,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         shape.setRadius(r);
         body.createFixture(shape, density);
 
-        // OpenGL用
+        // OpenGL
         float vertices[] = new float[32 * 2];
         float uv[] = new float[32 * 2];
         for (int i = 0; i < 32; ++i) {
@@ -277,9 +284,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     * 四角形の物体生成
+     * 四角形Bodyの生成
      */
-    public Body addBox(float width, float height, float posx, float posy, float angle, BodyType type) {
+    public Body createBoxBody(float width, float height, float posx, float posy, float angle, BodyType type) {
 
         //----------------
         // Body生成
@@ -303,7 +310,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * 流体Bodyを生成
      */
-    public void addFluidBody(GL10 gl, float hx, float hy, float cx, float cy, float particleRadius, int resId) {
+    public void createFluidBody(GL10 gl, float hx, float hy, float cx, float cy, float particleRadius, int resId) {
 
         // パーティクルグループの生成
         ParticleGroupDef pgd = new ParticleGroupDef();
@@ -755,7 +762,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         }
 
         // 物理世界を更新
-        mWorld.step(TIME_STEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS, PARTICLE_ITERATIONS);
+        mWorld.step(TIME_STEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS, mParticleIterations);
 
         //------------------
         // OpenGL
@@ -822,7 +829,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // パーティクルシステム生成
         createParticleSystem(mParticleRadius);
         // パーティクル生成
-        addFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.kitune_tanuki2);
+        createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.kitune_tanuki2);
 
         //---------------
         // 壁
@@ -865,7 +872,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //-------------------------------
         // 生成
         //-------------------------------
-        mMenuBody = addBox(menuWidth, menuHeight, collapsedMenuPosRight, menuInitPosY, 0, BodyType.staticBody);
+        mMenuBody = createBoxBody(menuWidth, menuHeight, collapsedMenuPosRight, menuInitPosY, 0, BodyType.staticBody);
 
         //-------------------------------
         // 保持
@@ -919,13 +926,13 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // 壁の生成
         //---------------
         // 天井
-        addBox(mWorldPosMax[0], 1, mWorldPosMid[0], mWorldPosMax[1], 0, BodyType.staticBody);
+        createBoxBody(mWorldPosMax[0], 1, mWorldPosMid[0], mWorldPosMax[1], 0, BodyType.staticBody);
         // 左
-        addBox(1, mWorldPosMax[1], mWorldPosMin[0] - 1, mWorldPosMid[1], 0, BodyType.staticBody);
+        createBoxBody(1, mWorldPosMax[1], mWorldPosMin[0] - 1, mWorldPosMid[1], 0, BodyType.staticBody);
         // 右
-        addBox(1, mWorldPosMax[1], mWorldPosMax[0] + 1, mWorldPosMid[1], 0, BodyType.staticBody);
+        createBoxBody(1, mWorldPosMax[1], mWorldPosMax[0] + 1, mWorldPosMid[1], 0, BodyType.staticBody);
         // 床(メニューの存在を考慮)
-        addBox(bottom_width, 1, bottom_posX, mWorldPosMin[1] - 1, 0, BodyType.staticBody);
+        createBoxBody(bottom_width, 1, bottom_posX, mWorldPosMin[1] - 1, 0, BodyType.staticBody);
     }
 
     /*
@@ -960,9 +967,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             //---------------
             case PARTICLE_REGENE_STATE_CREATE:
                 // パーティクル生成
-                addFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.kitune_tanuki2);
+                createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.kitune_tanuki2);
                 // オーバーラップ物体を生成
-                mOverlapBody = addBox(1f, 1f, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody);
+                mOverlapBody = createBoxBody(1f, 1f, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody);
                 // オーバーラップ物体ありに更新
                 mRegenerationState = PARTICLE_REGENE_STATE_OVERLAP;
 
@@ -1119,7 +1126,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
                 // 微妙なズレの蓄積を防ぐため、初期位置に戻ったタイミングで、menu背景物体を再生成
                 if (mMenuCollapsedPosY > mMenuBody.getPositionY()) {
                     mWorld.destroyBody(mMenuBody);
-                    mMenuBody = addBox(mMenuWidth, mMenuHeight, mMenuInitPosX, mMenuInitPosY, 0, BodyType.staticBody);
+                    mMenuBody = createBoxBody(mMenuWidth, mMenuHeight, mMenuInitPosX, mMenuInitPosY, 0, BodyType.staticBody);
                 }
 
                 // 移動状態：なし
@@ -1149,7 +1156,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             if ((mCannonCreateCycle % 12) == 0) {
                 // 形状
                 Body body;
-                body = addCircle(gl, CANNON_BULLET_SIZE, mWorldPosMid[0], mWorldPosMin[1] + CANNON_BULLET_DOUBLE_SIZE, 0, BodyType.dynamicBody, 0, R.drawable.white, CreateObjectType.BULLET);
+                body = createCircleBody(gl, CANNON_BULLET_SIZE, mWorldPosMid[0], mWorldPosMin[1] + CANNON_BULLET_DOUBLE_SIZE, 0, BodyType.dynamicBody, 0, R.drawable.white, CreateObjectType.BULLET);
 
                 // 上方向に発射
                 Vec2 force = new Vec2(0, 10000);
