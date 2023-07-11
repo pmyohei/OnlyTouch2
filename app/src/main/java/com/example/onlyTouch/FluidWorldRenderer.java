@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.opengl.GLUtils;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -229,6 +231,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //--------------------
         mRenderParticleBuff = new ArrayList<>();
         mRenderUVBuff = new ArrayList<>();
+
     }
 
     /*
@@ -258,13 +261,12 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         BodyDef bodyDef = new BodyDef();
         bodyDef.setType(type);
         bodyDef.setPosition(x, y);
-//        bodyDef.setAngle(angle);//!いらないかも
         // 生成
         Body body = mWorld.createBody(bodyDef);
         // フィクスチャをアタッチ
-        CircleShape shape = new CircleShape();
-        shape.setRadius(r);
-        body.createFixture(shape, 0);
+        CircleShape circle = new CircleShape();
+        circle.setRadius(r);
+        body.createFixture(circle, 0);
 
         //--------------
         // OpenGL
@@ -754,6 +756,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * 現在のフレームを描画するためにコールされる
      */
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onDrawFrame(GL10 gl) {
         //--------------------
@@ -781,11 +784,11 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //------------------
         // パーティクル
         //------------------
-        ParticleGroup pg = mParticleData.getParticleGroup();
+        ParticleGroup particleGroup = mParticleData.getParticleGroup();
         // パーティクル再生成
-        regenerationParticle(gl, pg);
+        regenerationParticle(gl, particleGroup);
         // パーティクル描画更新
-        updateParticleDraw(gl, pg);
+        updateParticleDraw(gl, particleGroup);
 
         //------------------
         // 物体
@@ -1151,12 +1154,18 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      *  弾の管理(生成・削除)
      */
+    @RequiresApi(api = Build.VERSION_CODES.N)
     private void bulletManage(GL10 gl) {
 
         // 大砲offなら何もしない
         if (!mBulletOn) {
             return;
         }
+
+        // 位置が急上昇した境界パーティクルを取得
+        int tooRiseIndex = mParticleData.tooRiseBorderParticle( mParticleSystem );
+        // 保持している境界パーティクルの位置情報を更新
+        mParticleData.updateBorderParticlePosY( mParticleSystem );
 
         //-------------
         // 弾の描画
@@ -1165,9 +1174,26 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         for (Long key : mMapBullet.keySet()) {
             // 弾
             BodyData bulletData = mMapBullet.get(key);
-
-            // 減速判定
             Body body = bulletData.getBody();
+
+            //-----------
+            // 弾の減速対応
+            // (境界パーティクルに掠った際、パーティクルが急上昇するのを防ぐための対応)
+            //-----------
+            if( tooRiseIndex != mParticleData.NOT_FOUND ){
+                float borderY = mParticleSystem.getParticlePositionY(tooRiseIndex);
+                float bulletY = body.getPositionY();
+
+                // 急上昇した境界パーティクルよりも上に位置する弾は減速させる
+                if( bulletY >= borderY ){
+                    // 速度を下方向へ !減速値は適当な値を採用
+                    body.setLinearVelocity( new Vec2(0, -10) );
+                }
+            }
+
+            //-----------
+            // 減速判定
+            //-----------
             boolean isDeceleration = isBulletDeceleration(body);
             if (isDeceleration) {
                 // 減速した弾は、削除リストに追加し描画もスキップ
@@ -1204,7 +1230,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // !真っすぐしか考慮していないから、ダメ
 //        return ( Math.abs(velocityX) > 15 || (velocityY < 0)) ;
 //        return ( velocityY < 0 ) ;
-        return (velocityY < 50);
+        return (velocityY < 90);
     }
 
     /*
@@ -1282,13 +1308,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         Body bullet = createCircleBody(gl, BULLET_SIZE, mWorldPosMid[0], mWorldPosMin[1] + BULLET_DOUBLE_SIZE, BodyType.dynamicBody, R.drawable.white);
         bullet.setGravityScale(2.0f);
 
-        // 発射：上方向へエネルギーを加える
-        final int FORCE_UP = 10000;
-
-        Vec2 force = new Vec2(0, FORCE_UP);
-//        bullet.applyForceToCenter(force, true);
-//        Log.i("弾", "初速=" + bullet.getLinearVelocity().getY());
-        bullet.setLinearVelocity( new Vec2(0, 120) );
+        // 発射：上方向の速度を設定
+        final int LINEAR_VEROCITY_Y = 120;
+        bullet.setLinearVelocity( new Vec2(0, LINEAR_VEROCITY_Y) );
 
         // 周期リセット
         mBulletCreateCycle = 0;
@@ -1583,7 +1605,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //---------------------------
         // タッチしているパーティクルあり
         //---------------------------
-        if (mParticleData.getBorder().contains(index)) {
+        if ( mParticleData.isBorderParticle(index) ) {
             // タッチ中のパーティクルを保持
             mParticleTouchData.borderIndex = index;
             // タッチ状態：パーティクル境界
@@ -1644,22 +1666,31 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * 大砲の制御要求
      */
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void reqCannonCtrl(boolean enable){
         // 発射有無を切り替え
         mBulletOn = !mBulletOn;
 
-        // 大砲offが指定された時
-        if( !mBulletOn ){
-            // 削除漏れに対応
-            for( Long key: mMapBullet.keySet() ){
-                BodyData bd = mMapBullet.get(key);
-                mWorld.destroyBody(bd.getBody());
-            }
-
-            // 管理情報をクリア
-            mMapBullet.clear();
-            mBulletCreateCycle = 0;
+        //-----------
+        // 大砲on
+        //-----------
+        if( mBulletOn ){
+            mParticleData.updateBorderParticlePosY( mParticleSystem );
+            return;
         }
+
+        //-----------
+        // 大砲off
+        //-----------
+        // 削除漏れに対応
+        for( Long key: mMapBullet.keySet() ){
+            BodyData bd = mMapBullet.get(key);
+            mWorld.destroyBody(bd.getBody());
+        }
+
+        // 管理情報をクリア
+        mMapBullet.clear();
+        mBulletCreateCycle = 0;
     }
 
     /*
