@@ -8,7 +8,6 @@ import android.opengl.GLU;
 import android.opengl.GLUtils;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -77,7 +76,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private ParticleData mParticleData;
     private int mRegenerationState;
     private float mParticleRadius;
-    ParticleTouchData mParticleTouchData;
+    ParticleTouchInfo mParticleTouchInfo;
 
     // パーティクル再生成シーケンス
     public static final int PARTICLE_REGENE_STATE_DELETE = 0;
@@ -85,13 +84,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     public static final int PARTICLE_REGENE_STATE_OVERLAP = 2;
     public static final int PARTICLE_REGENE_STATE_NOTHING = 3;
 
-    // パーティクル タッチ状態
-    enum ParticleTouchStatus {
-        OUTSIDE,        // 粒子外
-        INSIDE,        // 粒子内
-        BORDER,        // 境界粒子
-        TRACE          // 追随
-    }
 
     //----------------
     // Body
@@ -198,7 +190,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // パーティクル半径：この値をあげると固くなる
         mParticleRadius = 0.2f;
         mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
-        mParticleTouchData = new ParticleTouchData(-1, -1, ParticleTouchStatus.OUTSIDE, 0xFFFF, 0xFFFF);
+        mParticleTouchInfo = new ParticleTouchInfo(-1, ParticleTouchInfo.ParticleTouchStatus.OUTSIDE, 0xFFFF, 0xFFFF);
 
         // ポリゴンリストデータ管理クラス
         mPolygonListManage = new PolygonListDataManager();
@@ -358,12 +350,12 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         psd.setDampingStrength(0.2f);
         psd.setDensity(0.5f);
         psd.setGravityScale(0.4f);
-        // psd.setGravityScale(2.0f);
         psd.setDestroyByAge(true);
         psd.setLifetimeGranularity(0.0001f);
         psd.setMaxCount(729);                     // 0以外の値を設定する。
-        // psd.setMaxCount(1458);
-        // psd.setLifetimeGranularity();
+
+//        psd.setElasticStrength(0.1f);
+//        psd.setStrictContactCheck(true);
 
         // パーティクルシステムの生成
         mParticleSystem = mWorld.createParticleSystem(psd);
@@ -1476,26 +1468,23 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // !リファクタリング。同じ情報を複数で持っているため、一括管理したい。
 
         switch (event.getAction()) {
-            // タッチ開始
-//            case MotionEvent.ACTION_DOWN:
-//                break;
 
             // タッチ解除
             case MotionEvent.ACTION_UP:
                 // 粒子用：状態更新
-                mParticleTouchData.setStatus(ParticleTouchStatus.OUTSIDE);
-                mParticleTouchData.setBorderIndex(-1);
-                mParticleTouchData.setFollowingIndex(-1);
-                mParticleTouchData.setTouchPosX(0xFFFF);
-                mParticleTouchData.setTouchPosY(0xFFFF);
+                mParticleTouchInfo.setStatus(ParticleTouchInfo.ParticleTouchStatus.OUTSIDE);
+                mParticleTouchInfo.setTouchPosX(0xFFFF);
+                mParticleTouchInfo.setTouchPosY(0xFFFF);
                 break;
 
             // タッチ移動
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:
                 // 粒子用：タッチ中の位置を更新
-                mParticleTouchData.setTouchPosX(event.getX());
-                mParticleTouchData.setTouchPosY(event.getY());
+                // !world座標への変換は、必要なタイミングで実施する（この時点ではGL10がないため）
+                mParticleTouchInfo.setTouchPosX(event.getX());
+                mParticleTouchInfo.setTouchPosY(event.getY());
+
                 break;
 
             default:
@@ -1512,7 +1501,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private void traceTouchParticle(GL10 gl) {
 
         // 未タッチなら処理なし
-        if (mParticleTouchData.touchPosX == 0xFFFF) {
+        if (mParticleTouchInfo.touchPosX == 0xFFFF) {
             return;
         }
 
@@ -1520,20 +1509,20 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // パーティクル追随判定
         //------------------------
         // 現在のタッチ状態
-        ParticleTouchStatus currentStatus = getCurrentTouchStatus(gl);
+        ParticleTouchInfo.ParticleTouchStatus currentStatus = getCurrentTouchStatus(gl);
 
         // 前回のタッチ状態が「境界」「追随」でなければ
-        if ((mParticleTouchData.status != ParticleTouchStatus.BORDER) &&
-            (mParticleTouchData.status != ParticleTouchStatus.TRACE)) {
+        if ((mParticleTouchInfo.status != ParticleTouchInfo.ParticleTouchStatus.BORDER) &&
+            (mParticleTouchInfo.status != ParticleTouchInfo.ParticleTouchStatus.TRACE)) {
             // 現状のタッチ状態を更新して終了
-            mParticleTouchData.status = currentStatus;
+            mParticleTouchInfo.status = currentStatus;
             return;
         }
 
         // 今回のタッチ状態が「外側」以外の場合
-        if (currentStatus != ParticleTouchStatus.OUTSIDE) {
+        if (currentStatus != ParticleTouchInfo.ParticleTouchStatus.OUTSIDE) {
             // 現状のタッチ状態を更新して終了
-            mParticleTouchData.status = currentStatus;
+            mParticleTouchInfo.status = currentStatus;
             return;
         }
 
@@ -1542,18 +1531,18 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //------------------------
         // 境界のパーティクルをタッチ位置に追随させる
         // （タッチ座標から少しずらした位置に、パーティクルの位置を変更する）
-        float tracePosX = mParticleTouchData.touchPosWorldX + 0.1f;
-        float tracePosY = mParticleTouchData.touchPosWorldY + 0.1f;
-        mParticleSystem.setParticlePosition(mParticleTouchData.borderIndex, tracePosX, tracePosY);
+        float tracePosX = mParticleTouchInfo.touchPosWorldX + 0.1f;
+        float tracePosY = mParticleTouchInfo.touchPosWorldY + 0.1f;
+        mParticleSystem.setParticlePosition(mParticleTouchInfo.borderIndex, tracePosX, tracePosY);
 
         // 現状のタッチ状態を更新
-        mParticleTouchData.status = ParticleTouchStatus.TRACE;
+        mParticleTouchInfo.status = ParticleTouchInfo.ParticleTouchStatus.TRACE;
     }
 
     /*
      * 現在のパーティクルに対するタッチ状態を更新
      */
-    private ParticleTouchStatus getCurrentTouchStatus(GL10 gl) {
+    private ParticleTouchInfo.ParticleTouchStatus getCurrentTouchStatus(GL10 gl) {
 
         //----------------------
         // タッチ判定範囲
@@ -1563,21 +1552,21 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         float range = mParticleData.getParticleRadius() * 2;
 
         // タッチ判定範囲を算出
-        float[] touchPos = convPointScreenToWorld(mParticleTouchData.touchPosX, mParticleTouchData.touchPosY, gl);
+        float[] touchPos = convPointScreenToWorld(mParticleTouchInfo.touchPosX, mParticleTouchInfo.touchPosY, gl);
         float touchMinX = touchPos[0] - range;
         float touchMaxX = touchPos[0] + range;
         float touchMinY = touchPos[1] - range;
         float touchMaxY = touchPos[1] + range;
 
         // タッチ位置のworld座標を保持
-        mParticleTouchData.touchPosWorldX = touchPos[0];
-        mParticleTouchData.touchPosWorldY = touchPos[1];
+        mParticleTouchInfo.touchPosWorldX = touchPos[0];
+        mParticleTouchInfo.touchPosWorldY = touchPos[1];
 
         //----------------------
         // タッチ判定
         //----------------------
         // 判定前はパーティクルの外側
-        ParticleTouchStatus status = ParticleTouchStatus.OUTSIDE;
+        ParticleTouchInfo.ParticleTouchStatus status = ParticleTouchInfo.ParticleTouchStatus.OUTSIDE;
 
         // 全パーティクルを対象にタッチ判定
         int particleNum = mParticleData.getParticleGroup().getParticleCount();
@@ -1590,7 +1579,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             // タッチ範囲にパーティクルあるか
             if ( (x >= touchMinX) && (x <= touchMaxX) && (y >= touchMinY) && (y <= touchMaxY) ) {
                 // タッチ状態：パーティクル内部
-                status = ParticleTouchStatus.INSIDE;
+                status = ParticleTouchInfo.ParticleTouchStatus.INSIDE;
                 break;
             }
         }
@@ -1598,7 +1587,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //---------------------------
         // タッチしているパーティクルなし
         //---------------------------
-        if( status == ParticleTouchStatus.OUTSIDE ){
+        if( status == ParticleTouchInfo.ParticleTouchStatus.OUTSIDE ){
             return status;
         }
 
@@ -1607,9 +1596,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //---------------------------
         if ( mParticleData.isBorderParticle(index) ) {
             // タッチ中のパーティクルを保持
-            mParticleTouchData.borderIndex = index;
+            mParticleTouchInfo.setBorderIndex(index);
             // タッチ状態：パーティクル境界
-            status = ParticleTouchStatus.BORDER;
+            status = ParticleTouchInfo.ParticleTouchStatus.BORDER;
         }
 
         return status;
@@ -1675,6 +1664,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // 大砲on
         //-----------
         if( mBulletOn ){
+            // 保持している境界パーティクルの位置情報を更新
             mParticleData.updateBorderParticlePosY( mParticleSystem );
             return;
         }
