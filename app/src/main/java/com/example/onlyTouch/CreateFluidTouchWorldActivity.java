@@ -2,6 +2,7 @@ package com.example.onlyTouch;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 /*
@@ -18,7 +19,7 @@ public class CreateFluidTouchWorldActivity extends AppCompatActivity {
         //流体世界の描画ビューを生成
         FluidGLSurfaceView glView = new FluidGLSurfaceView(this, null, MenuActivity.PictureButton.Soft, null);
         //レイアウトに追加
-        LinearLayout root = findViewById(R.id.gl_view_root);
+        ViewGroup root = findViewById(R.id.gl_view_root);
         root.addView(glView);
     }
 }

@@ -33,6 +33,13 @@
     <color name="menu_create_touch">#FEEEDC</color>
     <color name="menu_picture_touch">#BDE1DA</color>
 
+
+    <color name="menu_icon">#FFFFFF</color>
+
+
+
+
+
     <!--  -->
     <color name="flick_area">#EFCEF5</color>
 

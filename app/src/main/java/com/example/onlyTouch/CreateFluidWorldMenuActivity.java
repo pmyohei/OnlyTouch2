@@ -4,9 +4,12 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
@@ -43,7 +46,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         glView = new FluidGLSurfaceView(this, bitmap, select,  touchList );
         // レンダリングビューをレイアウトに追加
         setContentView(R.layout.activity_fluid_design);
-        LinearLayout root = findViewById(R.id.gl_view_root);
+        ViewGroup root = findViewById(R.id.gl_view_root);
         root.addView(glView);
 
         // 画面下部のメニュー
@@ -74,7 +77,9 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 FluidWorldRenderer render = glView.getRenderer();
-                render.switchBullet();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    render.switchBullet();
+                }
             }
         });
 
@@ -124,8 +129,8 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             //--------------
             // menu制御
             //--------------
-            LinearLayout menu = findViewById(R.id.bottom_menu_contents);
-            LinearLayout explanation = findViewById(R.id.root_explanation);
+            ViewGroup menu = findViewById(R.id.bottom_menu_contents);
+            ViewGroup explanation = findViewById(R.id.root_explanation);
 
             if (menu.getVisibility() != View.VISIBLE) {
                 // 開く
@@ -275,7 +280,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
 
         /* メニューの位置・サイズを渡す( @@四隅の位置取得の方法はその内調査(主にoffset)@@ ) */
         // メニュー上部
-        LinearLayout menu_top = findViewById(R.id.bottom_menu_contents);
+        ViewGroup menu_top = findViewById(R.id.bottom_menu_contents);
         menu_top.getGlobalVisibleRect(menu_corners);
 
         findViewById(R.id.container).getGlobalVisibleRect(corners, globalOffset);
@@ -285,7 +290,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         fluidRenderer.setExpandedMenuRect(menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom);
 
         // メニュー下部
-        LinearLayout menu_bottom = findViewById(R.id.bottom_menu_init);
+        ViewGroup menu_bottom = findViewById(R.id.bottom_menu_init);
         menu_bottom.getGlobalVisibleRect(menu_corners);
         menu_corners.offset(-globalOffset.x, -globalOffset.y);
 
