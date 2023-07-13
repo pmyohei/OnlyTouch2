@@ -8,6 +8,7 @@ import android.opengl.GLU;
 import android.opengl.GLUtils;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -22,6 +23,7 @@ import com.google.fpl.liquidfun.ParticleGroupFlag;
 import com.google.fpl.liquidfun.ParticleSystem;
 import com.google.fpl.liquidfun.ParticleSystemDef;
 import com.google.fpl.liquidfun.PolygonShape;
+import com.google.fpl.liquidfun.SWIGTYPE_p_b2ContactEdge;
 import com.google.fpl.liquidfun.Vec2;
 import com.google.fpl.liquidfun.World;
 import com.google.fpl.liquidfun.liquidfun;
@@ -46,6 +48,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         System.loadLibrary("liquidfun");
         System.loadLibrary("liquidfun_jni");
     }
+
 
     //----------------
     // world
@@ -313,6 +316,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     public void createFluidBody(GL10 gl, float hx, float hy, float cx, float cy, float particleRadius, int resId) {
 
         // パーティクルグループの生成
+        // !生成するメソッドを用意する
         ParticleGroupDef pgd = new ParticleGroupDef();
         setParticleGroupDef(pgd, hx, hy, cx, cy);
         ParticleGroup pg = mParticleSystem.createParticleGroup(pgd);
@@ -776,6 +780,14 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         gl.glLoadIdentity();                  // 初期化
 
         //------------------
+        // 物体関連
+        //------------------
+        // menu背景物体
+        menuBodyControl();
+        // 弾 !パーティクルよりも先に描画すること（パーティクル内部に弾が描画されることがあるため）
+        bulletManage(gl);
+
+        //------------------
         // パーティクル
         //------------------
         ParticleGroup particleGroup = mParticleData.getParticleGroup();
@@ -784,13 +796,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // パーティクル描画更新
         updateParticleDraw(gl, particleGroup);
 
-        //------------------
-        // 物体
-        //------------------
-        // menu背景物体
-        menuBodyControl();
-        // 弾
-        bulletManage(gl);
     }
 
     /*
@@ -1214,18 +1219,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      *  弾の減速判定
      */
     private boolean isBulletDeceleration(Body bullet) {
-        // 速度
-        float velocityX = bullet.getLinearVelocity().getX();
+        // 減速判定ラインを下回ったかどうか
         float velocityY = bullet.getLinearVelocity().getY();
-
-//        Log.i("弾", "velocityY=" + velocityY);
-
-        // 下
-        // !真っすぐしか考慮していないから、ダメ
-//        return ( Math.abs(velocityX) > 15 || (velocityY < 0)) ;
-//        return ( velocityY < 0 ) ;
-        return (velocityY < 90);
-//        return (velocityY < 10);
+        return (velocityY < 100);
     }
 
     /*
@@ -1238,9 +1234,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
         gl.glPushMatrix();
         {
+            // レンダリング位置の移動
             gl.glTranslatef(bulletBody.getPositionX(), bulletBody.getPositionY(), 0);
-            float angle = (float) Math.toDegrees(bulletBody.getAngle());
-            gl.glRotatef(angle, 0, 0, 1);
 
             // テクスチャの指定
             gl.glActiveTexture(GL10.GL_TEXTURE0);
@@ -1254,7 +1249,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             gl.glVertexPointer(2, GL10.GL_FLOAT, 0, buff);
 
             gl.glDrawArrays(bulletData.getDrawMode(), 0, bulletData.getVertexLen());
-
         }
         gl.glPopMatrix();
     }
@@ -1303,7 +1297,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         float[] shotPos = convPointScreenToWorld(mBulletShotPosX, 0, gl);
 
         // 弾を生成
-        Body bullet = createCircleBody(gl, BULLET_SIZE, shotPos[0], mWorldPosMin[1] + BULLET_DOUBLE_SIZE, BodyType.dynamicBody, R.drawable.white);
+        Body bullet = createCircleBody(gl, BULLET_SIZE, shotPos[0], mWorldPosMin[1] + BULLET_DOUBLE_SIZE, BodyType.dynamicBody, R.drawable.bullet_color);
         bullet.setGravityScale(2.0f);
 
         // 発射：上方向の速度を設定
@@ -1390,13 +1384,13 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 
         // gl.glEnable(GL10.GL_DEPTH_TEST);
-        // gl.glClearColor(0.0f, 0.0f, 1.0f, 1.0f);       // 背景色を指定して背景を描画    青
-        gl.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);       // 背景色を指定して背景を描画
-        gl.glEnable(GL10.GL_LIGHTING);                                // ライティングを有効化
-        gl.glEnable(GL10.GL_LIGHT0);                                   // 光源の指定。GL_LIGHT0 から GL_LIGHT7 番までの8つの光源がある。
-        gl.glDepthFunc(GL10.GL_LEQUAL);                                // 深度値と深度バッファの震度を比較する関数の指定。GL_LEQUALは入って来る深度値が格納された深度値以下である時に通過
-        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);                 // 頂点座標のバッファをセットしたことをOpenGLに伝える
-        gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);         // テクスチャのマッピング座標のバッファをセットしたことをOpenGLに伝える
+//         gl.glClearColor(0.0f, 0.0f, 1.0f, 1.0f);                 // 背景色    青
+        gl.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);      // 背景色
+        gl.glEnable(GL10.GL_LIGHTING);                              // ライティングを有効化
+        gl.glEnable(GL10.GL_LIGHT0);                                // 光源の指定。GL_LIGHT0 から GL_LIGHT7 番までの8つの光源がある。
+        gl.glDepthFunc(GL10.GL_LEQUAL);                             // 深度値と深度バッファの震度を比較する関数の指定。GL_LEQUALは入って来る深度値が格納された深度値以下である時に通過
+        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);               // 頂点座標のバッファをセットしたことをOpenGLに伝える
+        gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);        // テクスチャのマッピング座標のバッファをセットしたことをOpenGLに伝える
 
         // テクスチャの有効化
         gl.glEnable(GL10.GL_TEXTURE_2D);                              // テクスチャの利用を有効にする
