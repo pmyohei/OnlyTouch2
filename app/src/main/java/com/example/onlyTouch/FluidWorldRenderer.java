@@ -8,7 +8,6 @@ import android.opengl.GLU;
 import android.opengl.GLUtils;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -23,7 +22,6 @@ import com.google.fpl.liquidfun.ParticleGroupFlag;
 import com.google.fpl.liquidfun.ParticleSystem;
 import com.google.fpl.liquidfun.ParticleSystemDef;
 import com.google.fpl.liquidfun.PolygonShape;
-import com.google.fpl.liquidfun.SWIGTYPE_p_b2ContactEdge;
 import com.google.fpl.liquidfun.Vec2;
 import com.google.fpl.liquidfun.World;
 import com.google.fpl.liquidfun.liquidfun;
@@ -311,39 +309,32 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
 
     /*
-     * 流体Bodyを生成
+     * パーティクル生成
      */
-    public void createFluidBody(GL10 gl, float hx, float hy, float cx, float cy, float particleRadius, int resId) {
+    public void createFluidBody(GL10 gl, float width, float height, float posX, float posY, float particleRadius, int resId) {
 
-        // パーティクルグループの生成
-        // !生成するメソッドを用意する
-        ParticleGroupDef pgd = new ParticleGroupDef();
-        setParticleGroupDef(pgd, hx, hy, cx, cy);
-        ParticleGroup pg = mParticleSystem.createParticleGroup(pgd);
+        // パーティクルグループ生成
+        ParticleGroup particleGroup = setupParticleGroup(width, height, posX, posY);
 
         // 行単位のパーティクルバッファを作成
         ArrayList<ArrayList<Integer>> allParticleLine = new ArrayList<>();
-        generateParticleLineBuff(pg, allParticleLine);
+        generateParticleLineBuff(particleGroup, allParticleLine);
 
         // パーティクルの直径
         float diameter = particleRadius * 2;
-
         // OpenGLに渡す三角形グルーピングバッファを作成
         enqueRendererBuff(allParticleLine, diameter);
-
         // 頂点数を保持
         mRenderPointNum = mRenderParticleBuff.size();
 
         // レンダリング用UVバッファを生成
         generateUVRendererBuff();
-
         // 境界パーティクルバッファを取得
         ArrayList<Integer> border = generateBorderParticleBuff(allParticleLine);
 
-        int textureId = makeTexture(gl, resId);
-
         // パーティクル情報の追加
-        addParticleData(gl, pg, particleRadius, allParticleLine, border, textureId);
+        int textureId = makeTexture(gl, resId);
+        addParticleData(gl, particleGroup, particleRadius, allParticleLine, border, textureId);
     }
 
     /*
@@ -371,26 +362,31 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      * パーティクルグループ定義の設定
      * @para パーティクル横幅、パーティクル縦幅、生成位置(x/y)
      */
-    private void setParticleGroupDef(ParticleGroupDef pgd, float hx, float hy, float cx, float cy) {
+    private ParticleGroup setupParticleGroup(float width, float height, float posX, float posY) {
+
+        ParticleGroupDef pgd = new ParticleGroupDef();
 
         // !plistなしで固定
         if (true) {
             PolygonShape shape = new PolygonShape();
-            shape.setAsBox(hx, hy, 0, 0, 0);
+            shape.setAsBox(width, height, 0, 0, 0);
             pgd.setShape(shape);
         } else {
             // plistにある座標で図形を生成
             int shapenum = mPolygonListManage.setPlistBuffer(mGLSurfaceView.getContext(), pgd, PolygonListDataManager.PLIST_KIND.PLIST_RABBIT);
             if (shapenum == -1) {
                 // 取得エラーなら、終了
-                return;
+                return null;
             }
         }
 
         pgd.setFlags(ParticleFlag.elasticParticle);
         pgd.setGroupFlags(ParticleGroupFlag.solidParticleGroup);
-        pgd.setPosition(cx, cy);
+        pgd.setPosition(posX, posY);
         pgd.setLifetime(0);
+
+        // 生成
+        return mParticleSystem.createParticleGroup(pgd);
     }
 
     /*
