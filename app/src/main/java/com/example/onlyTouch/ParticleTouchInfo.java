@@ -13,11 +13,14 @@ public class ParticleTouchInfo {
         TRACE          // 追随
     }
 
-
-    int borderIndex;
+    // タッチ状態
     ParticleTouchStatus status;
+    // タッチしている境界パーティクル
+    int borderIndex;
+    // タッチ座標
     float touchPosX;
     float touchPosY;
+    // タッチ座標（world）
     float touchPosWorldX;
     float touchPosWorldY;
 
