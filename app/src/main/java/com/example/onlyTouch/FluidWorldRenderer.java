@@ -95,9 +95,11 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private final HashMap<Long, BodyData> mMapBullet;
     private final ArrayList<Long> mRemoveBulletList;
     private int mBulletCreateCycle;
+    private float mBulletShotPosX;
     // Body
     private Body mMenuBody;
     private Body mOverlapBody;
+
 
     // 弾サイズ
     private static final float BULLET_SIZE = 0.4f;
@@ -1027,7 +1029,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // マトリクスを戻す
         gl.glPopMatrix();
 
-        // タッチ判定処理
+        // パーティクルタッチ判定処理
         traceTouchParticle(gl);
     }
 
@@ -1155,9 +1157,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         }
 
         // 位置が急上昇した境界パーティクルを取得
-        int tooRiseIndex = mParticleData.tooRiseBorderParticle( mParticleSystem );
+        int tooRiseIndex = mParticleData.tooRiseBorderParticle(mParticleSystem);
         // 保持している境界パーティクルの位置情報を更新
-        mParticleData.updateBorderParticlePosY( mParticleSystem );
+        mParticleData.updateBorderParticlePosY(mParticleSystem);
 
         //-------------
         // 弾の描画
@@ -1172,14 +1174,14 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             // 弾の減速対応
             // (境界パーティクルに掠った際、パーティクルが急上昇するのを防ぐための対応)
             //-----------
-            if( tooRiseIndex != mParticleData.NOT_FOUND ){
+            if (tooRiseIndex != mParticleData.NOT_FOUND) {
                 float borderY = mParticleSystem.getParticlePositionY(tooRiseIndex);
                 float bulletY = body.getPositionY();
 
                 // 急上昇した境界パーティクルよりも上に位置する弾は減速させる
-                if( bulletY >= borderY ){
+                if (bulletY >= borderY) {
                     // 速度を下方向へ !減速値は適当な値を採用
-                    body.setLinearVelocity( new Vec2(0, -10) );
+                    body.setLinearVelocity(new Vec2(0, -10));
                 }
             }
 
@@ -1223,6 +1225,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 //        return ( Math.abs(velocityX) > 15 || (velocityY < 0)) ;
 //        return ( velocityY < 0 ) ;
         return (velocityY < 90);
+//        return (velocityY < 10);
     }
 
     /*
@@ -1282,7 +1285,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      *  弾の生成と発射
      */
-    private void shotBullet( GL10 gl ) {
+    private void shotBullet(GL10 gl) {
 
         //-------------
         // 生成判定
@@ -1296,13 +1299,16 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //---------------
         // 弾の生成と発射
         //---------------
+        // 発射位置：X座標　　！Y座標は発射位置固定としており、変換対象の値はなんでもよいため0としている
+        float[] shotPos = convPointScreenToWorld(mBulletShotPosX, 0, gl);
+
         // 弾を生成
-        Body bullet = createCircleBody(gl, BULLET_SIZE, mWorldPosMid[0], mWorldPosMin[1] + BULLET_DOUBLE_SIZE, BodyType.dynamicBody, R.drawable.white);
+        Body bullet = createCircleBody(gl, BULLET_SIZE, shotPos[0], mWorldPosMin[1] + BULLET_DOUBLE_SIZE, BodyType.dynamicBody, R.drawable.white);
         bullet.setGravityScale(2.0f);
 
         // 発射：上方向の速度を設定
         final int LINEAR_VEROCITY_Y = 120;
-        bullet.setLinearVelocity( new Vec2(0, LINEAR_VEROCITY_Y) );
+        bullet.setLinearVelocity(new Vec2(0, LINEAR_VEROCITY_Y));
 
         // 周期リセット
         mBulletCreateCycle = 0;
@@ -1465,7 +1471,25 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      */
     public synchronized boolean onTouch(View v, MotionEvent event) {
 
-        // !リファクタリング。同じ情報を複数で持っているため、一括管理したい。
+        if (mBulletOn) {
+            //-------------------
+            // 銃弾方向の制御
+            //-------------------
+            return controlBulletDirection(event);
+
+        } else {
+            //-------------------
+            // パーティクルタッチ
+            //-------------------
+            return touchParticle(event);
+
+        }
+    }
+
+    /*
+     * パーティクルタッチ処理
+     */
+    private boolean touchParticle(MotionEvent event) {
 
         switch (event.getAction()) {
 
@@ -1495,11 +1519,39 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
+     * 銃弾方向の制御
+     */
+    private boolean controlBulletDirection(MotionEvent event) {
+
+        switch (event.getAction()) {
+
+            // タッチ移動
+            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_MOVE:
+                // タッチ位置のX座標から銃弾が発射されるようにする
+                mBulletShotPosX = event.getX();
+                break;
+
+            // タッチ解除
+            case MotionEvent.ACTION_UP:
+            default:
+                break;
+        }
+
+        return true;
+    }
+
+
+    /*
      * パーティクルタッチ追随処理
      *   パーティクルに対するタッチ判定を行い、タッチされていればパーティクルを追随させる
      */
     private void traceTouchParticle(GL10 gl) {
 
+        // 銃弾発射中なら処理なし
+        if ( mBulletOn ){
+            return;
+        }
         // 未タッチなら処理なし
         if (mParticleTouchInfo.touchPosX == 0xFFFF) {
             return;
@@ -1653,10 +1705,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
 
     /*
-     * 大砲の制御要求
+     * 銃弾OdOff切り替え
      */
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public void reqCannonCtrl(boolean enable){
+    public void switchBullet(){
         // 発射有無を切り替え
         mBulletOn = !mBulletOn;
 
@@ -1666,6 +1718,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         if( mBulletOn ){
             // 保持している境界パーティクルの位置情報を更新
             mParticleData.updateBorderParticlePosY( mParticleSystem );
+            // 発射位置（X座標）を画面中心位置で初期化
+            mBulletShotPosX = mGLSurfaceView.getWidth() / 2f;
             return;
         }
 
