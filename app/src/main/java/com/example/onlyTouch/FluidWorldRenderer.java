@@ -8,6 +8,7 @@ import android.opengl.GLU;
 import android.opengl.GLUtils;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -89,14 +90,13 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     //----------------
     // Body
     //----------------
-    // 管理ID
-    private long mBodyDataId;
     // 弾
     private boolean mBulletOn;
-    private final HashMap<Long, BodyData> mMapBullet;
-    private final ArrayList<Long> mRemoveBulletList;
-    private int mBulletCreateCycle;
+    private ArrayList<Bullet> mBullets;
+    private final ArrayList<Bullet> mRemoveBullets;
+    private int mBulletShotCycle;
     private float mBulletShotPosX;
+
     // Body
     private Body mMenuBody;
     private Body mOverlapBody;
@@ -204,10 +204,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //-----------------
         // Body
         //-----------------
-        mBodyDataId = 1;
         mBulletOn = false;
-        mMapBullet = new HashMap<Long, BodyData>();
-        mRemoveBulletList = new ArrayList<Long>();
+        mRemoveBullets = new ArrayList<>();
+        mBullets = new ArrayList<>();
 
         //-----------------
         // menu
@@ -230,58 +229,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     * 銃弾用Bodyの追加
-     */
-    private void addBulletBodyData(Body body, float[] buffer, float[] uv, int drawMode, int textureId) {
-        long id = mBodyDataId++;
-        BodyData data = new BodyData(id, body, buffer, uv, drawMode, textureId);
-        mMapBullet.put(id, data);
-    }
-
-    /*
      * パーティクル情報の追加
      */
     private void addParticleData(GL10 gl, ParticleGroup pg, float particleRadius, ArrayList<ArrayList<Integer>> allParticleLine, ArrayList<Integer> border, int textureId) {
         mParticleData = new ParticleData(0, mParticleSystem, pg, particleRadius, allParticleLine, border, textureId);
-    }
-
-    /*
-     * 円形Bodyの生成
-     */
-    public Body createCircleBody(GL10 gl, float r, float x, float y, BodyType type, int resId) {
-        //--------------
-        // body生成
-        //--------------
-        // 定義
-        BodyDef bodyDef = new BodyDef();
-        bodyDef.setType(type);
-        bodyDef.setPosition(x, y);
-        // 生成
-        Body body = mWorld.createBody(bodyDef);
-        // フィクスチャをアタッチ
-        CircleShape circle = new CircleShape();
-        circle.setRadius(r);
-        body.createFixture(circle, 0);
-
-        //--------------
-        // OpenGL
-        //--------------
-        float[] vertices = new float[32 * 2];
-        float[] uv = new float[32 * 2];
-        for (int i = 0; i < 32; ++i) {
-            float a = ((float) Math.PI * 2.0f * i) / 32;
-            vertices[i * 2] = r * (float) Math.sin(a);
-            vertices[i * 2 + 1] = r * (float) Math.cos(a);
-
-            uv[i * 2] = ((float) Math.sin(a) + 1.0f) / 2f;
-            uv[i * 2 + 1] = (-1 * (float) Math.cos(a) + 1.0f) / 2f;
-        }
-
-        // 管理対象として追加
-        int textureId = makeTexture(gl, resId);
-        addBulletBodyData(body, vertices, uv, GL10.GL_TRIANGLE_FAN, textureId);
-
-        return body;
     }
 
     /*
@@ -1166,10 +1117,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // 弾の描画
         //-------------
         // 発射済みの弾の描画
-        for (Long key : mMapBullet.keySet()) {
-            // 弾
-            BodyData bulletData = mMapBullet.get(key);
-            Body body = bulletData.getBody();
+        for (Bullet bullet : mBullets) {
 
             //-----------
             // 弾の減速対応
@@ -1177,27 +1125,27 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             //-----------
             if (tooRiseIndex != mParticleData.NOT_FOUND) {
                 float borderY = mParticleSystem.getParticlePositionY(tooRiseIndex);
-                float bulletY = body.getPositionY();
+                float bulletY = bullet.getBody().getPositionY();
 
                 // 急上昇した境界パーティクルよりも上に位置する弾は減速させる
                 if (bulletY >= borderY) {
-                    // 速度を下方向へ !減速値は適当な値を採用
-                    body.setLinearVelocity(new Vec2(0, -10));
+                    // 減速
+                    bullet.loseSpeed();
                 }
             }
 
             //-----------
             // 減速判定
             //-----------
-            boolean isDeceleration = isBulletDeceleration(body);
+            boolean isDeceleration = bullet.isDeceleration();
             if (isDeceleration) {
                 // 減速した弾は、削除リストに追加し描画もスキップ
-                mRemoveBulletList.add(key);
+                mRemoveBullets.add(bullet);
                 continue;
             }
 
-            // 弾の描画
-            renderBullet(gl, bulletData);
+            // 描画
+            bullet.draw(gl);
         }
 
         //-----------------
@@ -1212,64 +1160,53 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     *  弾の減速判定
-     */
-    private boolean isBulletDeceleration(Body bullet) {
-        // 減速判定ラインを下回ったかどうか
-        float velocityY = bullet.getLinearVelocity().getY();
-        return (velocityY < 100);
-    }
-
-    /*
-     *  弾のレンダリング
-     */
-    private void renderBullet(GL10 gl, BodyData bulletData) {
-
-        // レンダリング対象
-        Body bulletBody = bulletData.getBody();
-
-        gl.glPushMatrix();
-        {
-            // レンダリング位置の移動
-            gl.glTranslatef(bulletBody.getPositionX(), bulletBody.getPositionY(), 0);
-
-            // テクスチャの指定
-            gl.glActiveTexture(GL10.GL_TEXTURE0);
-            gl.glBindTexture(GL10.GL_TEXTURE_2D, bulletData.getTextureId());
-
-            // UVバッファ：確保したメモリをOpenGLに渡す
-            gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, bulletData.getUvBuffer());
-
-            // 頂点バッファ
-            FloatBuffer buff = bulletData.getVertexBuffer();
-            gl.glVertexPointer(2, GL10.GL_FLOAT, 0, buff);
-
-            gl.glDrawArrays(bulletData.getDrawMode(), 0, bulletData.getVertexLen());
-        }
-        gl.glPopMatrix();
-    }
-
-    /*
      *  削除対象の弾の削除
      */
     private void removeBullets() {
 
+        // 削除対象なければ、処理なし
+        if (mRemoveBullets.size() == 0) {
+            return;
+        }
+
         //-------------
         // 削除
         //-------------
-        for (int i = 0; i < mRemoveBulletList.size(); i++) {
+        for (Bullet bullet : mRemoveBullets) {
             // 削除対象
-            long key = mRemoveBulletList.get(i);
-            Body bullet = mMapBullet.get(key).getBody();
+            Body bulletBody = bullet.getBody();
 
             // 削除
-            mWorld.destroyBody(bullet);
-            bullet.delete();
-            mMapBullet.remove(key);
+            mWorld.destroyBody(bulletBody);
+            bulletBody.delete();
+            mBullets.remove(bullet);
         }
 
-        // リストをクリア
-        mRemoveBulletList.clear();
+        // 削除リストをクリア
+        mRemoveBullets.clear();
+    }
+
+    /*
+     *  銃弾全クリア
+     */
+    private void clearAllBullets() {
+
+        //-----------------------
+        // 発射済みの弾を全て削除
+        //-----------------------
+        for (Bullet bullet : mBullets) {
+            // 削除対象
+            Body bulletBody = bullet.getBody();
+            // 削除
+            mWorld.destroyBody(bulletBody);
+            bulletBody.delete();
+        }
+
+        //-----------------------
+        // クリア
+        //-----------------------
+        mBullets.clear();
+        mRemoveBullets.clear();
     }
 
     /*
@@ -1280,28 +1217,29 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //-------------
         // 生成判定
         //-------------
-        mBulletCreateCycle++;
-        if ((mBulletCreateCycle % 16) != 0) {
+        mBulletShotCycle++;
+        if ((mBulletShotCycle % 10) != 0) {
             // 周期未達なら何もしない
             return;
         }
+
+        // 周期リセット
+        mBulletShotCycle = 0;
 
         //---------------
         // 弾の生成と発射
         //---------------
         // 発射位置：X座標　　！Y座標は発射位置固定としており、変換対象の値はなんでもよいため0としている
-        float[] shotPos = convPointScreenToWorld(mBulletShotPosX, 0, gl);
+        float[] shotPosX = convPointScreenToWorld(mBulletShotPosX, 0, gl);
+        float shotPosY = mWorldPosMin[1] + BULLET_DOUBLE_SIZE;
 
-        // 弾を生成
-        Body bullet = createCircleBody(gl, BULLET_SIZE, shotPos[0], mWorldPosMin[1] + BULLET_DOUBLE_SIZE, BodyType.dynamicBody, R.drawable.texture_bullet_color);
-        bullet.setGravityScale(2.0f);
-
-        // 発射：上方向の速度を設定
-        final int LINEAR_VEROCITY_Y = 200;
-        bullet.setLinearVelocity(new Vec2(0, LINEAR_VEROCITY_Y));
-
-        // 周期リセット
-        mBulletCreateCycle = 0;
+        // 弾用のテクスチャ生成
+        int textureId = makeTexture(gl, Bullet.TEXTURE_RESOUCE_ID);
+        // 弾を生成・発射
+        Bullet bullet = new Bullet( mWorld, shotPosX[0], shotPosY, textureId );
+        bullet.shotUp();
+        // 生成済みリストに追加
+        mBullets.add( bullet );
     }
 
     /*
@@ -1710,21 +1648,17 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             mParticleData.updateBorderParticlePosY( mParticleSystem );
             // 発射位置（X座標）を画面中心位置で初期化
             mBulletShotPosX = mGLSurfaceView.getWidth() / 2f;
+            // 銃弾発射サイクルクリア
+            mBulletShotCycle = 0;
+
             return;
         }
 
         //-----------
         // 大砲off
         //-----------
-        // 削除漏れに対応
-        for( Long key: mMapBullet.keySet() ){
-            BodyData bd = mMapBullet.get(key);
-            mWorld.destroyBody(bd.getBody());
-        }
-
-        // 管理情報をクリア
-        mMapBullet.clear();
-        mBulletCreateCycle = 0;
+        // 発射済みの弾を全て削除リストへ
+        clearAllBullets();
     }
 
     /*
