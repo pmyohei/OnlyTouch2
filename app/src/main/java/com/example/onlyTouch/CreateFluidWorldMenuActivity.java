@@ -40,14 +40,19 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             touchList = app.getTouchList();
         }
 
-        // 流体レンダリングビューを生成
+        //-------------------------------
+        // パーティクルレンダリングビュー
+        //-------------------------------
+        // 生成
         glView = new FluidGLSurfaceView(this, bitmap, select, touchList);
-        // レンダリングビューをレイアウトに追加
+        // レイアウトに追加
         setContentView(R.layout.activity_fluid_design);
         ViewGroup root = findViewById(R.id.gl_view_root);
         root.addView(glView);
 
+        //---------------
         // メニューの設定
+        //---------------
         setMenu();
     }
 
