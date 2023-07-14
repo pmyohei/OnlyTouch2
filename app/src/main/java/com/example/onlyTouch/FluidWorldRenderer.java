@@ -1648,7 +1648,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             mParticleData.updateBorderParticlePosY( mParticleSystem );
             // 発射位置（X座標）を画面中心位置で初期化
             mBulletShotPosX = mGLSurfaceView.getWidth() / 2f;
-            // 銃弾発射サイクルクリア
+            // 銃弾発射サイクルリセット
             mBulletShotCycle = 0;
 
             return;
@@ -1657,7 +1657,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //-----------
         // 大砲off
         //-----------
-        // 発射済みの弾を全て削除リストへ
+        // 発射済みの弾を全て削除
         clearAllBullets();
     }
 
