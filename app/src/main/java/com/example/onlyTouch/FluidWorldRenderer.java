@@ -1633,7 +1633,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
 
     /*
-     * 銃弾OdOff切り替え
+     * 銃弾OnOff切り替え
      */
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void switchBullet(){
