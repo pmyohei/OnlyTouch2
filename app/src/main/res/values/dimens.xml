@@ -1,8 +1,12 @@
 <resources>
     <dimen name="fab_margin">16dp</dimen>
 
+    <!--  menu -->
+    <dimen name="menu_icon_margin">4dp</dimen>
+    <!--  menu 説明  -->
     <dimen name="menu_explanation_margin">6dp</dimen>
     <dimen name="menu_explanation_line_spacing">12dp</dimen>
+    <dimen name="menu_explanation_alpha">0.5</dimen>
 
 
 </resources>

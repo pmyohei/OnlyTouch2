@@ -831,7 +831,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // パーティクルシステム生成
         createParticleSystem(mParticleRadius);
         // パーティクル生成
-        createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.test_cat);
+        createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.texture_test_cat);
 
         //---------------
         // 壁
@@ -969,7 +969,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             //---------------
             case PARTICLE_REGENE_STATE_CREATE:
                 // パーティクル生成
-                createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.test_cat);
+                createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.texture_test_cat);
                 // オーバーラップ物体を生成
                 mOverlapBody = createBoxBody(1f, 1f, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody);
                 // オーバーラップ物体ありに更新
@@ -1293,11 +1293,11 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         float[] shotPos = convPointScreenToWorld(mBulletShotPosX, 0, gl);
 
         // 弾を生成
-        Body bullet = createCircleBody(gl, BULLET_SIZE, shotPos[0], mWorldPosMin[1] + BULLET_DOUBLE_SIZE, BodyType.dynamicBody, R.drawable.bullet_color);
+        Body bullet = createCircleBody(gl, BULLET_SIZE, shotPos[0], mWorldPosMin[1] + BULLET_DOUBLE_SIZE, BodyType.dynamicBody, R.drawable.texture_bullet_color);
         bullet.setGravityScale(2.0f);
 
         // 発射：上方向の速度を設定
-        final int LINEAR_VEROCITY_Y = 120;
+        final int LINEAR_VEROCITY_Y = 200;
         bullet.setLinearVelocity(new Vec2(0, LINEAR_VEROCITY_Y));
 
         // 周期リセット
