@@ -8,9 +8,9 @@ import android.opengl.GLU;
 import android.opengl.GLUtils;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.RadioButton;
 
 import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.BodyDef;
@@ -80,17 +80,21 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     ParticleTouchInfo mParticleTouchInfo;
 
     // パーティクル再生成シーケンス
-    public static final int PARTICLE_REGENE_STATE_DELETE = 0;
-    public static final int PARTICLE_REGENE_STATE_CREATE = 1;
+    public static final int PARTICLE_REGENE_STATE_DELETE  = 0;
+    public static final int PARTICLE_REGENE_STATE_CREATE  = 1;
     public static final int PARTICLE_REGENE_STATE_OVERLAP = 2;
     public static final int PARTICLE_REGENE_STATE_NOTHING = 3;
 
     // パーティクルの柔らかさ
     private int mSoftness;
-    public static final int SOFTNESS_SOFT = 0;         // 柔らかめ
-    public static final int SOFTNESS_NORMAL = 1;       // ノーマル（デフォルト）
-    public static final int SOFTNESS_LITTEL_HARD = 2;  // 少し固め
+    public static final int SOFTNESS_SOFT        = 0;       // 柔らかめ
+    public static final int SOFTNESS_NORMAL      = 1;       // ノーマル（デフォルト）
+    public static final int SOFTNESS_LITTEL_HARD = 2;       // 少し固め
 
+    // パーティクルの柔らかさパラメータ
+    private final float DEFAULT_RADIUS           = 0.3f;
+    private final float DEFAULT_DENCITY          = 0.5f;
+    private final float DEFAULT_ELASTIC_STRENGTH = 0.25f;
 
     //----------------
     // Body
@@ -196,7 +200,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // パーティクルの設定
         //-----------------
         // パーティクル半径：この値をあげると固くなる
-        mParticleRadius = 0.3f;
+        mParticleRadius = DEFAULT_RADIUS;
         mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
         mParticleTouchInfo = new ParticleTouchInfo(-1, ParticleTouchInfo.ParticleTouchStatus.OUTSIDE, 0xFFFF, 0xFFFF);
         mSoftness = SOFTNESS_NORMAL;
@@ -284,8 +288,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // 頂点数を保持
         mRenderPointNum = mRenderParticleBuff.size();
 
-//        Log.i("パラメータ調査", "particleGroup.getParticleCount()=" + particleGroup.getParticleCount());
-
         // レンダリング用UVバッファを生成
         generateUVRendererBuff();
         // 境界パーティクルバッファを取得
@@ -298,28 +300,19 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     /*
      * パーティクルシステムの生成
+     *   !パラメータは柔らかさの決定因子
      */
-    private void createParticleSystem(float particleRadius) {
+    private void setupParticleSystem(float particleRadius, float particleDensity, float particleElasticStrength) {
         // パーティクルシステム定義
         ParticleSystemDef particleSystemDef = new ParticleSystemDef();
         particleSystemDef.setRadius(particleRadius);
+        particleSystemDef.setDensity(particleDensity);
+        particleSystemDef.setElasticStrength(particleElasticStrength);
         particleSystemDef.setDampingStrength(0.2f);
-        particleSystemDef.setDensity(0.5f);
         particleSystemDef.setGravityScale(0.4f);
         particleSystemDef.setDestroyByAge(true);
         particleSystemDef.setLifetimeGranularity(0.0001f);
-//        particleSystemDef.setMaxCount(350);                     // 0以外の値を設定する。
-
-        particleSystemDef.setElasticStrength(0.25f);
-
-//        particleSystemDef.setSurfaceTensionNormalStrength(1f);
-        particleSystemDef.setSurfaceTensionPressureStrength(10f);
-
-//        particleSystemDef.setElasticStrength(0.05f);
-
-//        Log.i("柔さ調査", "getElasticStrength=" + particleSystemDef.getElasticStrength());
-        Log.i("柔さ調査", "setSurfaceTensionNormalStrength=" + particleSystemDef.getSurfaceTensionNormalStrength());
-        Log.i("柔さ調査", "setSurfaceTensionPressureStrength=" + particleSystemDef.getSurfaceTensionPressureStrength());
+//        particleSystemDef.setMaxCount(729);
 
         // パーティクルシステムの生成
         mParticleSystem = mWorld.createParticleSystem(particleSystemDef);
@@ -351,10 +344,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         particleGroupDef.setGroupFlags(ParticleGroupFlag.solidParticleGroup);
         particleGroupDef.setPosition(posX, posY);
         particleGroupDef.setLifetime(0);
-//        particleGroupDef.setStrength(0.5f);
-//        particleGroupDef.setStride(0.01f);
-//        Log.i("柔さ調査", "getStrength=" + particleGroupDef.getStrength());
-//        Log.i("柔さ調査", "getStride=" + particleGroupDef.getStride());
 
         // 生成
         return mParticleSystem.createParticleGroup(particleGroupDef);
@@ -800,7 +789,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // パーティクル
         //---------------
         // パーティクルシステム生成
-        createParticleSystem(mParticleRadius);
+        setupParticleSystem(mParticleRadius, DEFAULT_DENCITY, DEFAULT_ELASTIC_STRENGTH);
         // パーティクル生成
         createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.texture_test_cat);
 
@@ -1682,9 +1671,11 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     * パーティクルの再生成要求
+     * パーティクルを中心に再生成
+     *
      */
-    public void reqRegeneration(){
+    public void regenerationAtCenter(){
+        // 状態を更新し、次の周期で再生成されるようにする
         mRegenerationState = PARTICLE_REGENE_STATE_DELETE;
     }
 
@@ -1693,6 +1684,73 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      */
     public void setSoftness(int softness){
         mSoftness = softness;
+
+        // 指定された柔さでパーティクル再生成
+        changeParticleSoftness( softness );
+    }
+
+    /*
+     * パーティクルの再生成
+     * 　ユーザー指定（柔らかさ）に従い、パーティクルを再生成する
+     *
+     */
+    public void changeParticleSoftness(int softness){
+
+        //-------------------------
+        // 柔らかさを決めるパラメータ定数
+        //-------------------------
+        // SOFT
+        final float SOFT_RADIUS           = 0.2f;
+        final float SOFT_DENCITY          = 0.1f;
+        final float SOFT_ELASTIC_STRENGTH = 0.2f;
+        // LITTLE_HARD
+        final float LITTLE_HARD_RADIUS           = 0.4f;
+        final float LITTLE_HARD_DENCITY          = 1.0f;
+        final float LITTLE_HARD_ELASTIC_STRENGTH = 1.0f;
+
+        //-------------------------
+        // 柔らかさを決めるパラメータ
+        //-------------------------
+        float radius;
+        float dencity;
+        float elasticStrength;
+
+        // ユーザー指定に応じて、パラメータを設定
+        switch( softness ) {
+            case FluidWorldRenderer.SOFTNESS_SOFT:
+                radius          = SOFT_RADIUS;
+                dencity         = SOFT_DENCITY;
+                elasticStrength = SOFT_ELASTIC_STRENGTH;
+                break;
+
+            case FluidWorldRenderer.SOFTNESS_NORMAL:
+                radius          = DEFAULT_RADIUS;
+                dencity         = DEFAULT_DENCITY;
+                elasticStrength = DEFAULT_ELASTIC_STRENGTH;
+                break;
+
+            case FluidWorldRenderer.SOFTNESS_LITTEL_HARD:
+                radius          = LITTLE_HARD_RADIUS;
+                dencity         = LITTLE_HARD_DENCITY;
+                elasticStrength = LITTLE_HARD_ELASTIC_STRENGTH;
+                break;
+
+            default:
+                radius          = DEFAULT_RADIUS;
+                dencity         = DEFAULT_DENCITY;
+                elasticStrength = DEFAULT_ELASTIC_STRENGTH;
+                break;
+        }
+
+        //-------------------------
+        // パーティクル生成
+        //-------------------------
+        // 半径は保持
+        mParticleRadius = radius;
+        // パーティクルシステムの生成
+        setupParticleSystem( radius, dencity, elasticStrength );
+        // 中心に再生成
+        regenerationAtCenter();
     }
 
     /*
@@ -1702,12 +1760,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         return mSoftness;
     }
 
-    /*
-     * 重力を画面の向きに合わせて設定するかどうか
-     */
-    public void reqGravityDirection(boolean direction){
-
-    }
 
     /*
      * 重力の有無の切り替え
