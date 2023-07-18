@@ -5,14 +5,23 @@ package com.example.onlyTouch;
  */
 public class ParticleTouchInfo {
 
+    //-----------------------
+    // 定数
+    //-----------------------
     // パーティクルタッチ状態
     public enum ParticleTouchStatus {
-        OUTSIDE,        // 流体外部
+        OUTSIDE,       // 流体外部
         INSIDE,        // 流体内部
         BORDER,        // 境界粒子
         TRACE          // 追随
     }
 
+    // タッチ座標 無効値
+    public static final int INVALID_TOUCH_POS = 0xFFFF;
+
+    //-----------------------
+    // 変数
+    //-----------------------
     // タッチ状態
     ParticleTouchStatus status;
     // タッチしている境界パーティクル
@@ -27,11 +36,10 @@ public class ParticleTouchInfo {
     /*
      * コンストラクタ
      */
-    public ParticleTouchInfo(int border, ParticleTouchStatus status, float touchx, float touchy){
-        this.borderIndex = border;
-        this.status = status;
-        this.touchPosX = touchx;
-        this.touchPosY = touchy;
+    public ParticleTouchInfo(){
+        this.status = ParticleTouchStatus.OUTSIDE;
+        this.touchPosX = INVALID_TOUCH_POS;
+        this.touchPosY = INVALID_TOUCH_POS;
     }
 
     /*

@@ -219,7 +219,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // パーティクル半径：この値をあげると固くなる
         mParticleRadius = DEFAULT_RADIUS;
         mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
-        mParticleTouchInfo = new ParticleTouchInfo(-1, ParticleTouchInfo.ParticleTouchStatus.OUTSIDE, 0xFFFF, 0xFFFF);
+        mParticleTouchInfo = new ParticleTouchInfo();
         mSoftness = SOFTNESS_NORMAL;
 
         // ポリゴンリストデータ管理クラス
@@ -1451,8 +1451,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             case MotionEvent.ACTION_UP:
                 // 粒子用：状態更新
                 mParticleTouchInfo.setStatus(ParticleTouchInfo.ParticleTouchStatus.OUTSIDE);
-                mParticleTouchInfo.setTouchPosX(0xFFFF);
-                mParticleTouchInfo.setTouchPosY(0xFFFF);
+                mParticleTouchInfo.setTouchPosX( ParticleTouchInfo.INVALID_TOUCH_POS );
+                mParticleTouchInfo.setTouchPosY( ParticleTouchInfo.INVALID_TOUCH_POS );
                 break;
 
             // タッチ移動
@@ -1507,7 +1507,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             return;
         }
         // 未タッチなら処理なし
-        if (mParticleTouchInfo.touchPosX == 0xFFFF) {
+        if (mParticleTouchInfo.touchPosX == mParticleTouchInfo.INVALID_TOUCH_POS) {
             return;
         }
 
