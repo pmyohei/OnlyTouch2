@@ -15,7 +15,6 @@ import android.view.View;
 import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.BodyDef;
 import com.google.fpl.liquidfun.BodyType;
-import com.google.fpl.liquidfun.CircleShape;
 import com.google.fpl.liquidfun.ParticleFlag;
 import com.google.fpl.liquidfun.ParticleGroup;
 import com.google.fpl.liquidfun.ParticleGroupDef;
@@ -52,7 +51,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     //----------------
     // world
     //----------------
-    private World mWorld;
+    private final World mWorld;
     // 座標
     private float[] mWorldPosMax;
     private float[] mWorldPosMid;
@@ -85,6 +84,12 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     public static final int PARTICLE_REGENE_STATE_CREATE = 1;
     public static final int PARTICLE_REGENE_STATE_OVERLAP = 2;
     public static final int PARTICLE_REGENE_STATE_NOTHING = 3;
+
+    // パーティクルの柔らかさ
+    private int mSoftness;
+    public static final int SOFTNESS_SOFT = 0;         // 柔らかめ
+    public static final int SOFTNESS_NORMAL = 1;       // ノーマル（デフォルト）
+    public static final int SOFTNESS_LITTEL_HARD = 2;  // 少し固め
 
 
     //----------------
@@ -191,9 +196,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // パーティクルの設定
         //-----------------
         // パーティクル半径：この値をあげると固くなる
-        mParticleRadius = 0.2f;
+        mParticleRadius = 0.3f;
         mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
         mParticleTouchInfo = new ParticleTouchInfo(-1, ParticleTouchInfo.ParticleTouchStatus.OUTSIDE, 0xFFFF, 0xFFFF);
+        mSoftness = SOFTNESS_NORMAL;
 
         // ポリゴンリストデータ管理クラス
         mPolygonListManage = new PolygonListDataManager();
@@ -278,6 +284,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // 頂点数を保持
         mRenderPointNum = mRenderParticleBuff.size();
 
+//        Log.i("パラメータ調査", "particleGroup.getParticleCount()=" + particleGroup.getParticleCount());
+
         // レンダリング用UVバッファを生成
         generateUVRendererBuff();
         // 境界パーティクルバッファを取得
@@ -293,20 +301,28 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      */
     private void createParticleSystem(float particleRadius) {
         // パーティクルシステム定義
-        ParticleSystemDef psd = new ParticleSystemDef();
-        psd.setRadius(particleRadius);
-        psd.setDampingStrength(0.2f);
-        psd.setDensity(0.5f);
-        psd.setGravityScale(0.4f);
-        psd.setDestroyByAge(true);
-        psd.setLifetimeGranularity(0.0001f);
-        psd.setMaxCount(729);                     // 0以外の値を設定する。
+        ParticleSystemDef particleSystemDef = new ParticleSystemDef();
+        particleSystemDef.setRadius(particleRadius);
+        particleSystemDef.setDampingStrength(0.2f);
+        particleSystemDef.setDensity(0.5f);
+        particleSystemDef.setGravityScale(0.4f);
+        particleSystemDef.setDestroyByAge(true);
+        particleSystemDef.setLifetimeGranularity(0.0001f);
+//        particleSystemDef.setMaxCount(350);                     // 0以外の値を設定する。
 
-//        psd.setElasticStrength(0.1f);
-//        psd.setStrictContactCheck(true);
+        particleSystemDef.setElasticStrength(0.25f);
+
+//        particleSystemDef.setSurfaceTensionNormalStrength(1f);
+        particleSystemDef.setSurfaceTensionPressureStrength(10f);
+
+//        particleSystemDef.setElasticStrength(0.05f);
+
+//        Log.i("柔さ調査", "getElasticStrength=" + particleSystemDef.getElasticStrength());
+        Log.i("柔さ調査", "setSurfaceTensionNormalStrength=" + particleSystemDef.getSurfaceTensionNormalStrength());
+        Log.i("柔さ調査", "setSurfaceTensionPressureStrength=" + particleSystemDef.getSurfaceTensionPressureStrength());
 
         // パーティクルシステムの生成
-        mParticleSystem = mWorld.createParticleSystem(psd);
+        mParticleSystem = mWorld.createParticleSystem(particleSystemDef);
     }
 
     /*
@@ -315,29 +331,33 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      */
     private ParticleGroup setupParticleGroup(float width, float height, float posX, float posY) {
 
-        ParticleGroupDef pgd = new ParticleGroupDef();
+        ParticleGroupDef particleGroupDef = new ParticleGroupDef();
 
         // !plistなしで固定
         if (true) {
             PolygonShape shape = new PolygonShape();
             shape.setAsBox(width, height, 0, 0, 0);
-            pgd.setShape(shape);
+            particleGroupDef.setShape(shape);
         } else {
             // plistにある座標で図形を生成
-            int shapenum = mPolygonListManage.setPlistBuffer(mGLSurfaceView.getContext(), pgd, PolygonListDataManager.PLIST_KIND.PLIST_RABBIT);
+            int shapenum = mPolygonListManage.setPlistBuffer(mGLSurfaceView.getContext(), particleGroupDef, PolygonListDataManager.PLIST_KIND.PLIST_RABBIT);
             if (shapenum == -1) {
                 // 取得エラーなら、終了
                 return null;
             }
         }
 
-        pgd.setFlags(ParticleFlag.elasticParticle);
-        pgd.setGroupFlags(ParticleGroupFlag.solidParticleGroup);
-        pgd.setPosition(posX, posY);
-        pgd.setLifetime(0);
+        particleGroupDef.setFlags(ParticleFlag.elasticParticle);
+        particleGroupDef.setGroupFlags(ParticleGroupFlag.solidParticleGroup);
+        particleGroupDef.setPosition(posX, posY);
+        particleGroupDef.setLifetime(0);
+//        particleGroupDef.setStrength(0.5f);
+//        particleGroupDef.setStride(0.01f);
+//        Log.i("柔さ調査", "getStrength=" + particleGroupDef.getStrength());
+//        Log.i("柔さ調査", "getStride=" + particleGroupDef.getStride());
 
         // 生成
-        return mParticleSystem.createParticleGroup(pgd);
+        return mParticleSystem.createParticleGroup(particleGroupDef);
     }
 
     /*
@@ -891,7 +911,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * パーティクル再生成
      */
-    private void regenerationParticle(GL10 gl, ParticleGroup pg) {
+    private void regenerationParticle(GL10 gl, ParticleGroup particleGroup) {
 
         switch (mRegenerationState) {
 
@@ -906,7 +926,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             //---------------
             case PARTICLE_REGENE_STATE_DELETE:
                 // パーティクルグループを削除(粒子とグループは次の周期で削除される)
-                pg.destroyParticles();
+                particleGroup.destroyParticles();
                 mRenderParticleBuff.clear();
                 mRenderUVBuff.clear();
 
@@ -1666,6 +1686,20 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      */
     public void reqRegeneration(){
         mRegenerationState = PARTICLE_REGENE_STATE_DELETE;
+    }
+
+    /*
+     * パーティクルの柔らかさの変更
+     */
+    public void setSoftness(int softness){
+        mSoftness = softness;
+    }
+
+    /*
+     * パーティクルの柔らかさ取得
+     */
+    public int getSoftness(){
+        return mSoftness;
     }
 
     /*

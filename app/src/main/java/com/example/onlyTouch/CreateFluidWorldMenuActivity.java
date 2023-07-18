@@ -62,7 +62,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
      */
     private void setMenu() {
         // メニュー展開リスナーの設定
-        findViewById(R.id.ib_menu_expand).setOnClickListener( new CollapsedMenuListerner() );
+        findViewById(R.id.ib_menu_expand).setOnClickListener(new CollapsedMenuListerner());
 
         //-------------------
         // 各種メニューリスナー
@@ -89,7 +89,12 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         findViewById(R.id.ib_soft).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // 現在設定中の柔らかを取得
+                FluidWorldRenderer render = glView.getRenderer();
+                int currentValue = render.getSoftness();
 
+                // ダイアログを開く
+                showChangeSoftDialog( currentValue );
             }
         });
 
@@ -116,6 +121,24 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         });
     }
 
+    /*
+     * 柔らかさ変更ダイアログを開く
+     */
+    private void showChangeSoftDialog( int currentSoftness ) {
+
+        ChangeSoftDialog dialog = ChangeSoftDialog.newInstance();
+        dialog.selectedSoftness( currentSoftness );
+        dialog.setOnPositiveClickListener(new ChangeSoftDialog.PositiveClickListener() {
+                @Override
+                public void onPositiveClick(int softness) {
+                    // ユーザーの選択した柔らかさをパーティクルに反映
+                    FluidWorldRenderer render = glView.getRenderer();
+                    render.setSoftness(softness);
+                }
+            }
+        );
+        dialog.show( getFragmentManager(), "softness" );
+    }
 
     /*
      * メニュー(折りたたみ時)のリスナー

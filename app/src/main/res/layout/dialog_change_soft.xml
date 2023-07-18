@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@color/dialog_tmp_1">
+
+    <TextView
+        android:id="@+id/tv_delayTimeContents"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:text="@string/dialog_change_soft_title"
+        android:textColor="@color/dialog_tmp_2"
+        android:textSize="20sp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/rg_soft_choice"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <RadioGroup
+        android:id="@+id/rg_soft_choice"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@+id/tv_delayTimeContents"
+        app:layout_constraintBottom_toTopOf="@+id/v_border"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <RadioButton
+            android:id="@+id/radio_soft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Soft"/>
+
+        <RadioButton
+            android:id="@+id/radio_normal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Normal"
+            android:checked="true"/>
+
+        <RadioButton
+            android:id="@+id/radio_little_hard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="little hard"/>
+    </RadioGroup>
+
+    <!--    区切り線    -->
+    <View
+        android:id="@+id/v_border"
+        android:layout_width="match_parent"
+        android:layout_height="0.4dp"
+        android:layout_marginBottom="12dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="@color/dialog_tmp_2"
+        app:layout_constraintBottom_toTopOf="@+id/iv_positive"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageView
+        android:id="@+id/iv_positive"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/baseline_check_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+</android.support.constraint.ConstraintLayout>

@@ -41,4 +41,8 @@
     <string name="fluid_bottom_menu_contents_home">Return to home.</string>
     <string name="title_activity_information">InformationActivity</string>
 
+    <!-- dialog -->
+    <string name="dialog_change_soft_title">Change Soft</string>
+
+
 </resources>
