@@ -71,8 +71,12 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         findViewById(R.id.ib_gravity).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // 現在設定中の重力を取得
                 FluidWorldRenderer render = glView.getRenderer();
-                render.switchGravity(true);
+                int currentValue = render.getGravity();
+
+                // ダイアログを開く
+                showChangeGravityDialog( currentValue );
             }
         });
 
@@ -119,6 +123,26 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
                 finish();
             }
         });
+    }
+
+
+    /*
+     * 重力変更ダイアログを開く
+     */
+    private void showChangeGravityDialog( int gravity ) {
+
+        ChangeGravityDialog dialog = ChangeGravityDialog.newInstance();
+        dialog.selectedGravity( gravity );
+        dialog.setOnPositiveClickListener(new ChangeGravityDialog.PositiveClickListener() {
+                @Override
+                public void onPositiveClick(int gravity) {
+                    // ユーザーの選択した重力を反映
+                    FluidWorldRenderer render = glView.getRenderer();
+                    render.setGravity(gravity);
+                }
+            }
+        );
+        dialog.show( getFragmentManager(), "gravity" );
     }
 
     /*

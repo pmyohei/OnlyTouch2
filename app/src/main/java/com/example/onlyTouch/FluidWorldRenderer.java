@@ -10,7 +10,6 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.RadioButton;
 
 import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.BodyDef;
@@ -31,6 +30,7 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -56,8 +56,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private float[] mWorldPosMax;
     private float[] mWorldPosMid;
     private float[] mWorldPosMin;
-    // 重力の有無
-    private boolean mGravityOn;
 
     // 重力
     private final int GRAVITY = -10;
@@ -70,14 +68,32 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     // 粒子反復（適切な値は b2CalculateParticleIterations() で算出）
     private int mParticleIterations;
 
+    // 重力
+    private int mGravity;
+    public static final int GRAVITY_FLOAT   = 0;       // 浮く
+    public static final int GRAVITY_FLUFFY  = 1;       // ふわふわ浮く
+    public static final int GRAVITY_NONE    = 2;       // 重力なし
+    public static final int GRAVITY_DEFAULT = 3;       // 落ちる（デフォルト）
+    public static final int GRAVITY_STRONG  = 4;       // 強めの重力
+
+    // （重力種別、重力値）
+    private static final Map<Integer, Integer> mGravityScale = new HashMap<>();
+    static {
+        mGravityScale.put(GRAVITY_FLOAT,    30);
+        mGravityScale.put(GRAVITY_FLUFFY,   10);
+        mGravityScale.put(GRAVITY_NONE,      0);
+        mGravityScale.put(GRAVITY_DEFAULT, -10);
+        mGravityScale.put(GRAVITY_STRONG,  -30);
+    }
+
     //----------------
     // パーティクル
     //----------------
+    private final ParticleTouchInfo mParticleTouchInfo;
     private ParticleSystem mParticleSystem;
     private ParticleData mParticleData;
     private int mRegenerationState;
     private float mParticleRadius;
-    ParticleTouchInfo mParticleTouchInfo;
 
     // パーティクル再生成シーケンス
     public static final int PARTICLE_REGENE_STATE_DELETE  = 0;
@@ -194,7 +210,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // 物理世界生成
         //--------------
         mWorld = new World(0, GRAVITY);
-        mGravityOn = true;
+
+        mGravity = GRAVITY_DEFAULT;
 
         //-----------------
         // パーティクルの設定
@@ -599,7 +616,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         }
 
         // 横幅・縦幅を算出
-        float particleMaxWidth = Math.abs(maxParticleX - minParticleX);
+        float particleMaxWidth  = Math.abs(maxParticleX - minParticleX);
         float particleMaxHeight = Math.abs(maxParticleY - minParticleY);
 
         //-------------------------------------------------
@@ -608,7 +625,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // UV座標の最大・最小・横幅・縦幅
         float minUvX = mPolygonListManage.getUvMinX();
         float maxUvY = mPolygonListManage.getUvMaxY();
-        float UvMaxWidth = mPolygonListManage.getUvWidth();
+        float UvMaxWidth  = mPolygonListManage.getUvWidth();
         float UvMaxHeight = mPolygonListManage.getUvHeight();
 
         // 各パーティクル位置に対応するUV座標を計算し、バッファに保持する
@@ -656,7 +673,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             int lastIndex = line.size() - 1;
 
             // ラインの両サイドにあるパーティクル
-            int leftParticleIndex = line.get(0);
+            int leftParticleIndex  = line.get(0);
             int rightParticleIndex = line.get(lastIndex);
             // 格納
             borderBuff.add(leftParticleIndex);
@@ -1760,34 +1777,33 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         return mSoftness;
     }
 
-
     /*
-     * 重力の有無の切り替え
+     * 重力の変更
      */
-    public void switchGravity(boolean pin){
+    public void setGravity(int gravity){
 
-        // 有無を切り替え
-        mGravityOn = !mGravityOn;
+        // 指定された重力を保持
+        mGravity = gravity;
 
         //-----------
         // 重力の設定
         //-----------
-        int gravity;
-        if ( mGravityOn ){
-            gravity = GRAVITY;
-        } else {
-            gravity = 0;
-        }
-
+        // 設定する重力値
+        int gravityScaleY = mGravityScale.get( gravity );
         // 重力を変更
-        mWorld.setGravity( 0f, gravity );
+        mWorld.setGravity( 0f, gravityScaleY );
 
         //-----------
         // 粒子反復
         //-----------
-        // 適切な粒子反復を算出
-        mParticleIterations = liquidfun.b2CalculateParticleIterations( gravity, mParticleRadius, TIME_STEP );
+        // 適切な粒子反復を算出 !worldのstepで利用
+        mParticleIterations = liquidfun.b2CalculateParticleIterations( gravityScaleY, mParticleRadius, TIME_STEP );
     }
 
-
+    /*
+     * 重力種別を取得
+     */
+    public int getGravity(){
+        return mGravity;
+    }
 }

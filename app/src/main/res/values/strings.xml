@@ -43,6 +43,8 @@
 
     <!-- dialog -->
     <string name="dialog_change_soft_title">Change Soft</string>
+    <string name="dialog_change_gravity_title">Change Gravity</string>
+
 
 
 </resources>
