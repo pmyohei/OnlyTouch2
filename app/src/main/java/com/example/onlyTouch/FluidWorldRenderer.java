@@ -199,8 +199,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private final int NOT_FOUND_TRIANGLE_APEX = -1;
 
 
-
-
     /*
      * コンストラクタ
      */
@@ -749,9 +747,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //------------------
         // OpenGL
         //------------------
-        // 背景色を設定
-        // glClearColor() で指定した色で塗りつぶす
-        gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
         // ビューの変換行列の作成
         gl.glMatrixMode(GL10.GL_MODELVIEW);   // マトリクス(4x4の変換行列)の指定
         gl.glLoadIdentity();                  // 初期化
@@ -1331,24 +1326,29 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      */
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
+        // !==================
         // 参考
         // 端末縦：1080/2042
         // 端末横：2280/861
+        // !==================
 
         // 画面の範囲を指定
         gl.glViewport(0, 0, width, height);
 
         gl.glMatrixMode(GL10.GL_PROJECTION);
         gl.glLoadIdentity();
-        GLU.gluPerspective(gl,                     // 画面のパースペクティブを登録し、どの端末でも同じように描画できるよう設定
-                60f,                               // 縦の視野角を”度”単位で設定
+
+        // 画面のパースペクティブを登録し、どの端末でも同じように描画できるよう設定
+        GLU.gluPerspective(gl,
+                60f,                          // 縦の視野角を”度”単位で設定
                 (float) width / height,            // 縦に対する横方向の視野角の倍率
                 1f,                                // 一番近いZ位置を指定
                 50f);                              // 一番遠いZ位置を指定
 
-        GLU.gluLookAt(gl,                          // カメラの位置・姿勢を決定する
-                0, 15, 50,              // カメラの位置
-                0, 15, 0,           // カメラの注視点
+        // カメラの位置・姿勢を決定
+        GLU.gluLookAt(gl,
+                0, 15, 50,         // カメラの位置（視点）
+                0, 15, 0,           // カメラの注視点（カメラが見ているところ）
                 0, 1, 0                      // カメラの上方向
         );
     }
@@ -1360,7 +1360,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //------------------
         // GL
         //------------------
-        gl.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);      // 背景色
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);               // 頂点座標のバッファをセットしたことをOpenGLに伝える
         gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);        // テクスチャのマッピング座標のバッファをセットしたことをOpenGLに伝える
 
