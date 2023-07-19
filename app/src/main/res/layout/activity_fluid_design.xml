@@ -7,13 +7,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <android.support.constraint.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/baseline_menu_exp_home">
-
-    </android.support.constraint.ConstraintLayout>
-
     <!-- フレーム1 -->
     <!-- 物理空間 -->
     <android.support.constraint.ConstraintLayout
