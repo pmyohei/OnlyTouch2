@@ -8,7 +8,6 @@ import android.opengl.GLU;
 import android.opengl.GLUtils;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -131,6 +130,11 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private static final float BULLET_HALF_SIZE = BULLET_SIZE / 2;
     private static final float BULLET_DOUBLE_SIZE = BULLET_SIZE * 2;
 
+    //--------------------
+    // 背景
+    //--------------------
+    private DrawBackGround mDrawBackGround;
+
     //------------------
     // menu
     //------------------
@@ -197,6 +201,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     // レンダリング対象の三角形グループの頂点該当なし
     private final int NOT_FOUND_TRIANGLE_APEX = -1;
+
 
 
 
@@ -712,10 +717,14 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             return false;
         }
 
+        //--------------------------
+        // 初期処理
+        //--------------------------
         // world座標の計算
         calculateWorldPosition(gl);
         // 初期配置用の物体生成
         createPhysicsObject(gl);
+
         // GL初期化状態を描画可能に更新
         mGlInitStatus = GLInitStatus.Drawable;
 
@@ -750,6 +759,11 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // ビューの変換行列の作成
         gl.glMatrixMode(GL10.GL_MODELVIEW);   // マトリクス(4x4の変換行列)の指定
         gl.glLoadIdentity();                  // 初期化
+
+        //------------------
+        // 背景
+        //------------------
+        mDrawBackGround.draw(gl);
 
         //------------------
         // 物体関連
@@ -793,6 +807,12 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      * 各種物体生成
      */
     private void createPhysicsObject(GL10 gl) {
+
+        //---------------
+        // 背景
+        //---------------
+        int textureID = makeTexture(gl, R.drawable.texture_background);
+        mDrawBackGround = new DrawBackGround( mWorldPosMin, mWorldPosMax, textureID );
 
         //---------------
         // メニュー
