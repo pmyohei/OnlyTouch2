@@ -2,17 +2,15 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
+    android:layout_width="240dp"
     android:layout_height="wrap_content"
-    android:background="@color/dialog_tmp_1">
+    android:background="@drawable/frame_dialog">
 
     <TextView
-        android:id="@+id/tv_delayTimeContents"
+        android:id="@+id/tv_softTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
         android:text="@string/dialog_change_soft_title"
         android:textColor="@color/dialog_tmp_2"
         android:textSize="20sp"
@@ -26,29 +24,60 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@+id/tv_delayTimeContents"
+        app:layout_constraintTop_toBottomOf="@+id/tv_softTitle"
         app:layout_constraintBottom_toTopOf="@+id/v_border"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <RadioButton
             android:id="@+id/radio_soft"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Soft"/>
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp"
+            android:layout_marginStart="@dimen/radio_button_margin_x"
+            android:layout_marginEnd="@dimen/radio_button_margin_x"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:gravity="center"
+            android:button="@null"
+            android:background="@drawable/radio_button_selector_bg"
+            android:textColor="@drawable/radio_button_selector_tx"
+            android:text="@string/dialog_change_soft_too_soft"/>
 
         <RadioButton
             android:id="@+id/radio_normal"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Normal"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:layout_marginStart="@dimen/radio_button_margin_x"
+            android:layout_marginEnd="@dimen/radio_button_margin_x"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:gravity="center"
+            android:button="@null"
+            android:background="@drawable/radio_button_selector_bg"
+            android:textColor="@drawable/radio_button_selector_tx"
+            android:text="@string/dialog_change_soft_soft"
             android:checked="true"/>
 
         <RadioButton
             android:id="@+id/radio_little_hard"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="little hard"/>
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="24dp"
+            android:layout_marginStart="@dimen/radio_button_margin_x"
+            android:layout_marginEnd="@dimen/radio_button_margin_x"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:gravity="center"
+            android:button="@null"
+            android:background="@drawable/radio_button_selector_bg"
+            android:textColor="@drawable/radio_button_selector_tx"
+            android:text="@string/dialog_change_soft_little_hard"/>
+
     </RadioGroup>
 
     <!--    区切り線    -->

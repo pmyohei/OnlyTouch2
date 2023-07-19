@@ -45,6 +45,12 @@
     <string name="dialog_change_soft_title">Change Soft</string>
     <string name="dialog_change_gravity_title">Change Gravity</string>
 
+    <string name="dialog_change_soft_too_soft">Very Soft</string>
+    <string name="dialog_change_soft_soft">Soft</string>
+    <string name="dialog_change_soft_little_hard">Little hard</string>
 
+    <string name="dialog_change_gravity_float">Float</string>
+    <string name="dialog_change_gravity_nothing">No Gravity</string>
+    <string name="dialog_change_gravity_drop">Drop</string>
 
 </resources>

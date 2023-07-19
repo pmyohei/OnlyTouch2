@@ -2,9 +2,9 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
+    android:layout_width="240dp"
     android:layout_height="wrap_content"
-    android:background="@color/dialog_tmp_1">
+    android:background="@drawable/frame_dialog">
 
     <TextView
         android:id="@+id/tv_title"
@@ -31,36 +31,90 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!--    仕様として除外    -->
         <RadioButton
             android:id="@+id/radio_float"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp"
+            android:layout_marginStart="@dimen/radio_button_margin_x"
+            android:layout_marginEnd="@dimen/radio_button_margin_x"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:gravity="center"
+            android:button="@null"
+            android:background="@drawable/radio_button_selector_bg"
+            android:textColor="@drawable/radio_button_selector_tx"
+            android:visibility="gone"
             android:text="strong float"/>
 
         <RadioButton
             android:id="@+id/radio_fluffy"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="float"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp"
+            android:layout_marginStart="@dimen/radio_button_margin_x"
+            android:layout_marginEnd="@dimen/radio_button_margin_x"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:gravity="center"
+            android:button="@null"
+            android:background="@drawable/radio_button_selector_bg"
+            android:textColor="@drawable/radio_button_selector_tx"
+            android:text="@string/dialog_change_gravity_float"
             android:checked="true"/>
 
         <RadioButton
             android:id="@+id/radio_no_gravity"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="no gravity"/>
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:layout_marginStart="@dimen/radio_button_margin_x"
+            android:layout_marginEnd="@dimen/radio_button_margin_x"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:gravity="center"
+            android:button="@null"
+            android:background="@drawable/radio_button_selector_bg"
+            android:textColor="@drawable/radio_button_selector_tx"
+            android:text="@string/dialog_change_gravity_nothing"/>
 
         <RadioButton
             android:id="@+id/radio_gravity"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="gravity"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="24dp"
+            android:layout_marginStart="@dimen/radio_button_margin_x"
+            android:layout_marginEnd="@dimen/radio_button_margin_x"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:gravity="center"
+            android:button="@null"
+            android:background="@drawable/radio_button_selector_bg"
+            android:textColor="@drawable/radio_button_selector_tx"
+            android:text="@string/dialog_change_gravity_drop"
             android:checked="true"/>
 
+        <!--    仕様として除外    -->
         <RadioButton
             android:id="@+id/radio_strong_gravity"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="24dp"
+            android:layout_marginStart="@dimen/radio_button_margin_x"
+            android:layout_marginEnd="@dimen/radio_button_margin_x"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:gravity="center"
+            android:button="@null"
+            android:background="@drawable/radio_button_selector_bg"
+            android:textColor="@drawable/radio_button_selector_tx"
+            android:visibility="gone"
             android:text="strong gravity"/>
 
     </RadioGroup>

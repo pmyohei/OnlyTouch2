@@ -1353,7 +1353,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         );
     }
 
-    // レンダークラスの初期化時に呼ばれる
+    /*
+     * レンダークラスの初期化時に呼ばれる
+     */
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 
@@ -1416,9 +1418,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         gl10.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
         gl10.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
 
-        //------------------------------------------------
+        //-------------------
         // テクスチャを保持
-        //------------------------------------------------
+        //-------------------
         // リソースIDとテクスチャIDをMapとして保持する
         mMapResourceTexture.put(resourceId, textureIds[0]);
 

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 選択時の設定 -->
+    <item android:state_checked="true">
+        <shape android:shape="rectangle">
+            <!-- 背景色 -->
+            <solid android:color="@color/radio_button_selected_bg" />
+            <!-- 角丸 -->
+            <corners
+                android:topRightRadius="@dimen/radio_button_corners"
+                android:bottomRightRadius="@dimen/radio_button_corners"
+                android:bottomLeftRadius="@dimen/radio_button_corners"
+                android:topLeftRadius="@dimen/radio_button_corners"
+                />
+            <!-- 線の色 -->
+            <stroke
+                android:color="@color/radio_button_selected_bg"
+                android:width="@dimen/radio_button_stroke"
+                />
+        </shape>
+    </item>
+
+    <!-- 非選択時の設定 -->
+    <item android:state_checked="false">
+        <shape android:shape="rectangle">
+            <!-- 背景色 -->
+            <solid android:color="@color/radio_button_not_selected_bg" />
+            <!-- 角丸 -->
+            <corners
+                android:topRightRadius="@dimen/radio_button_corners"
+                android:bottomRightRadius="@dimen/radio_button_corners"
+                android:bottomLeftRadius="@dimen/radio_button_corners"
+                android:topLeftRadius="@dimen/radio_button_corners"
+                />
+            <!-- 線の色 -->
+            <stroke
+                android:color="@color/radio_button_not_selected_bg"
+                android:width="@dimen/radio_button_stroke"
+                />
+        </shape>
+    </item>
+</selector>

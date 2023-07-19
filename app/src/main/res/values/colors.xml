@@ -33,15 +33,21 @@
     <color name="menu_create_touch">#FEEEDC</color>
     <color name="menu_picture_touch">#BDE1DA</color>
 
-
     <color name="menu_icon">#FFFFFF</color>
     <color name="menu_exp_icon">#8F8F8F</color>
-
 
     <color name="dialog_tmp_1">#FEEEDC</color>
     <color name="dialog_tmp_2">#BDE1DA</color>
 
 
+    <color name="dialog_bg">#ffffff</color>
+    <color name="dialog_stroke">#BDE1DA</color>
+
+    <color name="radio_button_selected_tx">#ffffff</color>
+    <color name="radio_button_not_selected_tx">#4f3a43</color>
+
+    <color name="radio_button_selected_bg">#eb6c9f</color>
+    <color name="radio_button_not_selected_bg">#f1b9d0</color>
 
 
     <!--  -->
