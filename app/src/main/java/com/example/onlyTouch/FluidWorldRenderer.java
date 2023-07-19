@@ -8,6 +8,7 @@ import android.opengl.GLU;
 import android.opengl.GLUtils;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -57,8 +58,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private float[] mWorldPosMid;
     private float[] mWorldPosMin;
 
-    // 重力
-    private final int GRAVITY = -10;
     // 60fps
     private final float TIME_STEP = 1 / 60f;
     // 速度反復
@@ -200,6 +199,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private final int NOT_FOUND_TRIANGLE_APEX = -1;
 
 
+
     /*
      * コンストラクタ
      */
@@ -209,24 +209,23 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //--------------
         // 物理世界生成
         //--------------
-        mWorld = new World(0, GRAVITY);
-
+        // デフォルトの重力
         mGravity = GRAVITY_DEFAULT;
+        int gravity = mGravityScale.get(mGravity);
+        // world生成
+        mWorld = new World(0, gravity);
 
         //-----------------
         // パーティクルの設定
         //-----------------
-        // パーティクル半径：この値をあげると固くなる
+        mSoftness = SOFTNESS_NORMAL;
         mParticleRadius = DEFAULT_RADIUS;
         mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
         mParticleTouchInfo = new ParticleTouchInfo();
-        mSoftness = SOFTNESS_NORMAL;
-
         // ポリゴンリストデータ管理クラス
         mPolygonListManage = new PolygonListDataManager();
-
         // 適切な粒子反復を算出
-        mParticleIterations = liquidfun.b2CalculateParticleIterations(GRAVITY, mParticleRadius, TIME_STEP);
+        mParticleIterations = liquidfun.b2CalculateParticleIterations(gravity, mParticleRadius, TIME_STEP);
 
         //-----------------
         // Body
@@ -746,8 +745,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // OpenGL
         //------------------
         // 背景色を設定
-        // ！これは毎回必要？
-        gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
+        // glClearColor() で指定した色で塗りつぶす
+        gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
         // ビューの変換行列の作成
         gl.glMatrixMode(GL10.GL_MODELVIEW);   // マトリクス(4x4の変換行列)の指定
         gl.glLoadIdentity();                  // 初期化
@@ -768,7 +767,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         regenerationParticle(gl, particleGroup);
         // パーティクル描画更新
         updateParticleDraw(gl, particleGroup);
-
     }
 
     /*
@@ -808,7 +806,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // パーティクルシステム生成
         setupParticleSystem(mParticleRadius, DEFAULT_DENCITY, DEFAULT_ELASTIC_STRENGTH);
         // パーティクル生成
-        createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.texture_test_cat);
+        createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.texture_test_cat_2);
 
         //---------------
         // 壁
@@ -1326,16 +1324,16 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
         gl.glMatrixMode(GL10.GL_PROJECTION);
         gl.glLoadIdentity();
-        GLU.gluPerspective(gl,                         // 画面のパースペクティブを登録し、どの端末でも同じように描画できるよう設定
-                60f,                                // 縦の視野角を”度”単位で設定
-                (float) width / height,           // 縦に対する横方向の視野角の倍率
+        GLU.gluPerspective(gl,                     // 画面のパースペクティブを登録し、どの端末でも同じように描画できるよう設定
+                60f,                               // 縦の視野角を”度”単位で設定
+                (float) width / height,            // 縦に対する横方向の視野角の倍率
                 1f,                                // 一番近いZ位置を指定
-                50f);                               // 一番遠いZ位置を指定
+                50f);                              // 一番遠いZ位置を指定
 
-        GLU.gluLookAt(gl,                             // カメラの位置・姿勢を決定する
-                0, 15, 50,            // カメラの位置
-                0, 15, 0,       // カメラの注視点
-                0, 1, 0                 // カメラの上方向
+        GLU.gluLookAt(gl,                          // カメラの位置・姿勢を決定する
+                0, 15, 50,              // カメラの位置
+                0, 15, 0,           // カメラの注視点
+                0, 1, 0                      // カメラの上方向
         );
     }
 
@@ -1343,21 +1341,23 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 
-        // gl.glEnable(GL10.GL_DEPTH_TEST);
-//         gl.glClearColor(0.0f, 0.0f, 1.0f, 1.0f);                 // 背景色    青
+        //------------------
+        // GL
+        //------------------
         gl.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);      // 背景色
-        gl.glEnable(GL10.GL_LIGHTING);                              // ライティングを有効化
-        gl.glEnable(GL10.GL_LIGHT0);                                // 光源の指定。GL_LIGHT0 から GL_LIGHT7 番までの8つの光源がある。
-        gl.glDepthFunc(GL10.GL_LEQUAL);                             // 深度値と深度バッファの震度を比較する関数の指定。GL_LEQUALは入って来る深度値が格納された深度値以下である時に通過
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);               // 頂点座標のバッファをセットしたことをOpenGLに伝える
         gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);        // テクスチャのマッピング座標のバッファをセットしたことをOpenGLに伝える
 
         // テクスチャの有効化
-        gl.glEnable(GL10.GL_TEXTURE_2D);                              // テクスチャの利用を有効にする
+        gl.glEnable(GL10.GL_TEXTURE_2D);
+        // !これをしないと、画像テクスチャの背景が透過されない
         gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
         gl.glEnable(GL10.GL_BLEND);
 
-        // ステータス更新
+        //------------------
+        // ステータス
+        //------------------
+        // GLステータス更新
         mGlInitStatus = GLInitStatus.FinInit;
     }
 
