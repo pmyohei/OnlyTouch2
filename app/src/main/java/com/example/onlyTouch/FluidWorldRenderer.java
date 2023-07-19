@@ -119,16 +119,12 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private final ArrayList<Bullet> mRemoveBullets;
     private int mBulletShotCycle;
     private float mBulletShotPosX;
+    // 弾サイズ
+    private static final float BULLET_SIZE = 0.4f;
 
     // Body
     private Body mMenuBody;
     private Body mOverlapBody;
-
-
-    // 弾サイズ
-    private static final float BULLET_SIZE = 0.4f;
-    private static final float BULLET_HALF_SIZE = BULLET_SIZE / 2;
-    private static final float BULLET_DOUBLE_SIZE = BULLET_SIZE * 2;
 
     //--------------------
     // 背景
@@ -1275,7 +1271,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //---------------
         // 発射位置：X座標　　！Y座標は発射位置固定としており、変換対象の値はなんでもよいため0としている
         float[] shotPosX = convPointScreenToWorld(mBulletShotPosX, 0, gl);
-        float shotPosY = mWorldPosMin[1] + BULLET_DOUBLE_SIZE;
+        float shotPosY = mWorldPosMin[1] + (BULLET_SIZE * 2);
 
         // 弾用のテクスチャ生成
         int textureId = makeTexture(gl, Bullet.TEXTURE_RESOUCE_ID);
