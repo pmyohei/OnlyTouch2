@@ -34,10 +34,10 @@
     <!-- 流体画面下部 -->
     <string name="fluid_bottom_message">You can touch it！</string>
     <string name="fluid_bottom_menu_contents_init">▲</string>
-    <string name="fluid_bottom_menu_contents_gravity">Change the strength of gravity.</string>
-    <string name="fluid_bottom_menu_contents_center">Move to the center.</string>
+    <string name="fluid_bottom_menu_contents_gravity">Change the gravity.</string>
     <string name="fluid_bottom_menu_contents_soft">Change the softness.</string>
     <string name="fluid_bottom_menu_contents_bullet">Shoot bullets.</string>
+    <string name="fluid_bottom_menu_contents_center">Move to the center.</string>
     <string name="fluid_bottom_menu_contents_home">Return to home.</string>
     <string name="title_activity_information">InformationActivity</string>
 

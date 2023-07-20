@@ -49,32 +49,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/menu_explanation_margin"
                 android:text="@string/fluid_bottom_menu_contents_gravity"
-                android:textSize="16sp"
+                android:textSize="@dimen/menu_explanation_tx"
                 app:layout_constraintBottom_toBottomOf="@+id/explanation_gravity_icon"
                 app:layout_constraintStart_toEndOf="@+id/explanation_gravity_icon"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <ImageView
-                android:id="@+id/explanation_center_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/menu_explanation_line_spacing"
-                android:background="@drawable/baseline_menu_exp_center"
-                app:layout_constraintTop_toBottomOf="@+id/explanation_gravity_icon"
-                app:layout_constraintStart_toStartOf="parent"/>
-
-            <TextView
-                android:id="@+id/explanation_center"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/menu_explanation_line_spacing"
-                android:layout_marginStart="@dimen/menu_explanation_margin"
-                android:text="@string/fluid_bottom_menu_contents_center"
-                android:textSize="16sp"
-                app:layout_constraintBottom_toBottomOf="@+id/explanation_center_icon"
-                app:layout_constraintStart_toEndOf="@+id/explanation_center_icon"
-                app:layout_constraintTop_toBottomOf="@+id/explanation_gravity_icon" />
-
+                app:layout_constraintTop_toTopOf="@+id/explanation_gravity_icon" />
 
             <ImageView
                 android:id="@+id/explanation_soft_icon"
@@ -82,21 +60,19 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/menu_explanation_line_spacing"
                 android:background="@drawable/baseline_menu_exp_soft"
-                app:layout_constraintTop_toBottomOf="@+id/explanation_center_icon"
+                app:layout_constraintTop_toBottomOf="@+id/explanation_gravity_icon"
                 app:layout_constraintStart_toStartOf="parent"/>
 
             <TextView
                 android:id="@+id/explanation_soft"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/menu_explanation_line_spacing"
                 android:layout_marginStart="@dimen/menu_explanation_margin"
                 android:text="@string/fluid_bottom_menu_contents_soft"
-                android:textSize="16sp"
+                android:textSize="@dimen/menu_explanation_tx"
                 app:layout_constraintBottom_toBottomOf="@+id/explanation_soft_icon"
                 app:layout_constraintStart_toEndOf="@+id/explanation_soft_icon"
-                app:layout_constraintTop_toBottomOf="@+id/explanation_center_icon" />
-
+                app:layout_constraintTop_toTopOf="@+id/explanation_soft_icon" />
 
             <ImageView
                 android:id="@+id/explanation_bullet_icon"
@@ -111,13 +87,32 @@
                 android:id="@+id/explanation_bullet"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/menu_explanation_line_spacing"
                 android:layout_marginStart="@dimen/menu_explanation_margin"
                 android:text="@string/fluid_bottom_menu_contents_bullet"
-                android:textSize="16sp"
+                android:textSize="@dimen/menu_explanation_tx"
                 app:layout_constraintBottom_toBottomOf="@+id/explanation_bullet_icon"
                 app:layout_constraintStart_toEndOf="@+id/explanation_bullet_icon"
-                app:layout_constraintTop_toBottomOf="@+id/explanation_soft_icon" />
+                app:layout_constraintTop_toTopOf="@+id/explanation_bullet_icon" />
+
+            <ImageView
+                android:id="@+id/explanation_center_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/menu_explanation_line_spacing"
+                android:background="@drawable/baseline_menu_exp_center"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/explanation_bullet_icon" />
+
+            <TextView
+                android:id="@+id/explanation_center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/menu_explanation_margin"
+                android:text="@string/fluid_bottom_menu_contents_center"
+                android:textSize="@dimen/menu_explanation_tx"
+                app:layout_constraintBottom_toBottomOf="@+id/explanation_center_icon"
+                app:layout_constraintStart_toEndOf="@+id/explanation_center_icon"
+                app:layout_constraintTop_toTopOf="@+id/explanation_center_icon" />
 
             <ImageView
                 android:id="@+id/explanation_home_icon"
@@ -125,20 +120,19 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/menu_explanation_line_spacing"
                 android:background="@drawable/baseline_menu_exp_home"
-                app:layout_constraintTop_toBottomOf="@+id/explanation_bullet_icon"
+                app:layout_constraintTop_toBottomOf="@+id/explanation_center_icon"
                 app:layout_constraintStart_toStartOf="parent"/>
 
             <TextView
                 android:id="@+id/explanation_home"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/menu_explanation_line_spacing"
                 android:layout_marginStart="@dimen/menu_explanation_margin"
                 android:text="@string/fluid_bottom_menu_contents_home"
-                android:textSize="16sp"
+                android:textSize="@dimen/menu_explanation_tx"
                 app:layout_constraintBottom_toBottomOf="@+id/explanation_home_icon"
                 app:layout_constraintStart_toEndOf="@+id/explanation_home_icon"
-                app:layout_constraintTop_toBottomOf="@+id/explanation_bullet_icon" />
+                app:layout_constraintTop_toTopOf="@+id/explanation_home_icon" />
 
         </android.support.constraint.ConstraintLayout>
 
@@ -208,22 +202,12 @@
                     app:layout_constraintEnd_toEndOf="parent"/>
 
                 <ImageButton
-                    android:id="@+id/ib_center"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="@dimen/menu_icon_margin"
-                    android:background="@drawable/baseline_menu_center"
-                    app:layout_constraintTop_toBottomOf="@id/ib_gravity"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
-
-                <ImageButton
                     android:id="@+id/ib_soft"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/menu_icon_margin"
                     android:background="@drawable/baseline_menu_soft"
-                    app:layout_constraintTop_toBottomOf="@id/ib_center"
+                    app:layout_constraintTop_toBottomOf="@id/ib_gravity"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
 
@@ -238,12 +222,22 @@
                     app:layout_constraintEnd_toEndOf="parent" />
 
                 <ImageButton
+                    android:id="@+id/ib_center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/menu_icon_margin"
+                    android:background="@drawable/baseline_menu_center"
+                    app:layout_constraintTop_toBottomOf="@id/ib_bullet"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <ImageButton
                     android:id="@+id/ib_home"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/menu_icon_margin"
                     android:background="@drawable/baseline_menu_home"
-                    app:layout_constraintTop_toBottomOf="@id/ib_bullet"
+                    app:layout_constraintTop_toBottomOf="@id/ib_center"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
 
