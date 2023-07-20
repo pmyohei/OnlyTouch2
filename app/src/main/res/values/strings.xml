@@ -3,6 +3,14 @@
 
     <string name="action_settings">Settings</string>
 
+    <!--  スプラッシュ画面  -->
+    <string name="splash">Usagi Project</string>
+
+    <!--  Home画面  -->
+    <string name="home_prompt_touch">Touch!</string>
+    <string name="home_prompt_touch_sub">Play with cat.</string>
+
+
     <string name="meun_title_create">Create</string>
     <string name="meun_title_create_detail">Make animals from soft things.</string>
     <string name="meun_title_picture">Play</string>

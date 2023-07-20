@@ -8,9 +8,10 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 /*
- * スプラッシュイメージの表示画面
+ * スプラッシュ画面
  */
 public class SplashActivity extends AppCompatActivity {
 
@@ -19,20 +20,34 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        //スプラッシュのイメージにアニメーションを設定する
-        final ImageView imageView = (ImageView)findViewById(R.id.splash_image);
+        // スプラッシュアニメーション開始
+        startSplashAnimation();
+    }
 
-        //アニメーションを順番で設定
-        AnimatorSet set = (AnimatorSet) AnimatorInflater.loadAnimator(this, R.animator.splash);
-        set.setTarget(imageView);
-        set.start();
 
-        set.addListener(new AnimatorListenerAdapter() {
+    /*
+     * スプラッシュアニメーション開始
+     */
+    private void startSplashAnimation(){
+
+        // スプラッシュのイメージにアニメーションを設定する
+        final TextView tx_splash = (TextView)findViewById(R.id.tx_splash);
+
+        // アニメーションを順番で設定
+        AnimatorSet animator = (AnimatorSet) AnimatorInflater.loadAnimator(this, R.animator.splash);
+        animator.setTarget(tx_splash);
+
+        // アニメーション終了時処理
+        animator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 //アニメーション終了時に画面遷移
-                startActivity(new Intent(imageView.getContext(), MenuActivity.class));
+                startActivity(new Intent(tx_splash.getContext(), HomeActivity.class));
+                overridePendingTransition( R.anim.page_slide_up, R.anim.slide_down );
             }
         });
+
+        // start
+        animator.start();
     }
 }

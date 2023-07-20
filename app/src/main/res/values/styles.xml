@@ -23,4 +23,10 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <!-- ダイアログ show／close アニメーション -->
+    <style name="dialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/dialog_open</item>
+        <item name="android:windowExitAnimation">@anim/dialog_close</item>
+    </style>
+
 </resources>

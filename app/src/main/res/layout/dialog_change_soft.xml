@@ -2,7 +2,7 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="240dp"
+    android:layout_width="@dimen/dialog_width"
     android:layout_height="wrap_content"
     android:background="@drawable/frame_dialog">
 
@@ -10,10 +10,11 @@
         android:id="@+id/tv_softTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="12dp"
         android:text="@string/dialog_change_soft_title"
-        android:textColor="@color/dialog_tmp_2"
-        android:textSize="20sp"
+        android:textColor="@color/dialog_title_tx"
+        android:textSize="@dimen/dialog_title_size"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/rg_soft_choice"
         app:layout_constraintStart_toStartOf="parent"
@@ -43,6 +44,7 @@
             android:button="@null"
             android:background="@drawable/radio_button_selector_bg"
             android:textColor="@drawable/radio_button_selector_tx"
+            android:textSize="@dimen/radio_button_tx"
             android:text="@string/dialog_change_soft_too_soft"/>
 
         <RadioButton
@@ -59,6 +61,7 @@
             android:button="@null"
             android:background="@drawable/radio_button_selector_bg"
             android:textColor="@drawable/radio_button_selector_tx"
+            android:textSize="@dimen/radio_button_tx"
             android:text="@string/dialog_change_soft_soft"
             android:checked="true"/>
 
@@ -76,6 +79,7 @@
             android:button="@null"
             android:background="@drawable/radio_button_selector_bg"
             android:textColor="@drawable/radio_button_selector_tx"
+            android:textSize="@dimen/radio_button_tx"
             android:text="@string/dialog_change_soft_little_hard"/>
 
     </RadioGroup>
@@ -84,11 +88,11 @@
     <View
         android:id="@+id/v_border"
         android:layout_width="match_parent"
-        android:layout_height="0.4dp"
+        android:layout_height="@dimen/dialog_partition_line"
         android:layout_marginBottom="12dp"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
-        android:background="@color/dialog_tmp_2"
+        android:background="@color/dialog_stroke"
         app:layout_constraintBottom_toTopOf="@+id/iv_positive"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

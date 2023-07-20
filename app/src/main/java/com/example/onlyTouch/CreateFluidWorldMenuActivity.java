@@ -1,5 +1,7 @@
 package com.example.onlyTouch;
 
+import android.animation.AnimatorInflater;
+import android.animation.AnimatorSet;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Point;

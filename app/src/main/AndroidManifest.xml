@@ -22,6 +22,7 @@
         <activity android:name="com.example.onlyTouch.CreateFluidWorldMenuActivity" />
         <activity android:name="com.example.onlyTouch.SelectPictureActivity" />
         <activity android:name="com.example.onlyTouch.MenuActivity" />
+        <activity android:name="com.example.onlyTouch.HomeActivity" />
         <activity android:name="com.example.onlyTouch.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

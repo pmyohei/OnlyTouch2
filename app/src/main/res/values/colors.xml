@@ -11,6 +11,14 @@
     <color name="menu_collection">#FFD966</color>
     <color name="menu_play">#9AC46B</color>
     -->
+    <color name="splash_tx">#706c61</color>
+    <color name="splash_bg">#FFFFFF</color>
+
+    <!--  Home画面  -->
+    <color name="home_bg">#d3d5ec</color>
+    <color name="home_tx">#FFFFFF</color>
+
+
     <color name="menu_create">#FEEEDC</color>
     <color name="menu_picture">#BDE1DA</color>
     <color name="menu_collection">#F5B5A7</color>
@@ -40,14 +48,15 @@
     <color name="dialog_tmp_2">#BDE1DA</color>
 
 
-    <color name="dialog_bg">#ffffff</color>
-    <color name="dialog_stroke">#BDE1DA</color>
+    <color name="dialog_bg">#FFFFFF</color>
+    <color name="dialog_stroke">#F7CAC9</color>
+    <color name="dialog_title_tx">#eb6c9f</color>
 
     <color name="radio_button_selected_tx">#ffffff</color>
     <color name="radio_button_not_selected_tx">#4f3a43</color>
 
     <color name="radio_button_selected_bg">#eb6c9f</color>
-    <color name="radio_button_not_selected_bg">#f1b9d0</color>
+    <color name="radio_button_not_selected_bg">#F7CAC9</color>
 
 
     <!--  -->
