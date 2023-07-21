@@ -287,7 +287,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * パーティクル生成
      */
-    public void createFluidBody(GL10 gl, float width, float height, float posX, float posY, float particleRadius, int resId) {
+    public void createFluidBody(GL10 gl, float width, float height, float posX, float posY, float particleRadius) {
 
         // パーティクルグループ生成
         ParticleGroup particleGroup = setupParticleGroup(width, height, posX, posY);
@@ -309,7 +309,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         ArrayList<Integer> border = generateBorderParticleBuff(allParticleLine);
 
         // パーティクル情報の追加
-        int textureId = makeTexture(gl, resId);
+        int textureId = makeTexture(gl, R.drawable.texture_test_cat_1);
         addParticleData(gl, particleGroup, particleRadius, allParticleLine, border, textureId);
     }
 
@@ -817,7 +817,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         // パーティクルシステム生成
         setupParticleSystem(mParticleRadius, DEFAULT_DENCITY, DEFAULT_ELASTIC_STRENGTH);
         // パーティクル生成
-        createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.texture_test_cat_2);
+        createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius);
 
         //---------------
         // 壁
@@ -955,7 +955,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             //---------------
             case PARTICLE_REGENE_STATE_CREATE:
                 // パーティクル生成
-                createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius, R.drawable.texture_test_cat);
+                createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius);
                 // オーバーラップ物体を生成
                 mOverlapBody = createBoxBody(1f, 1f, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody);
                 // オーバーラップ物体ありに更新
