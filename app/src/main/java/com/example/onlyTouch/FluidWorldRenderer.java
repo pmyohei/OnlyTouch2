@@ -315,7 +315,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     /*
      * パーティクルシステムの生成
-     *   !パラメータは柔らかさの決定因子
+     *   !パラメータ：柔らかさの決定因子
      */
     private void setupParticleSystem(float particleRadius, float particleDensity, float particleElasticStrength) {
         // パーティクルシステム定義

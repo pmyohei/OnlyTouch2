@@ -20,7 +20,7 @@ public class FluidGLSurfaceView extends GLSurfaceView {
     public FluidGLSurfaceView(Context context, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
         super(context);
 
-        //Rendererオブジェクトに描画を委譲
+        // Rendererオブジェクトに描画を委譲
         mRenderer = new FluidWorldRenderer(this, bmp, select, touchList);
         setRenderer(mRenderer);
 
