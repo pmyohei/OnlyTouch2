@@ -41,7 +41,9 @@ public class SplashActivity extends AppCompatActivity {
             public void onAnimationEnd(Animator animation) {
                 //アニメーション終了時に画面遷移
                 startActivity(new Intent(tx_splash.getContext(), HomeActivity.class));
-                overridePendingTransition( R.anim.page_slide_up, R.anim.page_slide_down);
+
+                // 画面遷移後、戻る操作で戻れないように本画面は終了しておく
+                finish();
             }
         });
 
