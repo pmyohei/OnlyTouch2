@@ -9,6 +9,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/NoActionBar">
+
         <activity android:name="com.example.onlyTouch.ParticleWorldActivity" />
         <activity android:name="com.example.onlyTouch.HomeActivity" />
         <activity android:name="com.example.onlyTouch.SplashActivity">
@@ -17,6 +18,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>
