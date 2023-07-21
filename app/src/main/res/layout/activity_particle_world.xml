@@ -2,7 +2,7 @@
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/container"
+    android:id="@+id/fl_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -151,7 +151,7 @@
                 android:id="@+id/text_primary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/meun_title_picture"
+                android:text="@string/fluid_bottom_title"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 app:layout_constraintTop_toTopOf="parent"
@@ -196,7 +196,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/menu_icon_margin"
-                    android:background="@drawable/baseline_menu_gravity"
+                    android:background="@drawable/baseline_menu_icon_gravity"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"/>
@@ -206,7 +206,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/menu_icon_margin"
-                    android:background="@drawable/baseline_menu_soft"
+                    android:background="@drawable/baseline_menu_icon_soft"
                     app:layout_constraintTop_toBottomOf="@id/ib_gravity"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
@@ -216,7 +216,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/menu_icon_margin"
-                    android:background="@drawable/baseline_menu_bullet"
+                    android:background="@drawable/baseline_menu_icon_bullet"
                     app:layout_constraintTop_toBottomOf="@id/ib_soft"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
@@ -226,7 +226,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/menu_icon_margin"
-                    android:background="@drawable/baseline_menu_center"
+                    android:background="@drawable/baseline_menu_icon_center"
                     app:layout_constraintTop_toBottomOf="@id/ib_bullet"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
@@ -236,7 +236,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/menu_icon_margin"
-                    android:background="@drawable/baseline_menu_home"
+                    android:background="@drawable/baseline_menu_icon_home"
                     app:layout_constraintTop_toBottomOf="@id/ib_center"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
@@ -259,7 +259,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/menu_icon_margin"
-                    android:background="@drawable/baseline_menu_expand"
+                    android:background="@drawable/baseline_menu_icon_expand"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"

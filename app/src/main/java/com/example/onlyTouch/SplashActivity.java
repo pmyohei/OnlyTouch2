@@ -7,7 +7,6 @@ import android.animation.AnimatorSet;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 /*
@@ -23,7 +22,6 @@ public class SplashActivity extends AppCompatActivity {
         // スプラッシュアニメーション開始
         startSplashAnimation();
     }
-
 
     /*
      * スプラッシュアニメーション開始
@@ -43,7 +41,7 @@ public class SplashActivity extends AppCompatActivity {
             public void onAnimationEnd(Animator animation) {
                 //アニメーション終了時に画面遷移
                 startActivity(new Intent(tx_splash.getContext(), HomeActivity.class));
-                overridePendingTransition( R.anim.page_slide_up, R.anim.slide_down );
+                overridePendingTransition( R.anim.page_slide_up, R.anim.page_slide_down);
             }
         });
 

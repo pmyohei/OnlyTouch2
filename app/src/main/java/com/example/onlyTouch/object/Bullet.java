@@ -1,14 +1,12 @@
-package com.example.onlyTouch;
+package com.example.onlyTouch.object;
 
-import static com.example.onlyTouch.FluidWorldRenderer.convFloatBuffer;
+import static com.example.onlyTouch.opengl.ParticleWorldRenderer.convFloatBuffer;
 
-import android.util.Log;
-
+import com.example.onlyTouch.R;
 import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.BodyDef;
 import com.google.fpl.liquidfun.BodyType;
 import com.google.fpl.liquidfun.CircleShape;
-import com.google.fpl.liquidfun.FixtureDef;
 import com.google.fpl.liquidfun.Vec2;
 import com.google.fpl.liquidfun.World;
 

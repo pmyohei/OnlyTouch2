@@ -1,4 +1,4 @@
-package com.example.onlyTouch;
+package com.example.onlyTouch.opengl;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -11,6 +11,12 @@ import android.support.annotation.RequiresApi;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.example.onlyTouch.R;
+import com.example.onlyTouch.object.Bullet;
+import com.example.onlyTouch.object.DrawBackGround;
+import com.example.onlyTouch.particle.ParticleData;
+import com.example.onlyTouch.particle.ParticleTouchInfo;
+import com.example.onlyTouch.particle.PolygonListDataManager;
 import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.BodyDef;
 import com.google.fpl.liquidfun.BodyType;
@@ -39,7 +45,7 @@ import javax.microedition.khronos.opengles.GL11;
 /*
  * 物理世界で流体生成・レンダリング
  */
-public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchListener {
+public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchListener {
 
     /* LiquidFun ロード */
     static {
@@ -173,10 +179,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     //------------------
     // OpenGL
     //------------------
-    private FluidGLSurfaceView mGLSurfaceView;
     private GLInitStatus mGlInitStatus;
-    private HashMap<Integer, Integer> mMapResourceTexture;
-    private PolygonListDataManager mPolygonListManage;
+    private final ParticleGLSurfaceView mGLSurfaceView;
+    private final HashMap<Integer, Integer> mMapResourceTexture;
+    private final PolygonListDataManager mPolygonListManage;
 
     // OpenGL 描画開始シーケンス
     enum GLInitStatus {
@@ -202,7 +208,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * コンストラクタ
      */
-    public FluidWorldRenderer(FluidGLSurfaceView glSurfaceView, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
+    public ParticleWorldRenderer(ParticleGLSurfaceView glSurfaceView) {
         mGLSurfaceView = glSurfaceView;
 
         //--------------
@@ -1751,19 +1757,19 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
         // ユーザー指定に応じて、パラメータを設定
         switch( softness ) {
-            case FluidWorldRenderer.SOFTNESS_SOFT:
+            case ParticleWorldRenderer.SOFTNESS_SOFT:
                 radius          = SOFT_RADIUS;
                 dencity         = SOFT_DENCITY;
                 elasticStrength = SOFT_ELASTIC_STRENGTH;
                 break;
 
-            case FluidWorldRenderer.SOFTNESS_NORMAL:
+            case ParticleWorldRenderer.SOFTNESS_NORMAL:
                 radius          = DEFAULT_RADIUS;
                 dencity         = DEFAULT_DENCITY;
                 elasticStrength = DEFAULT_ELASTIC_STRENGTH;
                 break;
 
-            case FluidWorldRenderer.SOFTNESS_LITTEL_HARD:
+            case ParticleWorldRenderer.SOFTNESS_LITTEL_HARD:
                 radius          = LITTLE_HARD_RADIUS;
                 dencity         = LITTLE_HARD_DENCITY;
                 elasticStrength = LITTLE_HARD_ELASTIC_STRENGTH;

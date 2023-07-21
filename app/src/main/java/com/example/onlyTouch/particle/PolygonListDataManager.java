@@ -1,9 +1,10 @@
-package com.example.onlyTouch;
+package com.example.onlyTouch.particle;
 
 import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.util.Log;
 
+import com.example.onlyTouch.R;
 import com.google.fpl.liquidfun.ParticleGroupDef;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -33,7 +34,7 @@ public class PolygonListDataManager {
     private static final int LEVELING_SHAPE_SIZE_VALUE = 8;  //最大長を必ずこの値とする
 
     //plistファイル指定
-    enum PLIST_KIND{
+    public enum PLIST_KIND{
         PLIST_RABBIT,
         PLIST_CAT
     }

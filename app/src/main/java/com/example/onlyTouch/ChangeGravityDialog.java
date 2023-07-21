@@ -7,6 +7,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 
+import com.example.onlyTouch.opengl.ParticleWorldRenderer;
+
 /*
  * 重力変更ダイアログ
  */
@@ -58,19 +60,19 @@ public class ChangeGravityDialog extends DialogFragment implements View.OnClickL
 
         // 設定中の重力を選択中状態にする
         switch(mChoiceGravity) {
-            case FluidWorldRenderer.GRAVITY_FLOAT:
+            case ParticleWorldRenderer.GRAVITY_FLOAT:
                 ((RadioButton)dialog.findViewById( R.id.radio_float )).setChecked( true );
                 break;
-            case FluidWorldRenderer.GRAVITY_FLUFFY:
+            case ParticleWorldRenderer.GRAVITY_FLUFFY:
                 ((RadioButton)dialog.findViewById( R.id.radio_fluffy )).setChecked( true );
                 break;
-            case FluidWorldRenderer.GRAVITY_NONE:
+            case ParticleWorldRenderer.GRAVITY_NONE:
                 ((RadioButton)dialog.findViewById( R.id.radio_no_gravity )).setChecked( true );
                 break;
-            case FluidWorldRenderer.GRAVITY_DEFAULT:
+            case ParticleWorldRenderer.GRAVITY_DEFAULT:
                 ((RadioButton)dialog.findViewById( R.id.radio_gravity )).setChecked( true );
                 break;
-            case FluidWorldRenderer.GRAVITY_STRONG:
+            case ParticleWorldRenderer.GRAVITY_STRONG:
                 ((RadioButton)dialog.findViewById( R.id.radio_strong_gravity )).setChecked( true );
                 break;
             default:
@@ -129,31 +131,31 @@ public class ChangeGravityDialog extends DialogFragment implements View.OnClickL
         switch(view.getId()) {
             case R.id.radio_float:
                 if (checked) {
-                    mChoiceGravity = FluidWorldRenderer.GRAVITY_FLOAT;
+                    mChoiceGravity = ParticleWorldRenderer.GRAVITY_FLOAT;
                 }
                 break;
 
             case R.id.radio_fluffy:
                 if (checked) {
-                    mChoiceGravity = FluidWorldRenderer.GRAVITY_FLUFFY;
+                    mChoiceGravity = ParticleWorldRenderer.GRAVITY_FLUFFY;
                 }
                 break;
 
             case R.id.radio_no_gravity:
                 if (checked) {
-                    mChoiceGravity = FluidWorldRenderer.GRAVITY_NONE;
+                    mChoiceGravity = ParticleWorldRenderer.GRAVITY_NONE;
                 }
                 break;
 
             case R.id.radio_gravity:
                 if (checked) {
-                    mChoiceGravity = FluidWorldRenderer.GRAVITY_DEFAULT;
+                    mChoiceGravity = ParticleWorldRenderer.GRAVITY_DEFAULT;
                 }
                 break;
 
             case R.id.radio_strong_gravity:
                 if (checked) {
-                    mChoiceGravity = FluidWorldRenderer.GRAVITY_STRONG;
+                    mChoiceGravity = ParticleWorldRenderer.GRAVITY_STRONG;
                 }
                 break;
 

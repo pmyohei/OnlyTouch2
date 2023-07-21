@@ -4,13 +4,7 @@
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
 
-    <!-- menu -->
-    <!--
-    <color name="menu_create">#FFA7D3</color>
-    <color name="menu_picture">#8FAADC</color>
-    <color name="menu_collection">#FFD966</color>
-    <color name="menu_play">#9AC46B</color>
-    -->
+    <!--  スプラッシュ画面  -->
     <color name="splash_tx">#706c61</color>
     <color name="splash_bg">#FFFFFF</color>
 
@@ -18,7 +12,29 @@
     <color name="home_bg">#d3d5ec</color>
     <color name="home_tx">#FFFFFF</color>
 
+    <!--  menu  -->
+    <color name="menu_bg_collapsed">#B9FCC78C</color>
+    <color name="menu_bg_expanded">#BDE1DA</color>
 
+    <color name="menu_icon">#FFFFFF</color>
+    <color name="menu_exp_icon">#8F8F8F</color>
+
+    <!-- ダイアログ -->
+    <color name="dialog_bg">#FFFFFF</color>
+    <color name="dialog_stroke">#F7CAC9</color>
+    <color name="dialog_title_tx">#eb6c9f</color>
+
+    <!-- ラジオボタン -->
+    <color name="radio_button_selected_tx">#ffffff</color>
+    <color name="radio_button_not_selected_tx">#4f3a43</color>
+
+    <color name="radio_button_selected_bg">#eb6c9f</color>
+    <color name="radio_button_not_selected_bg">#F7CAC9</color>
+
+
+
+
+    <!-- 削除予定 -->
     <color name="menu_create">#FEEEDC</color>
     <color name="menu_picture">#BDE1DA</color>
     <color name="menu_collection">#F5B5A7</color>
@@ -32,34 +48,5 @@
 
     <color name="menu_text">#FEEEDC</color>
 
-
-    <!-- menu touch -->
-    <!--
-    <color name="menu_create_touch">#F8C7E0</color>
-    <color name="menu_picture_touch">#ABC3F1</color>
-    -->
-    <color name="menu_create_touch">#FEEEDC</color>
-    <color name="menu_picture_touch">#BDE1DA</color>
-
-    <color name="menu_icon">#FFFFFF</color>
-    <color name="menu_exp_icon">#8F8F8F</color>
-
-    <color name="dialog_tmp_1">#FEEEDC</color>
-    <color name="dialog_tmp_2">#BDE1DA</color>
-
-
-    <color name="dialog_bg">#FFFFFF</color>
-    <color name="dialog_stroke">#F7CAC9</color>
-    <color name="dialog_title_tx">#eb6c9f</color>
-
-    <color name="radio_button_selected_tx">#ffffff</color>
-    <color name="radio_button_not_selected_tx">#4f3a43</color>
-
-    <color name="radio_button_selected_bg">#eb6c9f</color>
-    <color name="radio_button_not_selected_bg">#F7CAC9</color>
-
-
-    <!--  -->
-    <color name="flick_area">#EFCEF5</color>
 
 </resources>

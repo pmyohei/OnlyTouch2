@@ -1,4 +1,4 @@
-package com.example.onlyTouch;
+package com.example.onlyTouch.particle;
 
 /*
  * パーティクルタッチ情報
@@ -23,15 +23,15 @@ public class ParticleTouchInfo {
     // 変数
     //-----------------------
     // タッチ状態
-    ParticleTouchStatus status;
+    public ParticleTouchStatus status;
     // タッチしている境界パーティクル
-    int borderIndex;
+    public int borderIndex;
     // タッチ座標
-    float touchPosX;
-    float touchPosY;
+    public float touchPosX;
+    public float touchPosY;
     // タッチ座標（world）
-    float touchPosWorldX;
-    float touchPosWorldY;
+    public float touchPosWorldX;
+    public float touchPosWorldY;
 
     /*
      * コンストラクタ

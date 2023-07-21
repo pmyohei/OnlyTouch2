@@ -1,7 +1,6 @@
 <resources>
+    <!--  アプリ名  -->
     <string name="app_name">Only Touch</string>
-
-    <string name="action_settings">Settings</string>
 
     <!--  スプラッシュ画面  -->
     <string name="splash">Usagi Project</string>
@@ -10,44 +9,14 @@
     <string name="home_prompt_touch">Touch!</string>
     <string name="home_prompt_touch_sub">Play with cat.</string>
 
-
-    <string name="meun_title_create">Create</string>
-    <string name="meun_title_create_detail">Make animals from soft things.</string>
-    <string name="meun_title_picture">Play</string>
-    <string name="meun_title_picture_detail">Select saved image.</string>
-    <string name="meun_title_collection">Collection</string>
-    <string name="meun_title_collection_detail">Play with collection.</string>
-    <string name="meun_title_play">Play</string>
-    <string name="meun_title_play_detail">Play with friends.</string>
-    <string name="meun_title_information">Information</string>
-    <string name="meun_title_information_detail">Information on this app.</string>
-
-    <!-- create -->
-    <string name="create_mochi">mochi</string>
-    <string name="create_sakuramochi">sakura\nmochi</string>
-    <string name="create_draw">draw</string>
-    <string name="create_dango">daifuku</string>
-
-    <!-- picture -->
-    <string name="picture_soft">Soft</string>
-    <string name="picture_hard">Hard</string>
-    <string name="picture_veryhard">Very Hard</string>
-    <string name="picture_break">Break</string>
-
-    <!-- FluidPlayActivity -->
-    <string name="flick_figure">Figure</string>
-    <string name="flick_line">Line</string>
-    <string name="flick_control">Control</string>
-
     <!-- 流体画面下部 -->
-    <string name="fluid_bottom_message">You can touch it！</string>
-    <string name="fluid_bottom_menu_contents_init">▲</string>
+    <string name="fluid_bottom_title">Play</string>
+    <string name="fluid_bottom_message">You can touch it !</string>
     <string name="fluid_bottom_menu_contents_gravity">Change the gravity.</string>
     <string name="fluid_bottom_menu_contents_soft">Change the softness.</string>
     <string name="fluid_bottom_menu_contents_bullet">Shoot bullets.</string>
     <string name="fluid_bottom_menu_contents_center">Move to the center.</string>
     <string name="fluid_bottom_menu_contents_home">Return to home.</string>
-    <string name="title_activity_information">InformationActivity</string>
 
     <!-- dialog -->
     <string name="dialog_change_soft_title">Change Soft</string>

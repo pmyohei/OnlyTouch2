@@ -1,9 +1,6 @@
 package com.example.onlyTouch;
 
-import android.animation.AnimatorInflater;
-import android.animation.AnimatorSet;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
@@ -16,41 +13,25 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.TranslateAnimation;
 
-import com.google.fpl.liquidfun.Vec2;
-
-import java.util.ArrayList;
+import com.example.onlyTouch.opengl.ParticleGLSurfaceView;
+import com.example.onlyTouch.opengl.ParticleWorldRenderer;
 
 /*
  * 流体画面
  *   レイヤー２：操作メニュー用画面
  */
-public class CreateFluidWorldMenuActivity extends AppCompatActivity {
+public class ParticleWorldActivity extends AppCompatActivity {
 
-    private FluidGLSurfaceView glView;
-    private MyApplication app;
+    private ParticleGLSurfaceView mGLSurfaceView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        app = (MyApplication) getApplication();
-        Bitmap bitmap = app.getObj();
-        MenuActivity.PictureButton select = app.getSelect();
-
-        ArrayList<Vec2> touchList = null;
-        if (select == MenuActivity.PictureButton.CreateDraw) {
-            touchList = app.getTouchList();
-        }
-
         //-------------------------------
         // パーティクルレンダリングビュー
         //-------------------------------
-        // 生成
-        glView = new FluidGLSurfaceView(this, bitmap, select, touchList);
-        // レイアウトに追加
-        setContentView(R.layout.activity_fluid_design);
-        ViewGroup root = findViewById(R.id.gl_view_root);
-        root.addView(glView);
+        setOpenGL();
 
         //---------------
         // メニューの設定
@@ -58,6 +39,18 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         setMenu();
     }
 
+    /*
+     * OpenGL ESの設定
+     */
+    private void setOpenGL() {
+        // ビューコンテナ生成
+        mGLSurfaceView = new ParticleGLSurfaceView(this);
+
+        // レイアウトに追加
+        setContentView(R.layout.activity_particle_world);
+        ViewGroup root = findViewById(R.id.gl_view_root);
+        root.addView(mGLSurfaceView);
+    }
 
     /*
      * メニューの設定
@@ -74,7 +67,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // 現在設定中の重力を取得
-                FluidWorldRenderer render = glView.getRenderer();
+                ParticleWorldRenderer render = mGLSurfaceView.getRenderer();
                 int currentValue = render.getGravity();
 
                 // ダイアログを開く
@@ -86,7 +79,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         findViewById(R.id.ib_center).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FluidWorldRenderer render = glView.getRenderer();
+                ParticleWorldRenderer render = mGLSurfaceView.getRenderer();
                 render.regenerationAtCenter();
             }
         });
@@ -96,7 +89,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // 現在設定中の柔らかを取得
-                FluidWorldRenderer render = glView.getRenderer();
+                ParticleWorldRenderer render = mGLSurfaceView.getRenderer();
                 int currentValue = render.getSoftness();
 
                 // ダイアログを開く
@@ -108,7 +101,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         findViewById(R.id.ib_bullet).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FluidWorldRenderer render = glView.getRenderer();
+                ParticleWorldRenderer render = mGLSurfaceView.getRenderer();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     render.switchBullet();
                 }
@@ -139,7 +132,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
                 @Override
                 public void onPositiveClick(int gravity) {
                     // ユーザーの選択した重力を反映
-                    FluidWorldRenderer render = glView.getRenderer();
+                    ParticleWorldRenderer render = mGLSurfaceView.getRenderer();
                     render.setGravity(gravity);
                 }
             }
@@ -158,7 +151,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
                 @Override
                 public void onPositiveClick(int softness) {
                     // ユーザーの選択した柔らかさをパーティクルに反映
-                    FluidWorldRenderer render = glView.getRenderer();
+                    ParticleWorldRenderer render = mGLSurfaceView.getRenderer();
                     render.setSoftness(softness);
                 }
             }
@@ -213,14 +206,14 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             // Viewをアニメーション
             slideUp(menu);
             // menu背景物体の移動
-            glView.getRenderer().moveMenuBody(FluidWorldRenderer.MENU_MOVE_STATE_UP);
+            mGLSurfaceView.getRenderer().moveMenuBody(ParticleWorldRenderer.MENU_MOVE_STATE_UP);
 
             //---------------------
             // 各種メニュー説明文
             //---------------------
             // 説明文のアニメーション表示
             explanation.setVisibility(View.VISIBLE);
-            Animation animation_in = AnimationUtils.loadAnimation(explanation.getContext(), R.anim.slide_right);
+            Animation animation_in = AnimationUtils.loadAnimation(explanation.getContext(), R.anim.menu_exp_show);
             explanation.startAnimation(animation_in);
         }
 
@@ -235,14 +228,14 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             // Viewをアニメーション
             slideDown(menu);
             // menu背景物体の移動
-            glView.getRenderer().moveMenuBody(FluidWorldRenderer.MENU_MOVE_STATE_DOWN);
+            mGLSurfaceView.getRenderer().moveMenuBody(ParticleWorldRenderer.MENU_MOVE_STATE_DOWN);
 
             //---------------------
             // 各種メニュー説明文
             //---------------------
             // 説明文のアニメーション非表示
             explanation.setVisibility(View.INVISIBLE);
-            Animation animation_in = AnimationUtils.loadAnimation(explanation.getContext(), R.anim.slide_left);
+            Animation animation_in = AnimationUtils.loadAnimation(explanation.getContext(), R.anim.menu_exp_close);
             explanation.startAnimation(animation_in);
         }
 
@@ -274,7 +267,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
                 @Override
                 public void onAnimationEnd(final Animation animation) {
                     // menuアニメーション停止通知
-                    glView.getRenderer().moveMenuBody(FluidWorldRenderer.MENU_MOVE_STATE_STOP);
+                    mGLSurfaceView.getRenderer().moveMenuBody(ParticleWorldRenderer.MENU_MOVE_STATE_STOP);
 
                     // アニメーションが終了すれば、受付可能にする
                     mIsEnable = true;
@@ -317,7 +310,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
                     v.setAlpha(0);
 
                     // menuアニメーション停止通知
-                    glView.getRenderer().moveMenuBody(FluidWorldRenderer.MENU_MOVE_STATE_STOP);
+                    mGLSurfaceView.getRenderer().moveMenuBody(ParticleWorldRenderer.MENU_MOVE_STATE_STOP);
 
                     // アニメーションが終了すれば、受付可能にする
                     mIsEnable = true;
@@ -344,10 +337,10 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         ViewGroup menu_top = findViewById(R.id.cl_menu_expanded);
         menu_top.getGlobalVisibleRect(menu_corners);
 
-        findViewById(R.id.container).getGlobalVisibleRect(corners, globalOffset);
+        findViewById(R.id.fl_root).getGlobalVisibleRect(corners, globalOffset);
         menu_corners.offset(-globalOffset.x, -globalOffset.y);
 
-        FluidWorldRenderer fluidRenderer = glView.getRenderer();
+        ParticleWorldRenderer fluidRenderer = mGLSurfaceView.getRenderer();
         fluidRenderer.setExpandedMenuRect(menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom);
 
         // 展開前メニュー
@@ -367,19 +360,18 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
     @Override
     protected void onResume(){
         super.onResume();
-        glView.onResume();
+        mGLSurfaceView.onResume();
     }
 
     @Override
     protected void onPause(){
         super.onPause();
-        glView.onPause();
+        mGLSurfaceView.onPause();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        app.clearObj();
     }
 
 }

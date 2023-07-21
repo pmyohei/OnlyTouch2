@@ -7,6 +7,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 
+import com.example.onlyTouch.opengl.ParticleWorldRenderer;
+
 /*
  * 柔らかさ変更ダイアログ
  */
@@ -50,13 +52,13 @@ public class ChangeSoftDialog extends DialogFragment implements View.OnClickList
 
         // 設定中の柔らかさを選択中状態にする
         switch (mChoiceSoftness) {
-            case FluidWorldRenderer.SOFTNESS_SOFT:
+            case ParticleWorldRenderer.SOFTNESS_SOFT:
                 ((RadioButton) dialog.findViewById(R.id.radio_soft)).setChecked(true);
                 break;
-            case FluidWorldRenderer.SOFTNESS_NORMAL:
+            case ParticleWorldRenderer.SOFTNESS_NORMAL:
                 ((RadioButton) dialog.findViewById(R.id.radio_normal)).setChecked(true);
                 break;
-            case FluidWorldRenderer.SOFTNESS_LITTEL_HARD:
+            case ParticleWorldRenderer.SOFTNESS_LITTEL_HARD:
                 ((RadioButton) dialog.findViewById(R.id.radio_little_hard)).setChecked(true);
                 break;
             default:
@@ -121,19 +123,19 @@ public class ChangeSoftDialog extends DialogFragment implements View.OnClickList
         switch(view.getId()) {
             case R.id.radio_soft:
                 if (checked) {
-                    mChoiceSoftness = FluidWorldRenderer.SOFTNESS_SOFT;
+                    mChoiceSoftness = ParticleWorldRenderer.SOFTNESS_SOFT;
                 }
                 break;
 
             case R.id.radio_normal:
                 if (checked) {
-                    mChoiceSoftness = FluidWorldRenderer.SOFTNESS_NORMAL;
+                    mChoiceSoftness = ParticleWorldRenderer.SOFTNESS_NORMAL;
                 }
                 break;
 
             case R.id.radio_little_hard:
                 if (checked) {
-                    mChoiceSoftness = FluidWorldRenderer.SOFTNESS_LITTEL_HARD;
+                    mChoiceSoftness = ParticleWorldRenderer.SOFTNESS_LITTEL_HARD;
                 }
                 break;
 
