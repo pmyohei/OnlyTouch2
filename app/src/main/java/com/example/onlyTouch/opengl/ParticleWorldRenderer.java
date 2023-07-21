@@ -8,6 +8,7 @@ import android.opengl.GLU;
 import android.opengl.GLUtils;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -298,6 +299,16 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // パーティクルグループ生成
         ParticleGroup particleGroup = setupParticleGroup(width, height, posX, posY);
 
+        // ！粒子座標取得用！
+        int size = particleGroup.getParticleCount();
+        for (int i = 0; i < size; i++) {
+            float x = mParticleSystem.getParticlePositionX(i);
+            float y = mParticleSystem.getParticlePositionY(i);
+            Log.i("Plist", "" + i + "\t" + x + "\t" + y);
+        }
+        //========================
+
+
         // 行単位のパーティクルバッファを作成
         ArrayList<ArrayList<Integer>> allParticleLine = new ArrayList<>();
         generateParticleLineBuff(particleGroup, allParticleLine);
@@ -316,6 +327,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
 
         // パーティクル情報の追加
         int textureId = makeTexture(gl, R.drawable.texture_test_cat_1);
+//        int textureId = makeTexture(gl, R.drawable.texture_bullet_color);
         addParticleData(gl, particleGroup, particleRadius, allParticleLine, border, textureId);
     }
 
@@ -348,7 +360,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         ParticleGroupDef particleGroupDef = new ParticleGroupDef();
 
         // !plistなしで固定
-        if (true) {
+        if (!true) {
             PolygonShape shape = new PolygonShape();
             shape.setAsBox(width, height, 0, 0, 0);
             particleGroupDef.setShape(shape);
@@ -357,6 +369,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             int shapenum = mPolygonListManage.setPlistBuffer(mGLSurfaceView.getContext(), particleGroupDef, PolygonListDataManager.PLIST_KIND.PLIST_RABBIT);
             if (shapenum == -1) {
                 // 取得エラーなら、終了
+                Log.i("plist", "setPlistBuffer() エラー");
                 return null;
             }
         }
@@ -375,14 +388,14 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
      *  @para I:パーティクルグループ
      *  @para O:全パーティクルライン
      */
-    private void generateParticleLineBuff(ParticleGroup pg, ArrayList<ArrayList<Integer>> allParticleLine) {
+    private void generateParticleLineBuff(ParticleGroup particleGroup, ArrayList<ArrayList<Integer>> allParticleLine) {
 
         // 1ライン分格納先
         ArrayList<Integer> line = new ArrayList<>();
 
         // 対象のパーティクルグループのパーティクル数を算出
-        int bufferIndex = pg.getBufferIndex();
-        int groupParticleNum = pg.getParticleCount() - bufferIndex;
+        int bufferIndex = particleGroup.getBufferIndex();
+        int groupParticleNum = particleGroup.getParticleCount() - bufferIndex;
 
         // 先頭パーティクルのY座標を格納中ラインのY座標とする
         float linePosY = mParticleSystem.getParticlePositionY(bufferIndex);
