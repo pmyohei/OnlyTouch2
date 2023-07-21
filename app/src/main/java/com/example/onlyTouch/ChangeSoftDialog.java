@@ -31,6 +31,8 @@ public class ChangeSoftDialog extends DialogFragment implements View.OnClickList
         Dialog dialog = new Dialog(getActivity());
         dialog.setContentView(R.layout.dialog_change_soft);
 
+        //アニメーションを設定
+        setShowHideAnimation(dialog);
         // ユーザーOKイメージ押下設定
         setPositiveImage(dialog);
         // 柔らかさ選択肢の初期設定
@@ -44,22 +46,30 @@ public class ChangeSoftDialog extends DialogFragment implements View.OnClickList
     /*
      * 柔らかさ選択肢の初期設定：
      */
-    public void initSoftness(Dialog dialog ) {
+    public void initSoftness(Dialog dialog) {
 
         // 設定中の柔らかさを選択中状態にする
-        switch( mChoiceSoftness ) {
+        switch (mChoiceSoftness) {
             case FluidWorldRenderer.SOFTNESS_SOFT:
-                ((RadioButton)dialog.findViewById( R.id.radio_soft )).setChecked( true );
+                ((RadioButton) dialog.findViewById(R.id.radio_soft)).setChecked(true);
                 break;
             case FluidWorldRenderer.SOFTNESS_NORMAL:
-                ((RadioButton)dialog.findViewById( R.id.radio_normal )).setChecked( true );
+                ((RadioButton) dialog.findViewById(R.id.radio_normal)).setChecked(true);
                 break;
             case FluidWorldRenderer.SOFTNESS_LITTEL_HARD:
-                ((RadioButton)dialog.findViewById( R.id.radio_little_hard )).setChecked( true );
+                ((RadioButton) dialog.findViewById(R.id.radio_little_hard)).setChecked(true);
                 break;
             default:
                 break;
         }
+    }
+
+    /*
+     * ダイアログ表示／非表示アニメーション
+     */
+    private void setShowHideAnimation( Dialog dialog ) {
+        // windowAnimationsのスタイルを上書き
+        dialog.getWindow().getAttributes().windowAnimations = R.style.dialogAnimation;
     }
 
     /*

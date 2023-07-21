@@ -9,9 +9,15 @@
     <dimen name="menu_explanation_alpha">0.5</dimen>
     <dimen name="menu_explanation_tx">16sp</dimen>
 
+    <!--  dialog -->
+    <dimen name="dialog_width">240dp</dimen>
+    <dimen name="dialog_title_size">24sp</dimen>
+    <dimen name="dialog_partition_line">1dp</dimen>
+
     <!--  radio button -->
     <dimen name="radio_button_margin_x">24dp</dimen>
     <dimen name="radio_button_corners">10dp</dimen>
     <dimen name="radio_button_stroke">1dp</dimen>
+    <dimen name="radio_button_tx">20sp</dimen>
 
 </resources>

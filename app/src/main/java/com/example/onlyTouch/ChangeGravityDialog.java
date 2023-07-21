@@ -31,6 +31,8 @@ public class ChangeGravityDialog extends DialogFragment implements View.OnClickL
         Dialog dialog = new Dialog(getActivity());
         dialog.setContentView(R.layout.dialog_change_gravity);
 
+        //アニメーションを設定
+        setShowHideAnimation(dialog);
         // ユーザーOKイメージ押下設定
         setPositiveImage(dialog);
         // 重力選択肢の初期設定
@@ -39,6 +41,14 @@ public class ChangeGravityDialog extends DialogFragment implements View.OnClickL
         setChoiceListener(dialog);
 
         return dialog;
+    }
+
+    /*
+     * ダイアログ表示／非表示アニメーション
+     */
+    private void setShowHideAnimation( Dialog dialog ) {
+        // windowAnimationsのスタイルを上書き
+        dialog.getWindow().getAttributes().windowAnimations = R.style.dialogAnimation;
     }
 
     /*
