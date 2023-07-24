@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.util.Log;
 
-import com.example.onlyTouch.R;
 import com.google.fpl.liquidfun.ParticleGroupDef;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -12,6 +11,7 @@ import org.xmlpull.v1.XmlPullParser;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /*
  * ポリゴンdata管理
@@ -31,6 +31,22 @@ public class PolygonListDataManager {
     private static final float PLIST_MAX_128PX = 75f;
     private static final float PLIST_LENGTH_128PX = 150.0f;
 
+    // PoligonXML から取得した図形情報
+    public class PolygonXmlData {
+        public ByteBuffer mCoordinateBuff;     // 図形の座標バッファ
+        public ByteBuffer mVertexeNumBuff;     // 図形毎の頂点数
+        public int        mShapeNum;           // 図形の数
+
+        public PolygonXmlData(ByteBuffer coordinateBuff, ByteBuffer vertexeNumBuff, int shapeNum ){
+            mCoordinateBuff = coordinateBuff;
+            mVertexeNumBuff = vertexeNumBuff;
+            mShapeNum = shapeNum;
+        }
+    }
+
+    // 図形情報とポリゴンxmlの対応リスト
+    private final HashMap<Integer, PolygonXmlData> mMapPolygon;
+
 
     /* UV座標 */
     private float UvMinX;           // plistの座標上で、最小の値をUV座標に変換したもの(x座標)
@@ -41,11 +57,6 @@ public class PolygonListDataManager {
     // 座標調整値
     private static final int LEVELING_SHAPE_SIZE_VALUE = 8;  // 最大長を必ずこの値とする
 
-    // plistファイル指定
-    public enum PLIST_KIND{
-        PLIST_RABBIT,
-        PLIST_CAT
-    }
 
     public PolygonListDataManager(){
         // 初期値はUV座標全体に画像がある場合とする
@@ -53,6 +64,9 @@ public class PolygonListDataManager {
         this.UvMaxY   = 1.0f;
         this.UvWidth  = 1;
         this.UvHeight = 1;
+
+        // 図形情報とポリゴンxmlの対応リスト
+        mMapPolygon = new HashMap<Integer, PolygonXmlData>();
     }
 
     public float getUvMinX() {
@@ -69,144 +83,171 @@ public class PolygonListDataManager {
     }
 
     /*
-     *　指定されたplistファイルから、図形生成に必要な情報を取得し、指定されたバッファに格納する。
-     * @para   頂点座標バッファ
-     * @para   図形頂点数バッファ
-     * @para   指定plist
-     * @return 図形数
+     *　形状設定
+     *　　指定されたPoligonXMLから図形情報を解析。
+     * 　 解析した図形データをParticleGroupDefにパーティクルの形状として設定する。
      */
-    public int setPlistBuffer(Context context, ParticleGroupDef particleGroupDef, PLIST_KIND kind){
+    public PolygonXmlData parsePoligonXmlShapes(Context context, int polygonXml){
 
+        // 解析済みであれば、解析結果を返して終了
+        PolygonXmlData polygonXmlData = mMapPolygon.get(polygonXml);
+        if (polygonXmlData != null) {
+            return polygonXmlData;
+        }
+
+        //----------------------
+        // 解析
+        //----------------------
+        ArrayList<Float> vertexCoordinateValue = new ArrayList<Float>();
+        ArrayList<Integer> vertexNumValue = new ArrayList<Integer>();
         int shapeNum = -1;
-        ArrayList<Integer> plistVerNums = new ArrayList<Integer>();
-        ArrayList<Float> plistVer = new ArrayList<Float>();
 
-        // plistの取得
-        XmlPullParser parser = context.getResources().getXml(R.xml.test_cat_plist);
 
+        // 解析対象のタグ
+        final String TAG_FIXTURE      = "fixture";
+        final String TAG_POLYGON      = "polygon";
+        final String TAG_VERTEX       = "vertex";
+        final String ATTR_NUMPOLYGONS = "numPolygons";
+        final String ATTR_NUMVERTEXES = "numVertexes";
+        final String ATTR_VERTEX_X    = "x";
+        final String ATTR_VERTEX_Y    = "y";
+
+        // 解析処理
+        XmlResourceParser parser = context.getResources().getXml(polygonXml);
         try {
-            int attr;
-            float attrFloat;
+            // イベントタイプ
             int eventType;
-
             eventType = parser.getEventType();
-            // ファイル終了までループ
+
+            //--------------------
+            // ファイル終了まで
+            //--------------------
             while (eventType != XmlPullParser.END_DOCUMENT) {
 
+                //---------------
+                // 開始タグまで移動
+                //---------------
+                // 開始タグをみつけるまで、なにもしない
                 eventType = parser.next();
                 if(eventType != XmlPullParser.START_TAG) {
-                    // 開始タグをみつけるまで、なにもしない
                     continue;
                 }
 
-                // fixtureタグ
-                if( parser.getName().equals("fixture") ){
+                //---------------------------
+                // fixtureタグ：図形数情報の取得
+                //---------------------------
+                if( parser.getName().equals( TAG_FIXTURE ) ){
                     // 図形数の取得
-                    attr = ((XmlResourceParser) parser).getAttributeIntValue(null, "numPolygons", -1);
+                    int attrIntValue = parser.getAttributeIntValue(null, ATTR_NUMPOLYGONS, -1);
 
                     // 取得に失敗した場合は、パース終了
-                    if( attr == -1 ){
-                        return -1;
+                    if( attrIntValue == -1 ){
+                        return null;
                     }
 
                     // 取得できたら次の解析へ
-                    // Log.d("XmlPullParserSample", "numPolygons=" + attr);
-                    shapeNum = attr;
+                    shapeNum = attrIntValue;
                     continue;
                 }
 
-                // polygonタグ
-                if( parser.getName().equals("polygon") ) {
+                //-----------------------------------
+                // polygonタグ：各図形の頂点数情報の取得
+                //-----------------------------------
+                if( parser.getName().equals(TAG_POLYGON) ) {
                     // 図形の頂点数の取得
-                    attr = ((XmlResourceParser) parser).getAttributeIntValue(null, "numVertexes", -1);
-
-                    // 取得に失敗した場合は、パース終了
-                    if( attr == -1 ){
-                        return -1;
+                    int attrIntValue = parser.getAttributeIntValue(null, ATTR_NUMVERTEXES, -1);
+                    if( attrIntValue == -1 ){
+                        // 取得に失敗した場合は、パース終了
+                        return null;
                     }
 
-                    // Log.d("XmlPullParserSample", "numVertexes=" + attr);
-
-                    // 取得できたら次の解析へ
-                    plistVerNums.add(attr);
+                    // リストに格納し、次の解析へ
+                    vertexNumValue.add(attrIntValue);
                     continue;
                 }
 
-                // vertexタグ
-                if( parser.getName().equals("vertex") ) {
-                    // 頂点座標の取得
-                    attrFloat = ((XmlResourceParser) parser).getAttributeFloatValue(null, "x", 0xFFFF);
-
-                    if( attrFloat == 0xFFFF ){
+                //---------------------------
+                // vertexタグ：頂点座標情報の取得
+                //---------------------------
+                if( parser.getName().equals( TAG_VERTEX ) ) {
+                    //--------------
+                    // x座標
+                    //--------------
+                    float attrFloatValue = parser.getAttributeFloatValue(null, ATTR_VERTEX_X, 0xFFFF);
+                    if( attrFloatValue == 0xFFFF ){
                         // 取得に失敗した場合は、パース終了
-                        return -1;
+                        return null;
                     }
-                    // Log.d("XmlPullParserSample", "x=" + attrFloat);
-                    plistVer.add(attrFloat);
 
-                    attrFloat = ((XmlResourceParser) parser).getAttributeFloatValue(null, "y", 0xFFFF);
-                    if( attrFloat == 0xFFFF ){
+                    // リストに格納
+                    vertexCoordinateValue.add(attrFloatValue);
+
+                    //--------------
+                    // y座標
+                    //--------------
+                    attrFloatValue = parser.getAttributeFloatValue(null, ATTR_VERTEX_Y, 0xFFFF);
+                    if( attrFloatValue == 0xFFFF ){
                         // 取得に失敗した場合は、パース終了
-                        return -1;
+                        return null;
                     }
-                    // Log.d("XmlPullParserSample", "y=" + attrFloat);
-                    attrFloat *= (-1);                                                  // 上下反転。plistが上下反転した状態で出力されるため。
-                    plistVer.add(attrFloat);
+
+                    // 上下反転してリストに格納　※xmlでは、座標が上下反転した状態で出力されるため
+                    attrFloatValue *= (-1);
+                    vertexCoordinateValue.add(attrFloatValue);
                 }
             }
         } catch (Exception e) {
             Log.d("XmlPullParserSample", "Error");
         }
 
-        // 座標サイズを標準化する
-        levelingPlist(plistVer);
 
-        // ！allocate()では落ちるため、注意！
-        // ！リトルエンディアン指定すること！
+        // xml上の座標値を標準化する
+        levelingPlist( vertexCoordinateValue );
+
 
         // 座標をバッファに格納
-        ByteBuffer vertexes = ByteBuffer.allocateDirect(Float.SIZE * plistVer.size());
+        // ！allocate()では落ちるため、注意！
+        // ！リトルエンディアン指定すること！
+        ByteBuffer vertexes = ByteBuffer.allocateDirect(Float.SIZE * vertexCoordinateValue.size());
         vertexes.order(ByteOrder.LITTLE_ENDIAN);
-        for( Float pos: plistVer ){
+        for( Float pos: vertexCoordinateValue ){
             vertexes.putFloat(pos);
             // Log.d("XmlPullParserSample", "pos=" + pos);
         }
 
         // 各図形の頂点数をバッファに格納
-        ByteBuffer vertexesNum = ByteBuffer.allocateDirect(Integer.SIZE * plistVerNums.size());
+        ByteBuffer vertexesNum = ByteBuffer.allocateDirect(Integer.SIZE * vertexNumValue.size());
         vertexesNum.order(ByteOrder.LITTLE_ENDIAN);
-        for( Integer num: plistVerNums ){
+        for( Integer num: vertexNumValue ){
             vertexesNum.putInt(num);
             // Log.d("XmlPullParserSample", "num=" + num);
         }
 
-        // plistの座標から図形を指定する
-        particleGroupDef.setPolygonShapesFromVertexList( vertexes, vertexesNum, shapeNum );
+        // 生成済みとする
+        PolygonXmlData newPolygonXmlData = new PolygonXmlData( vertexes, vertexesNum, shapeNum );
+        mMapPolygon.put( polygonXml, newPolygonXmlData);
 
-        // dbg
-        // int nums = particleGroupDef.getNums(0);
-        // float nums1 = particleGroupDef.getPointsOne(0);
-        // float nums2 = particleGroupDef.getPointsOne(1);
-
-        return shapeNum;
+        return newPolygonXmlData;
     }
 
     /*
      *　座標値を一定のサイズになるよう平準化する。
      *  @para 座標配列
      */
-    private void levelingPlist(ArrayList<Float> plistVer ){
+    private void levelingPlist(ArrayList<Float> vertexCoordinateValue ){
 
-        // 必ず更新されるよう、ありえない値を初期値とする
+        //---------------------------------------------
+        // 必ず更新されるよう、座標としてありえない値を初期値とする
+        //---------------------------------------------
         float xMin = 0xFFFF;
         float xMax = -(0xFFFF);
         float yMin = 0xFFFF;
         float yMax = -(0xFFFF);
 
         /* 最大値と最小値を見つける */
-        int num = plistVer.size();
+        int num = vertexCoordinateValue.size();
         for(int i = 0; i < num; i++){
-            float value = plistVer.get(i);
+            float value = vertexCoordinateValue.get(i);
 
             // 座標内の最小値と最大値を保持する
             if( (i % 2) == 0 ){
@@ -219,6 +260,8 @@ public class PolygonListDataManager {
                 yMax = (Math.max(value, yMax));
             }
         }
+
+
 
         // 図形の最大幅と最大高さ
         float width = xMax - xMin;
@@ -236,14 +279,14 @@ public class PolygonListDataManager {
 
         /* 座標値を平準化 */
         for (int i = 0; i < num; i++){
-            float value = plistVer.get(i);
+            float value = vertexCoordinateValue.get(i);
 
             if( (i % 2) == 0 ){
                 // X座標
-                plistVer.set(i, value * levelingX);
+                vertexCoordinateValue.set(i, value * levelingX);
             }else{
                 // Y座標
-                plistVer.set(i, value * levelingY);
+                vertexCoordinateValue.set(i, value * levelingY);
             }
         }
 

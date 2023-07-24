@@ -303,7 +303,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         for (int i = 0; i < size; i++) {
             float x = mParticleSystem.getParticlePositionX(i);
             float y = mParticleSystem.getParticlePositionY(i);
-            Log.i("Plist", "" + i + "\t" + x + "\t" + y);
+            Log.i("PolygonList", "" + i + "\t" + x + "\t" + y);
         }
         //========================
 
@@ -321,13 +321,12 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
 
         // レンダリング用UVバッファを生成
         generateUVRendererBuff();
+
         // 境界パーティクルバッファを取得
         ArrayList<Integer> border = generateBorderParticleBuff(allParticleLine);
 
-
         // パーティクル情報の追加
         int textureId = makeTexture(gl, R.drawable.texture_test_cat_1);
-//        int textureId = makeTexture(gl, R.drawable.texture_bullet_color);
         addParticleData(gl, particleGroup, particleRadius, allParticleLine, border, textureId);
     }
 
@@ -357,29 +356,37 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
      */
     private ParticleGroup setupParticleGroup(float width, float height, float posX, float posY) {
 
+        //----------------------
+        // ParticleGroup定義
+        //----------------------
         ParticleGroupDef particleGroupDef = new ParticleGroupDef();
-
-        // !plistなしで固定
-        if (!true) {
-            PolygonShape shape = new PolygonShape();
-            shape.setAsBox(width, height, 0, 0, 0);
-            particleGroupDef.setShape(shape);
-        } else {
-            // plistにある座標で図形を生成
-            int shapenum = mPolygonListManage.setPlistBuffer(mGLSurfaceView.getContext(), particleGroupDef, PolygonListDataManager.PLIST_KIND.PLIST_RABBIT);
-            if (shapenum == -1) {
-                // 取得エラーなら、終了
-                Log.i("plist", "setPlistBuffer() エラー");
-                return null;
-            }
-        }
-
         particleGroupDef.setFlags(ParticleFlag.elasticParticle);
         particleGroupDef.setGroupFlags(ParticleGroupFlag.solidParticleGroup);
         particleGroupDef.setPosition(posX, posY);
         particleGroupDef.setLifetime(0);
 
-        // 生成
+        // !PolygonListなしで固定
+        if ( false ) {
+            PolygonShape shape = new PolygonShape();
+            shape.setAsBox(width, height, 0, 0, 0);
+            particleGroupDef.setShape(shape);
+        } else {
+            // PolygonXMLデータを取得
+            PolygonListDataManager.PolygonXmlData polygonXmlData = mPolygonListManage.parsePoligonXmlShapes(mGLSurfaceView.getContext(), R.xml.test_cat_plist);
+            // 形状設定
+            particleGroupDef.setPolygonShapesFromVertexList( polygonXmlData.mCoordinateBuff, polygonXmlData.mVertexeNumBuff, polygonXmlData.mShapeNum );
+
+/*            if (shapenum == -1) {
+                // 取得エラーなら、終了
+                Log.i("PolygonList", "setPolygonListBuffer() エラー");
+                return null;
+            }*/
+        }
+
+
+        //----------------------
+        // ParticleGroup生成
+        //----------------------
         return mParticleSystem.createParticleGroup(particleGroupDef);
     }
 
@@ -636,9 +643,9 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         float particleMaxWidth  = Math.abs(maxParticleX - minParticleX);
         float particleMaxHeight = Math.abs(maxParticleY - minParticleY);
 
-        //-------------------------------------------------
+        //-------------------------------
         // UV座標をバッファに格納
-        //-------------------------------------------------
+        //-------------------------------
         // UV座標の最大・最小・横幅・縦幅
         float minUvX = mPolygonListManage.getUvMinX();
         float maxUvY = mPolygonListManage.getUvMaxY();
@@ -660,9 +667,9 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             uvCoordinate.add(new Vec2(vecx, vecy));
         }
 
-        //-------------------------------------------------
+        //---------------------------------
         // UV座標をバッファに格納
-        //-------------------------------------------------
+        //---------------------------------
         mRenderUVBuff = getUVBuffer( uvCoordinate );
     }
 
