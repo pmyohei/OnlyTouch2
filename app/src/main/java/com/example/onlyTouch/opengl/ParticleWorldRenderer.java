@@ -17,7 +17,7 @@ import com.example.onlyTouch.object.Bullet;
 import com.example.onlyTouch.object.DrawBackGround;
 import com.example.onlyTouch.particle.ParticleData;
 import com.example.onlyTouch.particle.ParticleTouchInfo;
-import com.example.onlyTouch.particle.PolygonListDataManager;
+import com.example.onlyTouch.particle.PolygonXmlDataManager;
 import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.BodyDef;
 import com.google.fpl.liquidfun.BodyType;
@@ -117,6 +117,10 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     private final float DEFAULT_DENCITY          = 0.5f;
     private final float DEFAULT_ELASTIC_STRENGTH = 0.25f;
 
+    // リソースID
+    int TEXTURE_ID = R.drawable.texture_test_cat_1_1;
+    int POLYGON_XML_ID = R.xml.test_cat_plist;
+
     //----------------
     // Body
     //----------------
@@ -183,7 +187,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     private GLInitStatus mGlInitStatus;
     private final ParticleGLSurfaceView mGLSurfaceView;
     private final HashMap<Integer, Integer> mMapResourceTexture;
-    private final PolygonListDataManager mPolygonListManage;
+    private final PolygonXmlDataManager mPolygonListManage;
 
     // OpenGL 描画開始シーケンス
     enum GLInitStatus {
@@ -229,7 +233,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
         mParticleTouchInfo = new ParticleTouchInfo();
         // ポリゴンリストデータ管理クラス
-        mPolygonListManage = new PolygonListDataManager();
+        mPolygonListManage = new PolygonXmlDataManager( glSurfaceView.getContext(), POLYGON_XML_ID, TEXTURE_ID);
         // 適切な粒子反復を算出
         mParticleIterations = liquidfun.b2CalculateParticleIterations(gravity, mParticleRadius, TIME_STEP);
 
@@ -292,19 +296,20 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     /*
      * パーティクル生成
      */
-    public void createFluidBody(GL10 gl, float width, float height, float posX, float posY, float particleRadius) {
+    public void createFluidBody(GL10 gl, float posX, float posY, float particleRadius) {
 
         // パーティクルグループ生成
-        ParticleGroup particleGroup = setupParticleGroup(width, height, posX, posY);
+        ParticleGroup particleGroup = setupParticleGroup(posX, posY);
 
         //========================
         // ！粒子座標取得用！
         int size = particleGroup.getParticleCount();
-        for (int i = 0; i < size; i++) {
-            float x = mParticleSystem.getParticlePositionX(i);
-            float y = mParticleSystem.getParticlePositionY(i);
-            Log.i("PolygonList", "" + i + "\t" + x + "\t" + y);
-        }
+        Log.i("getParticleCount()=", "" + size);
+//        for (int i = 0; i < size; i++) {
+//            float x = mParticleSystem.getParticlePositionX(i);
+//            float y = mParticleSystem.getParticlePositionY(i);
+//            Log.i("PolygonList", "" + i + "\t" + x + "\t" + y);
+//        }
         //========================
 
 
@@ -326,7 +331,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         ArrayList<Integer> border = generateBorderParticleBuff(allParticleLine);
 
         // パーティクル情報の追加
-        int textureId = makeTexture(gl, R.drawable.texture_test_cat_1);
+        int textureId = makeTexture(gl, TEXTURE_ID);
         addParticleData(gl, particleGroup, particleRadius, allParticleLine, border, textureId);
     }
 
@@ -354,7 +359,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
      * パーティクルグループ定義の設定
      * @para パーティクル横幅、パーティクル縦幅、生成位置(x/y)
      */
-    private ParticleGroup setupParticleGroup(float width, float height, float posX, float posY) {
+    private ParticleGroup setupParticleGroup(float posX, float posY) {
 
         //----------------------
         // ParticleGroup定義
@@ -365,23 +370,16 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         particleGroupDef.setPosition(posX, posY);
         particleGroupDef.setLifetime(0);
 
-        // !PolygonListなしで固定
-        if ( false ) {
-            PolygonShape shape = new PolygonShape();
-            shape.setAsBox(width, height, 0, 0, 0);
-            particleGroupDef.setShape(shape);
-        } else {
-            // PolygonXMLデータを取得
-            PolygonListDataManager.PolygonXmlData polygonXmlData = mPolygonListManage.parsePoligonXmlShapes(mGLSurfaceView.getContext(), R.xml.test_cat_plist);
-            // 形状設定
-            particleGroupDef.setPolygonShapesFromVertexList( polygonXmlData.mCoordinateBuff, polygonXmlData.mVertexeNumBuff, polygonXmlData.mShapeNum );
+        // PolygonXMLデータを取得
+        PolygonXmlDataManager.PolygonParseData polygonXmlData = mPolygonListManage.parsePoligonXmlShapes(mGLSurfaceView.getContext(), POLYGON_XML_ID);
+        // 形状設定
+        particleGroupDef.setPolygonShapesFromVertexList( polygonXmlData.mCoordinateBuff, polygonXmlData.mVertexeNumBuff, polygonXmlData.mShapeNum );
 
 /*            if (shapenum == -1) {
                 // 取得エラーなら、終了
                 Log.i("PolygonList", "setPolygonListBuffer() エラー");
                 return null;
             }*/
-        }
 
 
         //----------------------
@@ -849,7 +847,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // パーティクルシステム生成
         setupParticleSystem(mParticleRadius, DEFAULT_DENCITY, DEFAULT_ELASTIC_STRENGTH);
         // パーティクル生成
-        createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius);
+        createFluidBody(gl, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius);
 
         //---------------
         // 壁
@@ -986,7 +984,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             //---------------
             case PARTICLE_REGENE_STATE_CREATE:
                 // パーティクル生成
-                createFluidBody(gl, 4, 4, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius);
+                createFluidBody(gl, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius);
                 // オーバーラップ物体を生成
                 mOverlapBody = createBoxBody(1f, 1f, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody);
                 // オーバーラップ物体ありに更新
