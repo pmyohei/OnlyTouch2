@@ -112,7 +112,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     public static final int SOFTNESS_NORMAL      = 1;       // ノーマル（デフォルト）
     public static final int SOFTNESS_LITTEL_HARD = 2;       // 少し固め
 
-    // パーティクルの柔らかさパラメータ
+    // パーティクルの柔らかさパラメータ：デフォルト値
     private final float DEFAULT_RADIUS           = 0.3f;
     private final float DEFAULT_DENCITY          = 0.5f;
     private final float DEFAULT_ELASTIC_STRENGTH = 0.25f;
@@ -195,10 +195,10 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     //--------------------
     // Rendererバッファ
     //--------------------
-    // パーティクル(頂点)座標配列
-    private ArrayList<Integer> mRenderParticleBuff;
+    // 描画順のパーティクルindexリスト（このリストから頂点バッファを生成する）
+    private ArrayList<Integer> mRenderParticleOrderBuff;
     // UV座標配列
-    private ArrayList<Vec2> mRenderUVBuff;
+    private FloatBuffer mRenderUVBuff;
     // 描画対象の頂点数
     private int mRenderPointNum;
 
@@ -255,9 +255,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //--------------------
         // Rendererバッファ
         //--------------------
-        mRenderParticleBuff = new ArrayList<>();
-        mRenderUVBuff = new ArrayList<>();
-
+        mRenderParticleOrderBuff = new ArrayList<>();
     }
 
     /*
@@ -299,6 +297,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // パーティクルグループ生成
         ParticleGroup particleGroup = setupParticleGroup(width, height, posX, posY);
 
+        //========================
         // ！粒子座標取得用！
         int size = particleGroup.getParticleCount();
         for (int i = 0; i < size; i++) {
@@ -318,12 +317,13 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // OpenGLに渡す三角形グルーピングバッファを作成
         enqueRendererBuff(allParticleLine, diameter);
         // 頂点数を保持
-        mRenderPointNum = mRenderParticleBuff.size();
+        mRenderPointNum = mRenderParticleOrderBuff.size();
 
         // レンダリング用UVバッファを生成
         generateUVRendererBuff();
         // 境界パーティクルバッファを取得
         ArrayList<Integer> border = generateBorderParticleBuff(allParticleLine);
+
 
         // パーティクル情報の追加
         int textureId = makeTexture(gl, R.drawable.texture_test_cat_1);
@@ -500,9 +500,9 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             }
 
             // 3頂点を描画バッファに格納
-            mRenderParticleBuff.add(refIndex);        // 底辺-左
-            mRenderParticleBuff.add(refIndex + 1);    // 底辺-右
-            mRenderParticleBuff.add(refTopParticleIndex);  // 頂点
+            mRenderParticleOrderBuff.add(refIndex);        // 底辺-左
+            mRenderParticleOrderBuff.add(refIndex + 1);    // 底辺-右
+            mRenderParticleOrderBuff.add(refTopParticleIndex);  // 頂点
         }
     }
 
@@ -548,9 +548,9 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             }
 
             // 3頂点をバッファに格納
-            mRenderParticleBuff.add(topLastParticleIndex);
-            mRenderParticleBuff.add(topLastParticleIndex - 1);
-            mRenderParticleBuff.add(refBottomParticleIndex);
+            mRenderParticleOrderBuff.add(topLastParticleIndex);
+            mRenderParticleOrderBuff.add(topLastParticleIndex - 1);
+            mRenderParticleOrderBuff.add(refBottomParticleIndex);
         }
     }
 
@@ -645,8 +645,9 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         float UvMaxWidth  = mPolygonListManage.getUvWidth();
         float UvMaxHeight = mPolygonListManage.getUvHeight();
 
-        // 各パーティクル位置に対応するUV座標を計算し、バッファに保持する
-        for (int i : mRenderParticleBuff) {
+        // 各パーティクル位置に対応するUV座標を計算し、リストに格納する
+        ArrayList<Vec2> uvCoordinate = new ArrayList<>();
+        for (int i : mRenderParticleOrderBuff) {
             // パーティクル座標
             float x = mParticleSystem.getParticlePositionX(i);
             float y = mParticleSystem.getParticlePositionY(i);
@@ -656,8 +657,13 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             float vecy = maxUvY - (((y - minParticleY) / particleMaxHeight) * UvMaxHeight);
 
             // レンダリング用UVバッファに格納
-            mRenderUVBuff.add(new Vec2(vecx, vecy));
+            uvCoordinate.add(new Vec2(vecx, vecy));
         }
+
+        //-------------------------------------------------
+        // UV座標をバッファに格納
+        //-------------------------------------------------
+        mRenderUVBuff = getUVBuffer( uvCoordinate );
     }
 
     /*
@@ -961,8 +967,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             case PARTICLE_REGENE_STATE_DELETE:
                 // パーティクルグループを削除(粒子とグループは次の周期で削除される)
                 particleGroup.destroyParticles();
-                mRenderParticleBuff.clear();
-                mRenderUVBuff.clear();
+                mRenderParticleOrderBuff.clear();
 
                 // 再生成のシーケンスを生成に更新(次の周期で生成するため)
                 mRegenerationState = PARTICLE_REGENE_STATE_CREATE;
@@ -1023,12 +1028,11 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             gl.glActiveTexture(GL10.GL_TEXTURE0);
             gl.glBindTexture(GL10.GL_TEXTURE_2D, textureId);
 
-            // 頂点バッファ・UVバッファを取得
+            // 現時点のパーティクル座標から頂点バッファを計算
             FloatBuffer vertexBuffer = getVertexBuffer();
-            FloatBuffer uvBuffer = getUVBuffer();
 
             // バッファを渡して描画
-            gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, uvBuffer);
+            gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, mRenderUVBuff);
             gl.glVertexPointer(2, GL10.GL_FLOAT, 0, vertexBuffer);
             gl.glDrawArrays(GL10.GL_TRIANGLES, 0, mRenderPointNum);
         }
@@ -1043,14 +1047,14 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
      * 頂点座標バッファの取得
      */
     private FloatBuffer getVertexBuffer() {
-        int buffSize = mRenderPointNum * 2;
 
         // 頂点座標配列
+        int buffSize = mRenderPointNum * 2;
         float[] vertices = new float[buffSize];
 
         // レンダリングバッファのパーティクルの座標を配列に格納
         int count = 0;
-        for (int index : mRenderParticleBuff) {
+        for (int index : mRenderParticleOrderBuff) {
             vertices[count] = mParticleSystem.getParticlePositionX(index);
             count++;
             vertices[count] = mParticleSystem.getParticlePositionY(index);
@@ -1058,22 +1062,21 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         }
 
         // FloatBufferに変換
-        FloatBuffer vertexBuffer = convFloatBuffer(vertices);
-        return vertexBuffer;
+        return convFloatBuffer(vertices);
     }
 
     /*
      * UV座標バッファの取得
      */
-    private FloatBuffer getUVBuffer() {
-        int buffSize = mRenderPointNum * 2;
+    private FloatBuffer getUVBuffer( ArrayList<Vec2> uvCoordinate ) {
 
         // UV座標配列
+        int buffSize = mRenderPointNum * 2;
         float[] uv = new float[buffSize];
 
         // レンダリングUVバッファのUV座標を配列に格納
         int count = 0;
-        for (Vec2 Coordinate : mRenderUVBuff) {
+        for (Vec2 Coordinate : uvCoordinate) {
             uv[count] = Coordinate.getX();
             count++;
             uv[count] = Coordinate.getY();
@@ -1081,8 +1084,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         }
 
         // FloatBufferに変換
-        FloatBuffer uvBuffer = convFloatBuffer(uv);
-        return uvBuffer;
+        return convFloatBuffer(uv);
     }
 
     /*
