@@ -226,15 +226,12 @@ public class PolygonListDataManager {
 
         /* サイズを平準化するための値を算出 */
         float levelingX, levelingY;
-        if( width > height ){
+        if( width >= height ){
             levelingX = LEVELING_SHAPE_SIZE_VALUE / width;
             levelingY = levelingX;
-        }else if(width < height){
+        } else {
             levelingY = LEVELING_SHAPE_SIZE_VALUE / height;
             levelingX = levelingY;
-        }else{
-            levelingX = LEVELING_SHAPE_SIZE_VALUE / width;
-            levelingY = levelingX;
         }
 
         /* 座標値を平準化 */
