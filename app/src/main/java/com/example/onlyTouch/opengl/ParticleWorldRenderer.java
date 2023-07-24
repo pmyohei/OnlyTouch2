@@ -303,8 +303,8 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
 
         //========================
         // ！粒子座標取得用！
-        int size = particleGroup.getParticleCount();
-        Log.i("getParticleCount()=", "" + size);
+//        int size = particleGroup.getParticleCount();
+//        Log.i("PolygonList()=", "" + size);
 //        for (int i = 0; i < size; i++) {
 //            float x = mParticleSystem.getParticlePositionX(i);
 //            float y = mParticleSystem.getParticlePositionY(i);
@@ -619,22 +619,22 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //-------------------------------------------------
         // 先頭のパーティクルを暫定で最大値・最小値とする
         float minParticleX = mParticleSystem.getParticlePositionX(0);
-        float maxParticleX = mParticleSystem.getParticlePositionX(0);
+        float maxParticleX = minParticleX;
         float minParticleY = mParticleSystem.getParticlePositionY(0);
-        float maxParticleY = mParticleSystem.getParticlePositionY(0);
+        float maxParticleY = minParticleY;
 
         // 全パーティクルの中で、X/Y座標の最大値最小値を算出
         int particleNum = mParticleSystem.getParticleCount();
         for (int i = 1; i < particleNum; i++) {
             // X座標
             float posX = mParticleSystem.getParticlePositionX(i);
-            minParticleX = (Math.min(posX, minParticleX));
-            maxParticleX = (Math.max(posX, maxParticleX));
+            minParticleX = Math.min(posX, minParticleX);
+            maxParticleX = Math.max(posX, maxParticleX);
 
             // Y座標
             float posY = mParticleSystem.getParticlePositionY(i);
-            minParticleY = (Math.min(posY, minParticleY));
-            maxParticleY = (Math.max(posY, maxParticleY));
+            minParticleY = Math.min(posY, minParticleY);
+            maxParticleY = Math.max(posY, maxParticleY);
         }
 
         // 横幅・縦幅を算出
@@ -645,10 +645,10 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // UV座標をバッファに格納
         //-------------------------------
         // UV座標の最大・最小・横幅・縦幅
-        float minUvX = mPolygonListManage.getUvMinX();
-        float maxUvY = mPolygonListManage.getUvMaxY();
-        float UvMaxWidth  = mPolygonListManage.getUvWidth();
-        float UvMaxHeight = mPolygonListManage.getUvHeight();
+        final float minUvX = mPolygonListManage.getUvMinX();
+        final float maxUvY = mPolygonListManage.getUvMaxY();
+        final float UvMaxWidth  = mPolygonListManage.getUvWidth();
+        final float UvMaxHeight = mPolygonListManage.getUvHeight();
 
         // 各パーティクル位置に対応するUV座標を計算し、リストに格納する
         ArrayList<Vec2> uvCoordinate = new ArrayList<>();
@@ -662,7 +662,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             float vecy = maxUvY - (((y - minParticleY) / particleMaxHeight) * UvMaxHeight);
 
             // レンダリング用UVバッファに格納
-            uvCoordinate.add(new Vec2(vecx, vecy));
+            uvCoordinate.add( new Vec2(vecx, vecy) );
         }
 
         //---------------------------------
