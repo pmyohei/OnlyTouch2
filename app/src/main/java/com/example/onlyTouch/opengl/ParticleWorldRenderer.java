@@ -118,8 +118,8 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     private final float DEFAULT_ELASTIC_STRENGTH = 0.25f;
 
     // リソースID
-    int TEXTURE_ID = R.drawable.texture_test_cat_1_1;
-    int POLYGON_XML_ID = R.xml.test_cat_plist;
+    int TEXTURE_ID = R.drawable.test_cat_memo_1;
+    int POLYGON_XML_ID = R.xml.test_cat_memo_1;
 
     //----------------
     // Body
