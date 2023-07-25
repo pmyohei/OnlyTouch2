@@ -2,7 +2,7 @@
     <dimen name="fab_margin">16dp</dimen>
 
     <!--  menu -->
-    <dimen name="menu_icon_margin">4dp</dimen>
+    <dimen name="menu_icon_margin">2dp</dimen>
     <!--  menu 説明  -->
     <dimen name="menu_explanation_margin">6dp</dimen>
     <dimen name="menu_explanation_line_spacing">12dp</dimen>
@@ -19,5 +19,7 @@
     <dimen name="radio_button_corners">10dp</dimen>
     <dimen name="radio_button_stroke">1dp</dimen>
     <dimen name="radio_button_tx">20sp</dimen>
+
+
 
 </resources>
