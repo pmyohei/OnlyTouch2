@@ -31,7 +31,7 @@ public class Conversion {
     /*
      * 画面座標を物理座標へ変換
      */
-    public static float[] convertPointScreenToWorld(float wx, float wy, GL10 gl, final View screenView ) {
+    public static float[] convertPointScreenToWorld(float screenPosX, float screenPosY, GL10 gl, final View screenView ) {
 
         //---------------------------
         // 座標変換のためのデータを取得
@@ -60,15 +60,16 @@ public class Conversion {
         //---------------------
         float[] ret = new float[4];
         GLU.gluUnProject(
-                wx, (float) screenHeight - wy, 1f,
+                screenPosX, (float) screenHeight - screenPosY, 1f,
                 model, 0, proj, 0,
                 new int[]{0, 0, screenWidth, screenHeight}, 0,
                 ret, 0);
         float x = ret[0] / ret[3];
         float y = ret[1] / ret[3];
 
-        float[] position = {x, y};
-        return position;
+        // world座標を返す
+        float[] worldPos = {x, y};
+        return worldPos;
     }
 
     /*
