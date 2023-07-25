@@ -95,10 +95,10 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     private float mParticleRadius;
 
     // パーティクル再生成シーケンス
-    public static final int PARTICLE_REGENE_STATE_DELETE  = 0;
-    public static final int PARTICLE_REGENE_STATE_CREATE  = 1;
-    public static final int PARTICLE_REGENE_STATE_OVERLAP = 2;
-    public static final int PARTICLE_REGENE_STATE_NOTHING = 3;
+    public static final int PARTICLE_REGENE_STATE_NOTHING = 0;
+    public static final int PARTICLE_REGENE_STATE_DELETE  = 1;
+    public static final int PARTICLE_REGENE_STATE_CREATE  = 2;
+    public static final int PARTICLE_REGENE_STATE_OVERLAP = 3;
 
     // パーティクルの柔らかさ
     private int mSoftness;
