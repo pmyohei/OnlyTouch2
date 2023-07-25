@@ -1,19 +1,16 @@
 package com.example.onlyTouch.opengl;
 
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
-import android.opengl.GLUtils;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 import com.example.onlyTouch.R;
-import com.example.onlyTouch.object.Bullet;
+import com.example.onlyTouch.convert.Conversion;
+import com.example.onlyTouch.manage.BulletManager;
 import com.example.onlyTouch.object.DrawBackGround;
 import com.example.onlyTouch.particle.ParticleData;
 import com.example.onlyTouch.particle.ParticleTouchInfo;
@@ -41,7 +38,6 @@ import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
-import javax.microedition.khronos.opengles.GL11;
 
 /*
  * 物理世界で流体生成・レンダリング
@@ -118,24 +114,19 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     private final float DEFAULT_ELASTIC_STRENGTH = 0.25f;
 
     // リソースID
-    int TEXTURE_ID = R.drawable.test_cat_memo_1;
-    int POLYGON_XML_ID = R.xml.test_cat_memo_1;
+    private final int TEXTURE_ID = R.drawable.texture_test_cat;
+    private final int POLYGON_XML_ID = R.xml.test_cat_plist;
 
     //----------------
     // Body
     //----------------
-    // 弾
-    private boolean mBulletOn;
-    private ArrayList<Bullet> mBullets;
-    private final ArrayList<Bullet> mRemoveBullets;
-    private int mBulletShotCycle;
-    private float mBulletShotPosX;
-    // 弾サイズ
-    private static final float BULLET_SIZE = 0.4f;
-
-    // Body
     private Body mMenuBody;
     private Body mOverlapBody;
+
+    //----------------
+    // 管理
+    //----------------
+    private final BulletManager mBulletManager;
 
     //--------------------
     // 背景
@@ -238,11 +229,9 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         mParticleIterations = liquidfun.b2CalculateParticleIterations(gravity, mParticleRadius, TIME_STEP);
 
         //-----------------
-        // Body
+        // 銃弾
         //-----------------
-        mBulletOn = false;
-        mRemoveBullets = new ArrayList<>();
-        mBullets = new ArrayList<>();
+        mBulletManager = new BulletManager( mWorld, mGLSurfaceView );
 
         //-----------------
         // menu
@@ -331,7 +320,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         ArrayList<Integer> border = generateBorderParticleBuff(allParticleLine);
 
         // パーティクル情報の追加
-        int textureId = makeTexture(gl, TEXTURE_ID);
+        int textureId = getTexture(gl, TEXTURE_ID);
         addParticleData(gl, particleGroup, particleRadius, allParticleLine, border, textureId);
     }
 
@@ -792,7 +781,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // menu背景物体
         menuBodyControl();
         // 弾 !パーティクルよりも先に描画すること（パーティクル内部に弾が描画されることがあるため）
-        bulletManage(gl);
+        mBulletManager.bulletManage(gl, mParticleSystem ,mParticleData);
 
         //------------------
         // パーティクル
@@ -819,9 +808,9 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // 画面端の座標を物理座標に変換
         //---------------------------
         // 画面の端の位置を変換(Y座標は上が0)
-        mWorldPosMax = convPointScreenToWorld(screenWidth, 0, gl);
-        mWorldPosMid = convPointScreenToWorld(screenWidth / 2f, screenHeight / 2f, gl);
-        mWorldPosMin = convPointScreenToWorld(0, screenHeight, gl);
+        mWorldPosMax = Conversion.convPointScreenToWorld(screenWidth, 0, gl, mGLSurfaceView);
+        mWorldPosMid = Conversion.convPointScreenToWorld(screenWidth / 2f, screenHeight / 2f, gl, mGLSurfaceView);
+        mWorldPosMin = Conversion.convPointScreenToWorld(0, screenHeight, gl, mGLSurfaceView);
     }
 
     /*
@@ -832,7 +821,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //---------------
         // 背景
         //---------------
-        int textureID = makeTexture(gl, R.drawable.texture_background);
+        int textureID = getTexture(gl, R.drawable.texture_background);
         mDrawBackGround = new DrawBackGround( mWorldPosMin, mWorldPosMax, textureID );
 
         //---------------
@@ -864,13 +853,13 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // 座標変換
         //-------------------------------
         // メニュー（展開後）の座標変換
-        float[] worldExpandedMenuTopLeft = convPointScreenToWorld(mExpandedMenuLeft, mExpandedMenuTop, gl);
-        float[] worldExpandedMenuTopRight = convPointScreenToWorld(mExpandedMenuRight, mExpandedMenuTop, gl);
-        float[] worldExpandedMenuBottomRight = convPointScreenToWorld(mExpandedMenuRight, mExpandedMenuBottom, gl);
+        float[] worldExpandedMenuTopLeft = Conversion.convPointScreenToWorld(mExpandedMenuLeft, mExpandedMenuTop, gl, mGLSurfaceView);
+        float[] worldExpandedMenuTopRight = Conversion.convPointScreenToWorld(mExpandedMenuRight, mExpandedMenuTop, gl, mGLSurfaceView);
+        float[] worldExpandedMenuBottomRight = Conversion.convPointScreenToWorld(mExpandedMenuRight, mExpandedMenuBottom, gl, mGLSurfaceView);
 
         // メニュー（折りたたみ時）の座標変換
-        float[] worldCollapsedMenuTopLeft = convPointScreenToWorld(mCollapsedMenuLeft, mCollapsedMenuTop, gl);
-        float[] worldCollapsedMenuBottomRight = convPointScreenToWorld(mCollapsedMenuRight, mCollapsedMenuBottom, gl);
+        float[] worldCollapsedMenuTopLeft = Conversion.convPointScreenToWorld(mCollapsedMenuLeft, mCollapsedMenuTop, gl, mGLSurfaceView);
+        float[] worldCollapsedMenuBottomRight = Conversion.convPointScreenToWorld(mCollapsedMenuRight, mCollapsedMenuBottom, gl, mGLSurfaceView);
 
         //-------------------------------
         // サイズ・位置
@@ -933,7 +922,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // 床の座標計算
         //---------------
         // メニュー下部(初期)の四隅の座標を変換
-        float[] worldMenuPosTopLeft = convPointScreenToWorld(mCollapsedMenuLeft, mCollapsedMenuTop, gl);
+        float[] worldMenuPosTopLeft = Conversion.convPointScreenToWorld(mCollapsedMenuLeft, mCollapsedMenuTop, gl, mGLSurfaceView);
 
         // メニューの存在を考慮した横幅・X座標位置を計算する
         // ※メニュー物体とちょうどの位置だと下がるときうまくいかない時があるため、少し位置を左にする。
@@ -1158,194 +1147,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
 
     }
 
-    /*
-     *  弾の管理(生成・削除)
-     */
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    private void bulletManage(GL10 gl) {
-
-        // 大砲offなら何もしない
-        if (!mBulletOn) {
-            return;
-        }
-
-        // 位置が急上昇した境界パーティクルを取得
-        int tooRiseIndex = mParticleData.tooRiseBorderParticle(mParticleSystem);
-        // 保持している境界パーティクルの位置情報を更新
-        mParticleData.updateBorderParticlePosY(mParticleSystem);
-
-        //-------------
-        // 弾の描画
-        //-------------
-        // 発射済みの弾の描画
-        for (Bullet bullet : mBullets) {
-
-            //-----------
-            // 弾の減速対応
-            // (境界パーティクルに掠った際、パーティクルが急上昇するのを防ぐための対応)
-            //-----------
-            if (tooRiseIndex != mParticleData.NOT_FOUND) {
-                float borderY = mParticleSystem.getParticlePositionY(tooRiseIndex);
-                float bulletY = bullet.getBody().getPositionY();
-
-                // 急上昇した境界パーティクルよりも上に位置する弾は減速させる
-                if (bulletY >= borderY) {
-                    // 減速
-                    bullet.loseSpeed();
-                }
-            }
-
-            //-----------
-            // 減速判定
-            //-----------
-            boolean isDeceleration = bullet.isDeceleration();
-            if (isDeceleration) {
-                // 減速した弾は、削除リストに追加し描画もスキップ
-                mRemoveBullets.add(bullet);
-                continue;
-            }
-
-            // 描画
-            bullet.draw(gl);
-        }
-
-        //-----------------
-        // 削除対象の弾を削除
-        //-----------------
-        removeBullets();
-
-        //-----------------
-        // 弾の生成
-        //-----------------
-        shotBullet(gl);
-    }
-
-    /*
-     *  削除対象の弾の削除
-     */
-    private void removeBullets() {
-
-        // 削除対象なければ、処理なし
-        if (mRemoveBullets.size() == 0) {
-            return;
-        }
-
-        //-------------
-        // 削除
-        //-------------
-        for (Bullet bullet : mRemoveBullets) {
-            // 削除対象
-            Body bulletBody = bullet.getBody();
-
-            // 削除
-            mWorld.destroyBody(bulletBody);
-            bulletBody.delete();
-            mBullets.remove(bullet);
-        }
-
-        // 削除リストをクリア
-        mRemoveBullets.clear();
-    }
-
-    /*
-     *  銃弾全クリア
-     */
-    private void clearAllBullets() {
-
-        //-----------------------
-        // 発射済みの弾を全て削除
-        //-----------------------
-        for (Bullet bullet : mBullets) {
-            // 削除対象
-            Body bulletBody = bullet.getBody();
-            // 削除
-            mWorld.destroyBody(bulletBody);
-            bulletBody.delete();
-        }
-
-        //-----------------------
-        // クリア
-        //-----------------------
-        mBullets.clear();
-        mRemoveBullets.clear();
-    }
-
-    /*
-     *  弾の生成と発射
-     */
-    private void shotBullet(GL10 gl) {
-
-        //-------------
-        // 生成判定
-        //-------------
-        mBulletShotCycle++;
-        if ((mBulletShotCycle % 10) != 0) {
-            // 周期未達なら何もしない
-            return;
-        }
-
-        // 周期リセット
-        mBulletShotCycle = 0;
-
-        //---------------
-        // 弾の生成と発射
-        //---------------
-        // 発射位置：X座標　　！Y座標は発射位置固定としており、変換対象の値はなんでもよいため0としている
-        float[] shotPosX = convPointScreenToWorld(mBulletShotPosX, 0, gl);
-        float shotPosY = mWorldPosMin[1] + (BULLET_SIZE * 2);
-
-        // 弾用のテクスチャ生成
-        int textureId = makeTexture(gl, Bullet.TEXTURE_RESOUCE_ID);
-        // 弾を生成・発射
-        Bullet bullet = new Bullet( mWorld, shotPosX[0], shotPosY, textureId );
-        bullet.shotUp();
-        // 生成済みリストに追加
-        mBullets.add( bullet );
-    }
-
-    /*
-     * 画面座標を物理座標へ変換
-     */
-    private float[] convPointScreenToWorld(float wx, float wy, GL10 gl) {
-
-        //---------------------------
-        // 座標変換のためのデータを取得
-        //---------------------------
-        GL11 gl11 = (GL11) gl;
-        int[] bits = new int[16];
-        float[] model = new float[16];
-        float[] proj = new float[16];
-        gl11.glGetIntegerv(gl11.GL_MODELVIEW_MATRIX_FLOAT_AS_INT_BITS_OES, bits, 0);
-        for (int i = 0; i < bits.length; i++) {
-            model[i] = Float.intBitsToFloat(bits[i]);
-        }
-        gl11.glGetIntegerv(gl11.GL_PROJECTION_MATRIX_FLOAT_AS_INT_BITS_OES, bits, 0);
-        for (int i = 0; i < bits.length; i++) {
-            proj[i] = Float.intBitsToFloat(bits[i]);
-        }
-
-        //---------------------
-        // 画面サイズ
-        //---------------------
-        final int screenWidth = mGLSurfaceView.getWidth();
-        final int screenHeight = mGLSurfaceView.getHeight();
-
-        //---------------------
-        // 座標変換
-        //---------------------
-        float[] ret = new float[4];
-        GLU.gluUnProject(
-                wx, (float) screenHeight - wy, 1f,
-                model, 0, proj, 0,
-                new int[]{0, 0, screenWidth, screenHeight}, 0,
-                ret, 0);
-        float x = ret[0] / ret[3];
-        float y = ret[1] / ret[3];
-        // float z = (float)(ret[2] / ret[3]);
-
-        float[] position = {x, y};
-        return position;
-    }
 
     /*
      * 主に landscape と portraid の切り替え (縦向き、横向き切り替え) のときに呼ばれる
@@ -1407,7 +1208,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     /*
      * テクスチャ生成
      */
-    private int makeTexture(GL10 gl10, int resourceId) {
+    private int getTexture(GL10 gl10, int resourceId) {
 
         //------------------
         // 生成済み判定
@@ -1421,36 +1222,15 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //------------------
         // テクスチャ生成
         //------------------
-        // -- テクスチャオブジェクトの生成 --
-        // テクスチャ用のメモリを確保
-        final int TEXTURE_NUM = 1;
-        int[] textureIds = new int[TEXTURE_NUM];
-        // テクスチャオブジェクトの生成（第2引数にテクスチャIDが格納される）
-        gl10.glGenTextures(TEXTURE_NUM, textureIds, 0);
-
-        // -- テクスチャへのビットマップ指定 --
-        // 指定リソースのBitmapオブジェクトを生成
-        Resources resource = mGLSurfaceView.getContext().getResources();
-        Bitmap bmp = BitmapFactory.decodeResource(resource, resourceId);
-
-        // テクスチャユニットを選択
-        gl10.glActiveTexture(GL10.GL_TEXTURE0);
-        // テクスチャIDとGL_TEXTURE_2Dをバインド
-        gl10.glBindTexture(GL10.GL_TEXTURE_2D, textureIds[0]);
-        // バインドされたテクスチャにBitmapをセットする
-        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bmp, 0);
-
-        // -- テクスチャのフィルタ指定 --
-        gl10.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
-        gl10.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
+        textureId = Conversion.makeTexture( gl10, resourceId, mGLSurfaceView.getContext() );
 
         //-------------------
         // テクスチャを保持
         //-------------------
         // リソースIDとテクスチャIDをMapとして保持する
-        mMapResourceTexture.put(resourceId, textureIds[0]);
+        mMapResourceTexture.put(resourceId, textureId);
 
-        return textureIds[0];
+        return textureId;
     }
 
     /*
@@ -1468,11 +1248,12 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
      */
     public synchronized boolean onTouch(View v, MotionEvent event) {
 
-        if (mBulletOn) {
+        boolean onBullet = mBulletManager.onBullet();
+        if ( onBullet ) {
             //-------------------
             // 銃弾方向の制御
             //-------------------
-            return controlBulletDirection(event);
+            return mBulletManager.controlBulletShootPos(event);
 
         } else {
             //-------------------
@@ -1515,28 +1296,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         return true;
     }
 
-    /*
-     * 銃弾方向の制御
-     */
-    private boolean controlBulletDirection(MotionEvent event) {
 
-        switch (event.getAction()) {
-
-            // タッチ移動
-            case MotionEvent.ACTION_DOWN:
-            case MotionEvent.ACTION_MOVE:
-                // タッチ位置のX座標から銃弾が発射されるようにする
-                mBulletShotPosX = event.getX();
-                break;
-
-            // タッチ解除
-            case MotionEvent.ACTION_UP:
-            default:
-                break;
-        }
-
-        return true;
-    }
 
 
     /*
@@ -1546,7 +1306,8 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     private void traceTouchParticle(GL10 gl) {
 
         // 銃弾発射中なら処理なし
-        if ( mBulletOn ){
+        boolean onBullet = mBulletManager.onBullet();
+        if ( onBullet ){
             return;
         }
         // 未タッチなら処理なし
@@ -1601,7 +1362,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         float range = mParticleData.getParticleRadius() * 2;
 
         // タッチ判定範囲を算出
-        float[] touchPos = convPointScreenToWorld(mParticleTouchInfo.touchPosX, mParticleTouchInfo.touchPosY, gl);
+        float[] touchPos = Conversion.convPointScreenToWorld(mParticleTouchInfo.touchPosX, mParticleTouchInfo.touchPosY, gl, mGLSurfaceView);
         float touchMinX = touchPos[0] - range;
         float touchMaxX = touchPos[0] + range;
         float touchMinY = touchPos[1] - range;
@@ -1706,28 +1467,18 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
      */
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void switchBullet(){
-        // 発射有無を切り替え
-        mBulletOn = !mBulletOn;
+        // 発射On/Offを切り替え
+        boolean onBullet = mBulletManager.switchBulletOnOff();
 
         //-----------
-        // 大砲on
+        // 銃弾On
         //-----------
-        if( mBulletOn ){
+        if( onBullet ){
             // 保持している境界パーティクルの位置情報を更新
             mParticleData.updateBorderParticlePosY( mParticleSystem );
-            // 発射位置（X座標）を画面中心位置で初期化
-            mBulletShotPosX = mGLSurfaceView.getWidth() / 2f;
-            // 銃弾発射サイクルリセット
-            mBulletShotCycle = 0;
-
-            return;
+            // 画面下部座標値を渡し、発射位置を設定
+            mBulletManager.setShootPosY( mWorldPosMin[1] );
         }
-
-        //-----------
-        // 大砲off
-        //-----------
-        // 発射済みの弾を全て削除
-        clearAllBullets();
     }
 
     /*
