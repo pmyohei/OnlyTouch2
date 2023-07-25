@@ -29,8 +29,6 @@ import com.google.fpl.liquidfun.Vec2;
 import com.google.fpl.liquidfun.World;
 import com.google.fpl.liquidfun.liquidfun;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -808,9 +806,9 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // 画面端の座標を物理座標に変換
         //---------------------------
         // 画面の端の位置を変換(Y座標は上が0)
-        mWorldPosMax = Conversion.convPointScreenToWorld(screenWidth, 0, gl, mGLSurfaceView);
-        mWorldPosMid = Conversion.convPointScreenToWorld(screenWidth / 2f, screenHeight / 2f, gl, mGLSurfaceView);
-        mWorldPosMin = Conversion.convPointScreenToWorld(0, screenHeight, gl, mGLSurfaceView);
+        mWorldPosMax = Conversion.convertPointScreenToWorld(screenWidth, 0, gl, mGLSurfaceView);
+        mWorldPosMid = Conversion.convertPointScreenToWorld(screenWidth / 2f, screenHeight / 2f, gl, mGLSurfaceView);
+        mWorldPosMin = Conversion.convertPointScreenToWorld(0, screenHeight, gl, mGLSurfaceView);
     }
 
     /*
@@ -853,13 +851,13 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // 座標変換
         //-------------------------------
         // メニュー（展開後）の座標変換
-        float[] worldExpandedMenuTopLeft = Conversion.convPointScreenToWorld(mExpandedMenuLeft, mExpandedMenuTop, gl, mGLSurfaceView);
-        float[] worldExpandedMenuTopRight = Conversion.convPointScreenToWorld(mExpandedMenuRight, mExpandedMenuTop, gl, mGLSurfaceView);
-        float[] worldExpandedMenuBottomRight = Conversion.convPointScreenToWorld(mExpandedMenuRight, mExpandedMenuBottom, gl, mGLSurfaceView);
+        float[] worldExpandedMenuTopLeft = Conversion.convertPointScreenToWorld(mExpandedMenuLeft, mExpandedMenuTop, gl, mGLSurfaceView);
+        float[] worldExpandedMenuTopRight = Conversion.convertPointScreenToWorld(mExpandedMenuRight, mExpandedMenuTop, gl, mGLSurfaceView);
+        float[] worldExpandedMenuBottomRight = Conversion.convertPointScreenToWorld(mExpandedMenuRight, mExpandedMenuBottom, gl, mGLSurfaceView);
 
         // メニュー（折りたたみ時）の座標変換
-        float[] worldCollapsedMenuTopLeft = Conversion.convPointScreenToWorld(mCollapsedMenuLeft, mCollapsedMenuTop, gl, mGLSurfaceView);
-        float[] worldCollapsedMenuBottomRight = Conversion.convPointScreenToWorld(mCollapsedMenuRight, mCollapsedMenuBottom, gl, mGLSurfaceView);
+        float[] worldCollapsedMenuTopLeft = Conversion.convertPointScreenToWorld(mCollapsedMenuLeft, mCollapsedMenuTop, gl, mGLSurfaceView);
+        float[] worldCollapsedMenuBottomRight = Conversion.convertPointScreenToWorld(mCollapsedMenuRight, mCollapsedMenuBottom, gl, mGLSurfaceView);
 
         //-------------------------------
         // サイズ・位置
@@ -922,7 +920,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // 床の座標計算
         //---------------
         // メニュー下部(初期)の四隅の座標を変換
-        float[] worldMenuPosTopLeft = Conversion.convPointScreenToWorld(mCollapsedMenuLeft, mCollapsedMenuTop, gl, mGLSurfaceView);
+        float[] worldMenuPosTopLeft = Conversion.convertPointScreenToWorld(mCollapsedMenuLeft, mCollapsedMenuTop, gl, mGLSurfaceView);
 
         // メニューの存在を考慮した横幅・X座標位置を計算する
         // ※メニュー物体とちょうどの位置だと下がるときうまくいかない時があるため、少し位置を左にする。
@@ -1056,7 +1054,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         }
 
         // FloatBufferに変換
-        return convFloatBuffer(vertices);
+        return Conversion.convertFloatBuffer(vertices);
     }
 
     /*
@@ -1078,7 +1076,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         }
 
         // FloatBufferに変換
-        return convFloatBuffer(uv);
+        return Conversion.convertFloatBuffer(uv);
     }
 
     /*
@@ -1234,16 +1232,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     }
 
     /*
-     * float配列をFloatBufferに変換
-     */
-    public static FloatBuffer convFloatBuffer(float[] array) {
-        FloatBuffer fb = ByteBuffer.allocateDirect(array.length * 4).order(
-                ByteOrder.nativeOrder()).asFloatBuffer();
-        fb.put(array).position(0);
-        return fb;
-    }
-
-    /*
      * onTouch
      */
     public synchronized boolean onTouch(View v, MotionEvent event) {
@@ -1362,7 +1350,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         float range = mParticleData.getParticleRadius() * 2;
 
         // タッチ判定範囲を算出
-        float[] touchPos = Conversion.convPointScreenToWorld(mParticleTouchInfo.touchPosX, mParticleTouchInfo.touchPosY, gl, mGLSurfaceView);
+        float[] touchPos = Conversion.convertPointScreenToWorld(mParticleTouchInfo.touchPosX, mParticleTouchInfo.touchPosY, gl, mGLSurfaceView);
         float touchMinX = touchPos[0] - range;
         float touchMaxX = touchPos[0] + range;
         float touchMinY = touchPos[1] - range;

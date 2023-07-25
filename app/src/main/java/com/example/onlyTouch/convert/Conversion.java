@@ -1,7 +1,5 @@
 package com.example.onlyTouch.convert;
 
-import static com.example.onlyTouch.opengl.ParticleWorldRenderer.convFloatBuffer;
-
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -10,14 +8,8 @@ import android.opengl.GLU;
 import android.opengl.GLUtils;
 import android.view.View;
 
-import com.example.onlyTouch.R;
-import com.google.fpl.liquidfun.Body;
-import com.google.fpl.liquidfun.BodyDef;
-import com.google.fpl.liquidfun.BodyType;
-import com.google.fpl.liquidfun.CircleShape;
-import com.google.fpl.liquidfun.Vec2;
-import com.google.fpl.liquidfun.World;
-
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -39,7 +31,7 @@ public class Conversion {
     /*
      * 画面座標を物理座標へ変換
      */
-    public static float[] convPointScreenToWorld(float wx, float wy, GL10 gl, final View screenView ) {
+    public static float[] convertPointScreenToWorld(float wx, float wy, GL10 gl, final View screenView ) {
 
         //---------------------------
         // 座標変換のためのデータを取得
@@ -116,5 +108,15 @@ public class Conversion {
         return textureIds[0];
     }
 
+    /*
+     * float配列をFloatBufferに変換
+     */
+    public static FloatBuffer convertFloatBuffer(float[] array) {
+        // floatは32biteなのでx4.
+        FloatBuffer floatBuffer = ByteBuffer.allocateDirect(array.length * 4).order(
+                ByteOrder.nativeOrder()).asFloatBuffer();
+        floatBuffer.put(array).position(0);
+        return floatBuffer;
+    }
 
 }

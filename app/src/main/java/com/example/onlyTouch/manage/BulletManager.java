@@ -193,7 +193,7 @@ public class BulletManager {
         // 弾の生成と発射
         //---------------
         // 発射位置：X座標　　！Y座標は発射位置固定としており、変換対象の値はなんでもよいため0としている
-        float[] shotPosX = Conversion.convPointScreenToWorld(mBulletShotPosX, 0, gl, mGLSurfaceView);
+        float[] shotPosX = Conversion.convertPointScreenToWorld(mBulletShotPosX, 0, gl, mGLSurfaceView);
         float shotPosY = mBulletShotWorldPosY;
 
         // 弾用のテクスチャ生成

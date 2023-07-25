@@ -1,7 +1,7 @@
 package com.example.onlyTouch.object;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import com.example.onlyTouch.convert.Conversion;
+
 import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -56,18 +56,9 @@ public class DrawBackGround {
         // バッファ変換
         //--------------------
         // 頂点バッファ
-        ByteBuffer vertexBuffer = ByteBuffer.allocateDirect(vertices.length * 4); // floatは32biteなのでx4.
-        vertexBuffer.order(ByteOrder.nativeOrder());
-        mVertexBuffer = vertexBuffer.asFloatBuffer();
-        mVertexBuffer.put(vertices);
-        mVertexBuffer.position(0);
-
+        mVertexBuffer = Conversion.convertFloatBuffer( vertices );
         // UVバッファ
-        ByteBuffer uvBuffer = ByteBuffer.allocateDirect(uv.length * 4); // floatは32biteなのでx4.
-        uvBuffer.order(ByteOrder.nativeOrder());
-        mUVBuffer = uvBuffer.asFloatBuffer();
-        mUVBuffer.put(uv);
-        mUVBuffer.position(0);
+        mUVBuffer = Conversion.convertFloatBuffer( uv );
     }
 
     /*

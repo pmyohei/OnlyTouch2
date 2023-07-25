@@ -1,8 +1,7 @@
 package com.example.onlyTouch.object;
 
-import static com.example.onlyTouch.opengl.ParticleWorldRenderer.convFloatBuffer;
-
 import com.example.onlyTouch.R;
+import com.example.onlyTouch.convert.Conversion;
 import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.BodyDef;
 import com.google.fpl.liquidfun.BodyType;
@@ -86,8 +85,8 @@ public class Bullet {
 
         // 保持
         mVertexLen = vertices.length / 2;
-        mVertexBuffer = convFloatBuffer(vertices);
-        mUvBuffer = convFloatBuffer(uv);
+        mVertexBuffer = Conversion.convertFloatBuffer(vertices);
+        mUvBuffer = Conversion.convertFloatBuffer(uv);
     }
 
     /*
