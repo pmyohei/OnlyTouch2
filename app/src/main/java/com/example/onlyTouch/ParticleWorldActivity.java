@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.TranslateAnimation;
 
@@ -209,10 +210,8 @@ public class ParticleWorldActivity extends AppCompatActivity {
             //---------------------
             // メニュー本体制御
             //---------------------
-            // Viewをアニメーション
+            // メニューをスライドアップ
             slideUp(menu);
-            // menu背景物体の移動
-            mGLSurfaceView.getRenderer().moveMenuBody(ParticleWorldRenderer.MENU_MOVE_STATE_UP);
 
             //---------------------
             // 各種メニュー説明文
@@ -231,10 +230,8 @@ public class ParticleWorldActivity extends AppCompatActivity {
             //---------------------
             // メニュー本体制御
             //---------------------
-            // Viewをアニメーション
+            // メニューをスライドダウン
             slideDown(menu);
-            // menu背景物体の移動
-            mGLSurfaceView.getRenderer().moveMenuBody(ParticleWorldRenderer.MENU_MOVE_STATE_DOWN);
 
             //---------------------
             // 各種メニュー説明文
@@ -249,7 +246,6 @@ public class ParticleWorldActivity extends AppCompatActivity {
          * アニメーション：スライドアップ
          */
         private void slideUp(final View menu ){
-            menu.setVisibility(View.VISIBLE);
 
             //------------------
             // animate生成
@@ -264,17 +260,15 @@ public class ParticleWorldActivity extends AppCompatActivity {
                     0);
             animate.setDuration(duration);
             animate.setFillAfter(true);
-            animate.setInterpolator(new LinearInterpolator());
+            animate.setInterpolator(new DecelerateInterpolator());
             animate.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationStart(Animation animation) {
-                    menu.setAlpha(1);
+                    // ビューを可視化
+                    menu.setVisibility(View.VISIBLE);
                 }
                 @Override
                 public void onAnimationEnd(final Animation animation) {
-                    // menuアニメーション停止通知
-                    mGLSurfaceView.getRenderer().moveMenuBody(ParticleWorldRenderer.MENU_MOVE_STATE_STOP);
-
                     // アニメーションが終了すれば、受付可能にする
                     mIsControlReception = true;
                 }
@@ -289,7 +283,6 @@ public class ParticleWorldActivity extends AppCompatActivity {
          * アニメーション：スライドダウン
          */
         private void slideDown(final View menu ){
-            menu.setVisibility(View.INVISIBLE);
 
             //------------------
             // animate生成
@@ -304,26 +297,23 @@ public class ParticleWorldActivity extends AppCompatActivity {
                     menu.getHeight());
             animate.setDuration(duration);
             animate.setFillAfter(true);
-            animate.setInterpolator(new LinearInterpolator());
+            animate.setInterpolator(new DecelerateInterpolator());
             animate.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationStart(Animation animation) {
-                    /* do nothing */
+                    // do nothing
                 }
                 @Override
                 public void onAnimationEnd(final Animation animation) {
-                    // 初期menuと本体が重なった位置にくる。後ろに色があるのが見えてしまうため、透明にしとく
-                    menu.setAlpha(0);
-
-                    // menuアニメーション停止通知
-                    mGLSurfaceView.getRenderer().moveMenuBody(ParticleWorldRenderer.MENU_MOVE_STATE_STOP);
+                    // ビューを不可視化
+                    menu.setVisibility(View.GONE);
 
                     // アニメーションが終了すれば、受付可能にする
                     mIsControlReception = true;
                 }
                 @Override
                 public void onAnimationRepeat(Animation animation) {
-                    /* do nothing */
+                    // do nothing
                 }
             });
             menu.startAnimation(animate);
@@ -334,33 +324,21 @@ public class ParticleWorldActivity extends AppCompatActivity {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
 
-        Rect menu_corners = new Rect();
-        Rect corners = new Rect();
+        Rect menuCorners = new Rect();
         Point globalOffset = new Point();
 
-        /* メニューの位置・サイズを渡す( @@四隅の位置取得の方法はその内調査(主にoffset)@@ ) */
-        // 展開後メニュー
-        ViewGroup menuExpanded = findViewById(R.id.cl_menu_expanded);
-        menuExpanded.getGlobalVisibleRect(menu_corners);
-
-        findViewById(R.id.fl_root).getGlobalVisibleRect(corners, globalOffset);
-        menu_corners.offset(-globalOffset.x, -globalOffset.y);
-
-        ParticleWorldRenderer fluidRenderer = mGLSurfaceView.getRenderer();
-        fluidRenderer.setExpandedMenuRect(menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom);
-
-        // 展開前メニュー
+        //------------------------
+        // メニューの位置・サイズ
+        //------------------------
+        // 折りたたみメニューの情報
         ViewGroup menu_collapsed = findViewById(R.id.cl_menu_collapsed);
-        menu_collapsed.getGlobalVisibleRect(menu_corners);
-        menu_corners.offset(-globalOffset.x, -globalOffset.y);
+        menu_collapsed.getGlobalVisibleRect(menuCorners);
+        menuCorners.offset(-globalOffset.x, -globalOffset.y);
 
-        fluidRenderer.setCollapsedMenuRect(menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom);
-
-        // メニューのRect情報設定完了
+        // メニューのRect情報をWorldに渡す
+        ParticleWorldRenderer fluidRenderer = mGLSurfaceView.getRenderer();
+        fluidRenderer.setCollapsedMenuRect(menuCorners.top, menuCorners.left, menuCorners.right, menuCorners.bottom);
         fluidRenderer.finishSetMenuRect();
-
-        // 横幅を取得後、メニュー本体は隠す
-        menuExpanded.setVisibility(View.INVISIBLE);
     }
 
     @Override

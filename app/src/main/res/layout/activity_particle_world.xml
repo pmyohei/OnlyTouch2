@@ -183,10 +183,11 @@
                 android:id="@+id/cl_menu_expanded"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:alpha="1.0"
+                android:alpha="0.8"
                 android:background="@drawable/border_menu_expanded"
                 android:paddingLeft="2dp"
                 android:paddingRight="2dp"
+                android:visibility="invisible"
                 app:layout_constraintBottom_toTopOf="@+id/cl_menu_collapsed"
                 app:layout_constraintEnd_toEndOf="parent">
 

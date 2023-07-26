@@ -118,7 +118,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     //----------------
     // Body
     //----------------
-    private Body mMenuBody;
     private Body mOverlapBody;
 
     //----------------
@@ -137,38 +136,11 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     // menu初期位置設定完了フラグ
     private boolean mIsSetMenuRect;
 
-    // menu展開時のRect情報
-    private float mExpandedMenuTop;
-    private float mExpandedMenuLeft;
-    private float mExpandedMenuRight;
-    private float mExpandedMenuBottom;
     // menu折りたたみ時のRect情報
     private float mCollapsedMenuTop;
     private float mCollapsedMenuLeft;
     private float mCollapsedMenuRight;
     private float mCollapsedMenuBottom;
-
-    // menu背景物体の情報
-    private float mMenuInitPosX;
-    private float mMenuInitPosY;
-    private float mMenuWidth;
-    private float mMenuHeight;
-    private float mMenuCollapsedPosY;
-
-    // アニメーションと連動するmenu背景物体の移動速度
-    private Vec2 mMenuUpVelocity;
-    private Vec2 mMenuDownVelocity;
-    private Vec2 mMenuVelocity;
-
-    // menu移動状態
-    private int mMenuMoveState = MENU_MOVE_STATE_NOTHING;
-
-    // menu背景物体の移動状態
-    public static final int MENU_MOVE_STATE_NOTHING = 0;
-    public static final int MENU_MOVE_STATE_UP = 1;
-    public static final int MENU_MOVE_STATE_DOWN = 2;
-    public static final int MENU_MOVE_STATE_KEEP = 3;
-    public static final int MENU_MOVE_STATE_STOP = 4;
 
     //------------------
     // OpenGL
@@ -776,8 +748,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //------------------
         // 物体関連
         //------------------
-        // menu背景物体
-        menuBodyControl();
         // 弾 !パーティクルよりも先に描画すること（パーティクル内部に弾が描画されることがあるため）
         mBulletManager.bulletManage(gl, mParticleSystem ,mParticleData);
 
@@ -850,11 +820,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //-------------------------------
         // 座標変換
         //-------------------------------
-        // メニュー（展開後）の座標変換
-        float[] worldExpandedMenuTopLeft = Conversion.convertPointScreenToWorld(mExpandedMenuLeft, mExpandedMenuTop, gl, mGLSurfaceView);
-        float[] worldExpandedMenuTopRight = Conversion.convertPointScreenToWorld(mExpandedMenuRight, mExpandedMenuTop, gl, mGLSurfaceView);
-        float[] worldExpandedMenuBottomRight = Conversion.convertPointScreenToWorld(mExpandedMenuRight, mExpandedMenuBottom, gl, mGLSurfaceView);
-
         // メニュー（折りたたみ時）の座標変換
         float[] worldCollapsedMenuTopLeft = Conversion.convertPointScreenToWorld(mCollapsedMenuLeft, mCollapsedMenuTop, gl, mGLSurfaceView);
         float[] worldCollapsedMenuBottomRight = Conversion.convertPointScreenToWorld(mCollapsedMenuRight, mCollapsedMenuBottom, gl, mGLSurfaceView);
@@ -863,52 +828,16 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // サイズ・位置
         //-------------------------------
         // menuサイズ  !メニュービューの半分のサイズ（半分にすると適切なサイズに調整されるのは要調査）
-        float menuWidth = (worldExpandedMenuTopRight[0] - worldExpandedMenuTopLeft[0]) / 2;
-        float expandedMenuHeight = (worldExpandedMenuTopRight[1] - worldExpandedMenuBottomRight[1]) / 2;
+        float menuWidth = (worldCollapsedMenuBottomRight[0] - worldCollapsedMenuTopLeft[0]) / 2;
         float collapsedHeight = (worldCollapsedMenuTopLeft[1] - worldCollapsedMenuBottomRight[1]) / 2;
-        float menuHeight = expandedMenuHeight + collapsedHeight;
 
         // menu折りたたみ位置
         float collapsedMenuPosRight = worldCollapsedMenuTopLeft[0] + menuWidth;
-        float collapsedMenuPosTop = worldCollapsedMenuBottomRight[1] + collapsedHeight;
-        // menu背景物体の初期位置（menu折りたたみViewと物体上部が重なるY位置）
-        float menuInitPosY = worldCollapsedMenuTopLeft[1] - menuHeight;
 
         //-------------------------------
         // 生成
         //-------------------------------
-        mMenuBody = createBoxBody(menuWidth, menuHeight, collapsedMenuPosRight, menuInitPosY, 0, BodyType.staticBody);
-
-        //-------------------------------
-        // 保持
-        //-------------------------------
-        // 位置情報
-        mMenuInitPosX = collapsedMenuPosRight;
-        mMenuInitPosY = menuInitPosY;
-        mMenuWidth = menuWidth;
-        mMenuHeight = menuHeight;
-        // menu（折りたたみ時）の位置
-        mMenuCollapsedPosY = collapsedMenuPosTop;
-
-        //------------------
-        // メニュー移動速度
-        //------------------
-        // メニュー操作時のアニメーション時間(ms)
-        Resources resources = mGLSurfaceView.getContext().getResources();
-        int upDuration = resources.getInteger(R.integer.menu_up_anim_duration);
-        int downDuration = resources.getInteger(R.integer.menu_down_anim_duration);
-
-        // メニュー背景物体の移動速度を計算：Up
-        float millSecond = (float) upDuration / 1000f;
-        float ratioToSecond = 1.0f / millSecond;
-        float speed = expandedMenuHeight * ratioToSecond * 1.32f;   // !1.32f の理由・妥当性はその内調査。
-        mMenuUpVelocity = new Vec2(0, speed);
-
-        // メニュー背景物体の移動速度を計算：Down
-        millSecond = (float) downDuration / 1000f;
-        ratioToSecond = 1.0f / millSecond;
-        speed = expandedMenuHeight * ratioToSecond * 1.32f;         // !1.32f の理由・妥当性はその内調査。
-        mMenuDownVelocity = new Vec2(0, -(speed));
+        createBoxBody(menuWidth, collapsedHeight, collapsedMenuPosRight, worldCollapsedMenuBottomRight[1] + collapsedHeight, 0, BodyType.staticBody);
     }
 
     /*
@@ -1078,73 +1007,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // FloatBufferに変換
         return Conversion.convertFloatBuffer(uv);
     }
-
-    /*
-     * menu背景物体の制御
-     */
-    private void menuBodyControl() {
-
-        switch (mMenuMoveState) {
-
-            //------------
-            // 上／下
-            //------------
-            case MENU_MOVE_STATE_UP:
-            case MENU_MOVE_STATE_DOWN:
-                //----------
-                // 移動開始
-                //----------
-                mMenuBody.setType(BodyType.dynamicBody);
-                mMenuBody.setLinearVelocity(mMenuVelocity);
-
-                // 移動状態：移動継続
-                mMenuMoveState = MENU_MOVE_STATE_KEEP;
-
-                break;
-
-            //------------
-            // 移動継続
-            //------------
-            case MENU_MOVE_STATE_KEEP:
-                // 停止要求がくるまで、速度を維持し続ける
-                mMenuBody.setLinearVelocity(mMenuVelocity);
-
-                break;
-
-            //------------
-            // 停止
-            //------------
-            case MENU_MOVE_STATE_STOP:
-                //----------
-                // 移動終了
-                //----------
-                // bodyをstaticに戻す
-                mMenuBody.setType(BodyType.staticBody);
-
-                //------------
-                // 位置リセット
-                //------------
-                // 微妙なズレの蓄積を防ぐため、初期位置に戻ったタイミングで、menu背景物体を再生成
-                if (mMenuCollapsedPosY > mMenuBody.getPositionY()) {
-                    mWorld.destroyBody(mMenuBody);
-                    mMenuBody = createBoxBody(mMenuWidth, mMenuHeight, mMenuInitPosX, mMenuInitPosY, 0, BodyType.staticBody);
-                }
-
-                // 移動状態：なし
-                mMenuMoveState = MENU_MOVE_STATE_NOTHING;
-
-                break;
-
-            //------------
-            // なし
-            //------------
-            case MENU_MOVE_STATE_NOTHING:
-            default:
-                break;
-        }
-
-    }
-
 
     /*
      * 主に landscape と portraid の切り替え (縦向き、横向き切り替え) のときに呼ばれる
@@ -1403,17 +1265,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     }
 
     /*
-     * メニューView（展開時）Rect情報の設定
-     */
-    public void setExpandedMenuRect(float top, float left, float right, float bottom) {
-        // メニューが開いている状態の座標情報
-        mExpandedMenuTop = top;
-        mExpandedMenuLeft = left;
-        mExpandedMenuRight = right;
-        mExpandedMenuBottom = bottom;
-    }
-
-    /*
      * メニューView（折りたたみ時）Rect情報の設定
      */
     public void setCollapsedMenuRect(float top, float left, float right, float bottom){
@@ -1431,24 +1282,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // メニュー座標設定済み
         mIsSetMenuRect = true;
     }
-
-    /*
-     * menu動作の制御要求
-     */
-    public void moveMenuBody(int direction){
-
-        if( direction == MENU_MOVE_STATE_UP){
-            // 上方向を保持
-            mMenuVelocity = mMenuUpVelocity;
-        }else if( direction == MENU_MOVE_STATE_DOWN ){
-            // 下方向を保持
-            mMenuVelocity = mMenuDownVelocity;
-        }
-
-        // 制御情報を保持
-        mMenuMoveState = direction;
-    }
-
 
     /*
      * 銃弾OnOff切り替え
