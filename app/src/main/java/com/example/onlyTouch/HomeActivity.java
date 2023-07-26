@@ -25,8 +25,8 @@ public class HomeActivity extends AppCompatActivity {
      */
     private void setTouch(){
 
-        final TextView tx_touch = (TextView)findViewById(R.id.tx_touch);
-        tx_touch.setOnClickListener(new View.OnClickListener() {
+        final View cl_message = findViewById(R.id.cl_message);
+        cl_message.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(view.getContext(), ParticleWorldActivity.class);

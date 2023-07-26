@@ -8,29 +8,52 @@
     android:background="@color/home_bg"
     tools:context=".HomeActivity">
 
-    <TextView
-        android:id="@+id/tx_touch"
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/cl_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/home_prompt_touch"
-        android:textColor="@color/home_tx"
-        android:textSize="28sp"
-        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <TextView
+        <TextView
+            android:id="@+id/tx_touch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/home_prompt_touch"
+            android:textColor="@color/home_tx"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@+id/tx_play"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tx_play"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/home_prompt_touch_sub"
+            android:textColor="@color/home_tx"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tx_touch" />
+
+    </android.support.constraint.ConstraintLayout>
+
+    <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="@string/home_prompt_touch_sub"
-        android:textColor="@color/home_tx"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@+id/tx_touch"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:alpha="0.9"
+        android:background="@drawable/iv_footprint"
+        android:rotation="30"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="40dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </android.support.constraint.ConstraintLayout>
