@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:text="@string/splash"
         android:textColor="@color/splash_tx"
-        android:textSize="28sp"
+        android:textSize="24sp"
         android:fontFamily="@font/quicksand_regular"
         android:letterSpacing="0.3"
         app:layout_constraintBottom_toBottomOf="parent"
