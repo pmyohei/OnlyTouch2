@@ -759,6 +759,8 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         regenerationParticle(gl, particleGroup);
         // パーティクル描画更新
         updateParticleDraw(gl, particleGroup);
+        // パーティクルタッチ追随処理
+        traceTouchParticle(gl, particleGroup);
     }
 
     /*
@@ -927,20 +929,16 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     /*
      * パーティクルの描画情報の更新(頂点バッファ/UVバッファ)
      */
-    private void updateParticleDraw(GL10 gl, ParticleGroup pg) {
-        /* 粒子がない場合、何もしない */
-        if (pg.getParticleCount() == 0) {
+    private void updateParticleDraw(GL10 gl, ParticleGroup particleGroup) {
+
+        // 粒子がない場合、何もしない
+        if (particleGroup.getParticleCount() == 0) {
             return;
         }
 
-        // 描画情報の更新
-        updateParticleCreateDraw(gl);
-    }
-
-    /*
-     * パーティクル描画更新（Createモード用）
-     */
-    private void updateParticleCreateDraw(GL10 gl) {
+        //---------------
+        // レンダリング
+        //---------------
         // マトリクス記憶
         gl.glPushMatrix();
         {
@@ -959,9 +957,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         }
         // マトリクスを戻す
         gl.glPopMatrix();
-
-        // パーティクルタッチ判定処理
-        traceTouchParticle(gl);
     }
 
     /*
@@ -1146,21 +1141,25 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         return true;
     }
 
-
-
-
     /*
      * パーティクルタッチ追随処理
      *   パーティクルに対するタッチ判定を行い、タッチされていればパーティクルを追随させる
      */
-    private void traceTouchParticle(GL10 gl) {
+    private void traceTouchParticle(GL10 gl, ParticleGroup particleGroup) {
 
-        // 銃弾発射中なら処理なし
+        //----------------
+        // 処理なし
+        //----------------
+        // パーティクルなし
+        if (particleGroup.getParticleCount() == 0) {
+            return;
+        }
+        // 銃弾発射中
         boolean onBullet = mBulletManager.onBullet();
         if ( onBullet ){
             return;
         }
-        // 未タッチなら処理なし
+        // 未タッチ
         if (mParticleTouchInfo.touchPosX == mParticleTouchInfo.INVALID_TOUCH_POS) {
             return;
         }
