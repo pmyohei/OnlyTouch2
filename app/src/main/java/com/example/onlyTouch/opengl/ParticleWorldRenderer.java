@@ -224,7 +224,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     /*
      * パーティクル情報の追加
      */
-    private void addParticleData(GL10 gl, ParticleGroup pg, float particleRadius, ArrayList<ArrayList<Integer>> allParticleLine, ArrayList<Integer> border, int textureId) {
+    private void addParticleData(ParticleGroup pg, float particleRadius, ArrayList<ArrayList<Integer>> allParticleLine, ArrayList<Integer> border, int textureId) {
         mParticleData = new ParticleData(0, mParticleSystem, pg, particleRadius, allParticleLine, border, textureId);
     }
 
@@ -291,7 +291,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
 
         // パーティクル情報の追加
         int textureId = getTexture(gl, TEXTURE_ID);
-        addParticleData(gl, particleGroup, particleRadius, allParticleLine, border, textureId);
+        addParticleData(particleGroup, particleRadius, allParticleLine, border, textureId);
     }
 
     /*

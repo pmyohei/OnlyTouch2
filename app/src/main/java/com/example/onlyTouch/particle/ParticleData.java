@@ -13,18 +13,16 @@ public class ParticleData {
 
     public final int NOT_FOUND = -1;
 
-
-    long mID;
-    int mTextureId;
-    ParticleGroup mParticleGroup;
-    ArrayList<Integer> mTextureIdList;
-    ArrayList<ArrayList<Integer>> mAllParticleLine;     // ライン毎のパーティクルIndexリスト
+    private long mID;
+    private int mTextureId;
+    private ParticleGroup mParticleGroup;
+    private ArrayList<ArrayList<Integer>> mAllParticleLine;     // ライン毎のパーティクルIndexリスト
     private HashMap<Integer, Float> mBorderParticle;    // 境界粒子
 
     // 設定したradius
-    float mParticleRadius;
+    private float mParticleRadius;
     // 初期配置位置から計算したradius
-    float mParticleActualRadius;
+    private float mParticleActualRadius;
 
 
     public ParticleData(long id, ParticleSystem ps, ParticleGroup pg, float particleRadius, ArrayList<ArrayList<Integer>> allParticleLine, ArrayList<Integer> border, int textureId) {
@@ -52,13 +50,6 @@ public class ParticleData {
     }
 
     public int getTextureId() { return mTextureId;}
-
-    public ArrayList<Integer> getTextureIdList() {
-        return mTextureIdList;
-    }
-    public void setTextureIdList(ArrayList<Integer> textureIdList) {
-        mTextureIdList = textureIdList;
-    }
 
     public float getParticleRadius() { return mParticleRadius;}
 
