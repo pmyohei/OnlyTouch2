@@ -6,6 +6,7 @@ import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -165,7 +166,11 @@ public class ParticleWorldActivity extends AppCompatActivity {
     private class CollapsedMenuListerner implements View.OnClickListener {
 
         // リスナー受付(初期値は受付OK)
-        public boolean mIsEnable = true;
+        // （アニメーション中は受付不可にする）
+        private boolean mIsControlReception = true;
+
+        // menu折りたたみ
+        private boolean mIsCollapsed = true;
 
         @Override
         public void onClick(View view) {
@@ -173,25 +178,26 @@ public class ParticleWorldActivity extends AppCompatActivity {
             // リスナー受付制御
             //--------------
             // リスナー受付中でなければ、なにもしない
-            if (!mIsEnable) {
+            if (!mIsControlReception) {
                 return;
             }
-
-            // リスナーの処理を終えるまでは、受付不可にする
-            mIsEnable = false;
+            // アニメーション終了するまでは、受付不可
+            mIsControlReception = false;
 
             //--------------
             // menu制御
             //--------------
-            ViewGroup menu = findViewById(R.id.cl_menu_expanded);
+            ViewGroup menuExpanded = findViewById(R.id.cl_menu_expanded);
             ViewGroup explanation = findViewById(R.id.root_explanation);
 
-            if (menu.getVisibility() != View.VISIBLE) {
+            if ( mIsCollapsed ) {
                 // 開く
-                expandMenu( menu, explanation );
+                expandMenu( menuExpanded, explanation );
+                mIsCollapsed = false;
             } else {
                 // 折りたたむ
-                collapseMenu( menu, explanation );
+                collapseMenu( menuExpanded, explanation );
+                mIsCollapsed = true;
             }
         }
 
@@ -242,8 +248,8 @@ public class ParticleWorldActivity extends AppCompatActivity {
         /*
          * アニメーション：スライドアップ
          */
-        private void slideUp(final View v ){
-            v.setVisibility(View.VISIBLE);
+        private void slideUp(final View menu ){
+            menu.setVisibility(View.VISIBLE);
 
             //------------------
             // animate生成
@@ -254,7 +260,7 @@ public class ParticleWorldActivity extends AppCompatActivity {
             TranslateAnimation animate = new TranslateAnimation(
                     0,
                     0,
-                    v.getHeight(),
+                    menu.getHeight(),
                     0);
             animate.setDuration(duration);
             animate.setFillAfter(true);
@@ -262,7 +268,7 @@ public class ParticleWorldActivity extends AppCompatActivity {
             animate.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationStart(Animation animation) {
-                    v.setAlpha(1);
+                    menu.setAlpha(1);
                 }
                 @Override
                 public void onAnimationEnd(final Animation animation) {
@@ -270,20 +276,20 @@ public class ParticleWorldActivity extends AppCompatActivity {
                     mGLSurfaceView.getRenderer().moveMenuBody(ParticleWorldRenderer.MENU_MOVE_STATE_STOP);
 
                     // アニメーションが終了すれば、受付可能にする
-                    mIsEnable = true;
+                    mIsControlReception = true;
                 }
                 @Override
                 public void onAnimationRepeat(Animation animation) {
                 }
             });
-            v.startAnimation(animate);
+            menu.startAnimation(animate);
         }
 
         /*
          * アニメーション：スライドダウン
          */
-        private void slideDown(final View v ){
-            v.setVisibility(View.INVISIBLE);
+        private void slideDown(final View menu ){
+            menu.setVisibility(View.INVISIBLE);
 
             //------------------
             // animate生成
@@ -295,7 +301,7 @@ public class ParticleWorldActivity extends AppCompatActivity {
                     0,
                     0,
                     0,
-                    v.getHeight());
+                    menu.getHeight());
             animate.setDuration(duration);
             animate.setFillAfter(true);
             animate.setInterpolator(new LinearInterpolator());
@@ -307,20 +313,20 @@ public class ParticleWorldActivity extends AppCompatActivity {
                 @Override
                 public void onAnimationEnd(final Animation animation) {
                     // 初期menuと本体が重なった位置にくる。後ろに色があるのが見えてしまうため、透明にしとく
-                    v.setAlpha(0);
+                    menu.setAlpha(0);
 
                     // menuアニメーション停止通知
                     mGLSurfaceView.getRenderer().moveMenuBody(ParticleWorldRenderer.MENU_MOVE_STATE_STOP);
 
                     // アニメーションが終了すれば、受付可能にする
-                    mIsEnable = true;
+                    mIsControlReception = true;
                 }
                 @Override
                 public void onAnimationRepeat(Animation animation) {
                     /* do nothing */
                 }
             });
-            v.startAnimation(animate);
+            menu.startAnimation(animate);
         }
     }
 
@@ -334,8 +340,8 @@ public class ParticleWorldActivity extends AppCompatActivity {
 
         /* メニューの位置・サイズを渡す( @@四隅の位置取得の方法はその内調査(主にoffset)@@ ) */
         // 展開後メニュー
-        ViewGroup menu_top = findViewById(R.id.cl_menu_expanded);
-        menu_top.getGlobalVisibleRect(menu_corners);
+        ViewGroup menuExpanded = findViewById(R.id.cl_menu_expanded);
+        menuExpanded.getGlobalVisibleRect(menu_corners);
 
         findViewById(R.id.fl_root).getGlobalVisibleRect(corners, globalOffset);
         menu_corners.offset(-globalOffset.x, -globalOffset.y);
@@ -354,7 +360,7 @@ public class ParticleWorldActivity extends AppCompatActivity {
         fluidRenderer.finishSetMenuRect();
 
         // 横幅を取得後、メニュー本体は隠す
-        menu_top.setVisibility(View.INVISIBLE);
+        menuExpanded.setVisibility(View.INVISIBLE);
     }
 
     @Override
