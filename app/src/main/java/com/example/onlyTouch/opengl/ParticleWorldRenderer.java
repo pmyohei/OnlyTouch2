@@ -48,7 +48,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         System.loadLibrary("liquidfun_jni");
     }
 
-
     //----------------
     // world
     //----------------
@@ -88,32 +87,16 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     //----------------
     // パーティクル
     //----------------
+    private final ParticleData mParticleData;
     private final ParticleTouchInfo mParticleTouchInfo;
     private ParticleSystem mParticleSystem;
-    private ParticleData mParticleData;
     private int mRegenerationState;
-    private float mParticleRadius;
 
     // パーティクル再生成シーケンス
     public static final int PARTICLE_REGENE_STATE_NOTHING = 0;
     public static final int PARTICLE_REGENE_STATE_DELETE  = 1;
     public static final int PARTICLE_REGENE_STATE_CREATE  = 2;
     public static final int PARTICLE_REGENE_STATE_OVERLAP = 3;
-
-    // パーティクルの柔らかさ
-    private int mSoftness;
-    public static final int SOFTNESS_SOFT        = 0;       // 柔らかめ
-    public static final int SOFTNESS_NORMAL      = 1;       // ノーマル（デフォルト）
-    public static final int SOFTNESS_LITTEL_HARD = 2;       // 少し固め
-
-    // パーティクルの柔らかさパラメータ：デフォルト値
-    private final float DEFAULT_RADIUS           = 0.3f;
-    private final float DEFAULT_DENCITY          = 0.5f;
-    private final float DEFAULT_ELASTIC_STRENGTH = 0.25f;
-
-    // リソースID
-    private final int TEXTURE_ID = R.drawable.texture_test_cat;
-    private final int POLYGON_XML_ID = R.xml.test_cat_plist;
 
     //----------------
     // Body
@@ -189,14 +172,13 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //-----------------
         // パーティクルの設定
         //-----------------
-        mSoftness = SOFTNESS_NORMAL;
-        mParticleRadius = DEFAULT_RADIUS;
+        mParticleData = new ParticleData();
         mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
         mParticleTouchInfo = new ParticleTouchInfo();
         // ポリゴンリストデータ管理クラス
-        mPolygonListManage = new PolygonXmlDataManager( glSurfaceView.getContext(), POLYGON_XML_ID, TEXTURE_ID);
+        mPolygonListManage = new PolygonXmlDataManager( glSurfaceView.getContext(), ParticleData.POLYGON_XML_ID, ParticleData.TEXTURE_ID);
         // 適切な粒子反復を算出
-        mParticleIterations = liquidfun.b2CalculateParticleIterations(gravity, mParticleRadius, TIME_STEP);
+        mParticleIterations = liquidfun.b2CalculateParticleIterations(gravity, ParticleData.DEFAULT_RADIUS, TIME_STEP);
 
         //-----------------
         // 銃弾
@@ -219,13 +201,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // Rendererバッファ
         //--------------------
         mRenderParticleOrderBuff = new ArrayList<>();
-    }
-
-    /*
-     * パーティクル情報の追加
-     */
-    private void addParticleData(ParticleGroup pg, float particleRadius, ArrayList<ArrayList<Integer>> allParticleLine, ArrayList<Integer> border, int textureId) {
-        mParticleData = new ParticleData(0, mParticleSystem, pg, particleRadius, allParticleLine, border, textureId);
     }
 
     /*
@@ -255,7 +230,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     /*
      * パーティクル生成
      */
-    public void createFluidBody(GL10 gl, float posX, float posY, float particleRadius) {
+    public void createFluidBody(GL10 gl, float posX, float posY) {
 
         // パーティクルグループ生成
         ParticleGroup particleGroup = setupParticleGroup(posX, posY);
@@ -277,7 +252,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         generateParticleLineBuff(particleGroup, allParticleLine);
 
         // パーティクルの直径
-        float diameter = particleRadius * 2;
+        float diameter = mParticleData.getParticleRadius() * 2;
         // OpenGLに渡す三角形グルーピングバッファを作成
         enqueRendererBuff(allParticleLine, diameter);
         // 頂点数を保持
@@ -286,24 +261,35 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // レンダリング用UVバッファを生成
         generateUVRendererBuff();
 
-        // 境界パーティクルバッファを取得
+        //-----------------------
+        // パーティクル情報を保持
+        //-----------------------
+        // テクスチャID
+        int textureId = getTexture(gl, ParticleData.TEXTURE_ID);
+        // 境界パーティクルバッファ
         ArrayList<Integer> border = generateBorderParticleBuff(allParticleLine);
 
-        // パーティクル情報の追加
-        int textureId = getTexture(gl, TEXTURE_ID);
-        addParticleData(particleGroup, particleRadius, allParticleLine, border, textureId);
+        mParticleData.setParticleGroup( particleGroup );
+        mParticleData.setTextureId( textureId );
+        mParticleData.initBorderParticle( mParticleSystem, border );
     }
 
     /*
      * パーティクルシステムの生成
      *   !パラメータ：柔らかさの決定因子
      */
-    private void setupParticleSystem(float particleRadius, float particleDensity, float particleElasticStrength) {
+    private void setupParticleSystem() {
+
+        // 柔らかさの決定因子
+        float radius = mParticleData.getParticleRadius();
+        float dencity = mParticleData.getParticleDencity();
+        float elasticStrength = mParticleData.getParticleElasticStrength();
+
         // パーティクルシステム定義
         ParticleSystemDef particleSystemDef = new ParticleSystemDef();
-        particleSystemDef.setRadius(particleRadius);
-        particleSystemDef.setDensity(particleDensity);
-        particleSystemDef.setElasticStrength(particleElasticStrength);
+        particleSystemDef.setRadius(radius);
+        particleSystemDef.setDensity(dencity);
+        particleSystemDef.setElasticStrength(elasticStrength);
         particleSystemDef.setDampingStrength(0.2f);
         particleSystemDef.setGravityScale(0.4f);
         particleSystemDef.setDestroyByAge(true);
@@ -330,7 +316,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         particleGroupDef.setLifetime(0);
 
         // PolygonXMLデータを取得
-        PolygonXmlDataManager.PolygonParseData polygonXmlData = mPolygonListManage.parsePoligonXmlShapes(mGLSurfaceView.getContext(), POLYGON_XML_ID);
+        PolygonXmlDataManager.PolygonParseData polygonXmlData = mPolygonListManage.parsePoligonXmlShapes(mGLSurfaceView.getContext(), ParticleData.POLYGON_XML_ID);
         // 形状設定
         particleGroupDef.setPolygonShapesFromVertexList( polygonXmlData.mCoordinateBuff, polygonXmlData.mVertexeNumBuff, polygonXmlData.mShapeNum );
 
@@ -804,9 +790,9 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // パーティクル
         //---------------
         // パーティクルシステム生成
-        setupParticleSystem(mParticleRadius, DEFAULT_DENCITY, DEFAULT_ELASTIC_STRENGTH);
+        setupParticleSystem();
         // パーティクル生成
-        createFluidBody(gl, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius);
+        createFluidBody(gl, mWorldPosMid[0], mWorldPosMid[1]);
 
         //---------------
         // 壁
@@ -839,7 +825,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //-------------------------------
         // 生成
         //-------------------------------
-        createBoxBody(menuWidth, collapsedHeight, collapsedMenuPosRight, worldCollapsedMenuBottomRight[1] + collapsedHeight, 0, BodyType.staticBody);
+        createBoxBody(menuWidth, collapsedHeight, collapsedMenuPosRight, worldCollapsedMenuBottomRight[1] + collapsedHeight * 2, 0, BodyType.staticBody);
     }
 
     /*
@@ -902,7 +888,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             //---------------
             case PARTICLE_REGENE_STATE_CREATE:
                 // パーティクル生成
-                createFluidBody(gl, mWorldPosMid[0], mWorldPosMid[1], mParticleRadius);
+                createFluidBody(gl, mWorldPosMid[0], mWorldPosMid[1]);
                 // オーバーラップ物体を生成
                 mOverlapBody = createBoxBody(1f, 1f, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody);
                 // オーバーラップ物体ありに更新
@@ -1314,8 +1300,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
      * パーティクルの柔らかさの変更
      */
     public void setSoftness(int softness){
-        mSoftness = softness;
-
         // 指定された柔さでパーティクル再生成
         changeParticleSoftness( softness );
     }
@@ -1327,59 +1311,14 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
      */
     public void changeParticleSoftness(int softness){
 
-        //-------------------------
-        // 柔らかさを決めるパラメータ定数
-        //-------------------------
-        // SOFT
-        final float SOFT_RADIUS           = 0.2f;
-        final float SOFT_DENCITY          = 0.1f;
-        final float SOFT_ELASTIC_STRENGTH = 0.2f;
-        // LITTLE_HARD
-        final float LITTLE_HARD_RADIUS           = 0.4f;
-        final float LITTLE_HARD_DENCITY          = 1.0f;
-        final float LITTLE_HARD_ELASTIC_STRENGTH = 1.0f;
-
-        //-------------------------
-        // 柔らかさを決めるパラメータ
-        //-------------------------
-        float radius;
-        float dencity;
-        float elasticStrength;
-
-        // ユーザー指定に応じて、パラメータを設定
-        switch( softness ) {
-            case ParticleWorldRenderer.SOFTNESS_SOFT:
-                radius          = SOFT_RADIUS;
-                dencity         = SOFT_DENCITY;
-                elasticStrength = SOFT_ELASTIC_STRENGTH;
-                break;
-
-            case ParticleWorldRenderer.SOFTNESS_NORMAL:
-                radius          = DEFAULT_RADIUS;
-                dencity         = DEFAULT_DENCITY;
-                elasticStrength = DEFAULT_ELASTIC_STRENGTH;
-                break;
-
-            case ParticleWorldRenderer.SOFTNESS_LITTEL_HARD:
-                radius          = LITTLE_HARD_RADIUS;
-                dencity         = LITTLE_HARD_DENCITY;
-                elasticStrength = LITTLE_HARD_ELASTIC_STRENGTH;
-                break;
-
-            default:
-                radius          = DEFAULT_RADIUS;
-                dencity         = DEFAULT_DENCITY;
-                elasticStrength = DEFAULT_ELASTIC_STRENGTH;
-                break;
-        }
+        // 柔らかさ因子の変更
+        mParticleData.setSoftnessFactor( softness );
 
         //-------------------------
         // パーティクル生成
         //-------------------------
-        // 半径は保持
-        mParticleRadius = radius;
         // パーティクルシステムの生成
-        setupParticleSystem( radius, dencity, elasticStrength );
+        setupParticleSystem();
         // 中心に再生成
         regenerationAtCenter();
     }
@@ -1388,7 +1327,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
      * パーティクルの柔らかさ取得
      */
     public int getSoftness(){
-        return mSoftness;
+        return mParticleData.getSoftness();
     }
 
     /*
@@ -1411,7 +1350,8 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // 粒子反復
         //-----------
         // 適切な粒子反復を算出 !worldのstepで利用
-        mParticleIterations = liquidfun.b2CalculateParticleIterations( gravityScaleY, mParticleRadius, TIME_STEP );
+        float radius = mParticleData.getParticleRadius();
+        mParticleIterations = liquidfun.b2CalculateParticleIterations( gravityScaleY, radius, TIME_STEP );
     }
 
     /*
