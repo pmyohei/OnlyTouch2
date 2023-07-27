@@ -9,7 +9,7 @@ import android.view.View;
 
 import com.example.onlyTouch.R;
 import com.example.onlyTouch.convert.Conversion;
-import com.example.onlyTouch.manage.BulletManager;
+import com.example.onlyTouch.object.BulletManager;
 import com.example.onlyTouch.object.DrawBackGround;
 import com.example.onlyTouch.particle.ParticleManager;
 import com.google.fpl.liquidfun.Body;

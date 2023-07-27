@@ -1,4 +1,4 @@
-package com.example.onlyTouch.manage;
+package com.example.onlyTouch.object;
 
 import android.os.Build;
 import android.support.annotation.RequiresApi;
