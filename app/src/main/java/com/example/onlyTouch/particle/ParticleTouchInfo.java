@@ -23,40 +23,47 @@ public class ParticleTouchInfo {
     // 変数
     //-----------------------
     // タッチ状態
-    public ParticleTouchStatus status;
+    public ParticleTouchStatus mStatus;
     // タッチしている境界パーティクル
-    public int borderIndex;
+    public int mBorderIndex;
     // タッチ座標
-    public float touchPosX;
-    public float touchPosY;
+    public float mTouchPosX;
+    public float mTouchPosY;
     // タッチ座標（world）
-    public float touchPosWorldX;
-    public float touchPosWorldY;
+    public float mTouchPosWorldX;
+    public float mTouchPosWorldY;
 
     /*
      * コンストラクタ
      */
-    public ParticleTouchInfo(){
-        this.status = ParticleTouchStatus.OUTSIDE;
-        this.touchPosX = INVALID_TOUCH_POS;
-        this.touchPosY = INVALID_TOUCH_POS;
+    public ParticleTouchInfo() {
+        mStatus = ParticleTouchStatus.OUTSIDE;
+        mTouchPosX = INVALID_TOUCH_POS;
+        mTouchPosY = INVALID_TOUCH_POS;
     }
 
     /*
-     * setting
+     * タッチ座標（画面）設定
      */
-    public void setBorderIndex(int index) {
-        this.borderIndex = index;
-    }
-    public void setStatus(ParticleTouchStatus status) {
-        this.status = status;
-    }
-    public void setTouchPosX(float touchPosX) {
-        this.touchPosX = touchPosX;
-    }
-    public void setTouchPosY(float touchPosY) {
-        this.touchPosY = touchPosY;
+    public void setTouchPos( float touchPosX, float touchPosY ){
+        mTouchPosX = touchPosX;
+        mTouchPosY = touchPosY;
     }
 
+    /*
+     * タッチ座標（world）設定
+     */
+    public void setTouchWorldPos( float posX, float posY ){
+        mTouchPosWorldX = posX;
+        mTouchPosWorldY = posY;
+    }
 
+    /*
+     * タッチ情報クリア
+     */
+    public void clearTouchInfo(){
+        mStatus = ParticleTouchStatus.OUTSIDE;
+        mTouchPosX = INVALID_TOUCH_POS;
+        mTouchPosY = INVALID_TOUCH_POS;
+    }
 }

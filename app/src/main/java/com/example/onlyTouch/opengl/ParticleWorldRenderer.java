@@ -1,6 +1,5 @@
 package com.example.onlyTouch.opengl;
 
-import android.content.res.Resources;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.os.Build;
@@ -13,24 +12,13 @@ import com.example.onlyTouch.convert.Conversion;
 import com.example.onlyTouch.manage.BulletManager;
 import com.example.onlyTouch.object.DrawBackGround;
 import com.example.onlyTouch.particle.ParticleData;
-import com.example.onlyTouch.particle.ParticleTouchInfo;
-import com.example.onlyTouch.particle.PolygonXmlDataManager;
 import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.BodyDef;
 import com.google.fpl.liquidfun.BodyType;
-import com.google.fpl.liquidfun.ParticleFlag;
-import com.google.fpl.liquidfun.ParticleGroup;
-import com.google.fpl.liquidfun.ParticleGroupDef;
-import com.google.fpl.liquidfun.ParticleGroupFlag;
-import com.google.fpl.liquidfun.ParticleSystem;
-import com.google.fpl.liquidfun.ParticleSystemDef;
 import com.google.fpl.liquidfun.PolygonShape;
-import com.google.fpl.liquidfun.Vec2;
 import com.google.fpl.liquidfun.World;
 import com.google.fpl.liquidfun.liquidfun;
 
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -88,8 +76,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     // パーティクル
     //----------------
     private final ParticleData mParticleData;
-    private final ParticleTouchInfo mParticleTouchInfo;
-    private ParticleSystem mParticleSystem;
     private int mRegenerationState;
 
     // パーティクル再生成シーケンス
@@ -131,7 +117,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     private GLInitStatus mGlInitStatus;
     private final ParticleGLSurfaceView mGLSurfaceView;
     private final HashMap<Integer, Integer> mMapResourceTexture;
-    private final PolygonXmlDataManager mPolygonListManage;
 
     // OpenGL 描画開始シーケンス
     enum GLInitStatus {
@@ -139,19 +124,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         FinInit,       // 初期化完了
         Drawable       // Draw開始
     }
-
-    //--------------------
-    // Rendererバッファ
-    //--------------------
-    // 描画順のパーティクルindexリスト（このリストから頂点バッファを生成する）
-    private ArrayList<Integer> mRenderParticleOrderBuff;
-    // UV座標配列
-    private FloatBuffer mRenderUVBuff;
-    // 描画対象の頂点数
-    private int mRenderPointNum;
-
-    // レンダリング対象の三角形グループの頂点該当なし
-    private final int NOT_FOUND_TRIANGLE_APEX = -1;
 
 
     /*
@@ -172,11 +144,8 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //-----------------
         // パーティクルの設定
         //-----------------
-        mParticleData = new ParticleData();
+        mParticleData = new ParticleData( glSurfaceView, mWorld );
         mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
-        mParticleTouchInfo = new ParticleTouchInfo();
-        // ポリゴンリストデータ管理クラス
-        mPolygonListManage = new PolygonXmlDataManager( glSurfaceView.getContext(), ParticleData.POLYGON_XML_ID, ParticleData.TEXTURE_ID);
         // 適切な粒子反復を算出
         mParticleIterations = liquidfun.b2CalculateParticleIterations(gravity, ParticleData.DEFAULT_RADIUS, TIME_STEP);
 
@@ -196,11 +165,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //------------------
         mGlInitStatus = GLInitStatus.PreInit;
         mMapResourceTexture = new HashMap<Integer, Integer>();
-
-        //--------------------
-        // Rendererバッファ
-        //--------------------
-        mRenderParticleOrderBuff = new ArrayList<>();
     }
 
     /*
@@ -224,436 +188,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         body.createFixture(shape, DENSITY);
 
         return body;
-    }
-
-
-    /*
-     * パーティクル生成
-     */
-    public void createFluidBody(GL10 gl, float posX, float posY) {
-
-        // パーティクルグループ生成
-        ParticleGroup particleGroup = setupParticleGroup(posX, posY);
-
-        //========================
-        // ！粒子座標取得用！
-//        int size = particleGroup.getParticleCount();
-//        Log.i("PolygonList()=", "" + size);
-//        for (int i = 0; i < size; i++) {
-//            float x = mParticleSystem.getParticlePositionX(i);
-//            float y = mParticleSystem.getParticlePositionY(i);
-//            Log.i("PolygonList", "" + i + "\t" + x + "\t" + y);
-//        }
-        //========================
-
-
-        // 行単位のパーティクルバッファを作成
-        ArrayList<ArrayList<Integer>> allParticleLine = new ArrayList<>();
-        generateParticleLineBuff(particleGroup, allParticleLine);
-
-        // パーティクルの直径
-        float diameter = mParticleData.getParticleRadius() * 2;
-        // OpenGLに渡す三角形グルーピングバッファを作成
-        enqueRendererBuff(allParticleLine, diameter);
-        // 頂点数を保持
-        mRenderPointNum = mRenderParticleOrderBuff.size();
-
-        // レンダリング用UVバッファを生成
-        generateUVRendererBuff();
-
-        //-----------------------
-        // パーティクル情報を保持
-        //-----------------------
-        // テクスチャID
-        int textureId = getTexture(gl, ParticleData.TEXTURE_ID);
-        // 境界パーティクルバッファ
-        ArrayList<Integer> border = generateBorderParticleBuff(allParticleLine);
-
-        mParticleData.setParticleGroup( particleGroup );
-        mParticleData.setTextureId( textureId );
-        mParticleData.initBorderParticle( mParticleSystem, border );
-    }
-
-    /*
-     * パーティクルシステムの生成
-     *   !パラメータ：柔らかさの決定因子
-     */
-    private void setupParticleSystem() {
-
-        // 柔らかさの決定因子
-        float radius = mParticleData.getParticleRadius();
-        float dencity = mParticleData.getParticleDencity();
-        float elasticStrength = mParticleData.getParticleElasticStrength();
-
-        // パーティクルシステム定義
-        ParticleSystemDef particleSystemDef = new ParticleSystemDef();
-        particleSystemDef.setRadius(radius);
-        particleSystemDef.setDensity(dencity);
-        particleSystemDef.setElasticStrength(elasticStrength);
-        particleSystemDef.setDampingStrength(0.2f);
-        particleSystemDef.setGravityScale(0.4f);
-        particleSystemDef.setDestroyByAge(true);
-        particleSystemDef.setLifetimeGranularity(0.0001f);
-//        particleSystemDef.setMaxCount(729);
-
-        // パーティクルシステムの生成
-        mParticleSystem = mWorld.createParticleSystem(particleSystemDef);
-    }
-
-    /*
-     * パーティクルグループ定義の設定
-     * @para パーティクル横幅、パーティクル縦幅、生成位置(x/y)
-     */
-    private ParticleGroup setupParticleGroup(float posX, float posY) {
-
-        //----------------------
-        // ParticleGroup定義
-        //----------------------
-        ParticleGroupDef particleGroupDef = new ParticleGroupDef();
-        particleGroupDef.setFlags(ParticleFlag.elasticParticle);
-        particleGroupDef.setGroupFlags(ParticleGroupFlag.solidParticleGroup);
-        particleGroupDef.setPosition(posX, posY);
-        particleGroupDef.setLifetime(0);
-
-        // PolygonXMLデータを取得
-        PolygonXmlDataManager.PolygonParseData polygonXmlData = mPolygonListManage.parsePoligonXmlShapes(mGLSurfaceView.getContext(), ParticleData.POLYGON_XML_ID);
-        // 形状設定
-        particleGroupDef.setPolygonShapesFromVertexList( polygonXmlData.mCoordinateBuff, polygonXmlData.mVertexeNumBuff, polygonXmlData.mShapeNum );
-
-/*            if (shapenum == -1) {
-                // 取得エラーなら、終了
-                Log.i("PolygonList", "setPolygonListBuffer() エラー");
-                return null;
-            }*/
-
-
-        //----------------------
-        // ParticleGroup生成
-        //----------------------
-        return mParticleSystem.createParticleGroup(particleGroupDef);
-    }
-
-    /*
-     * 同一行のパーティクルによるバッファ生成
-     *  @para I:パーティクルグループ
-     *  @para O:全パーティクルライン
-     */
-    private void generateParticleLineBuff(ParticleGroup particleGroup, ArrayList<ArrayList<Integer>> allParticleLine) {
-
-        // 1ライン分格納先
-        ArrayList<Integer> line = new ArrayList<>();
-
-        // 対象のパーティクルグループのパーティクル数を算出
-        int bufferIndex = particleGroup.getBufferIndex();
-        int groupParticleNum = particleGroup.getParticleCount() - bufferIndex;
-
-        // 先頭パーティクルのY座標を格納中ラインのY座標とする
-        float linePosY = mParticleSystem.getParticlePositionY(bufferIndex);
-
-        //------------------------
-        // 全パーティクルを格納
-        //------------------------
-        for (int i = bufferIndex; i < groupParticleNum; ++i) {
-
-            //-------------------
-            // ライン切り替わり判定
-            //-------------------
-            // パーティクルのY座標
-            float y = mParticleSystem.getParticlePositionY(i);
-
-            // パーティクルが次のラインのものの場合
-            // !0.01fは適当に定めた値（とりあえずこれ以上離れていればラインが変わったと判断する）
-            final float LINE_DIFF = 0.01f;
-            float distanceLines = Math.abs(linePosY - y);
-            if (distanceLines > LINE_DIFF) {
-                // パーティクルラインを全パーティクルラインに追加
-                allParticleLine.add(line);
-                // 新規ラインを用意
-                line = new ArrayList<>();
-                // 格納中ラインのY座標を更新
-                linePosY = y;
-            }
-
-            //-------------------------------
-            // ラインバッファにパーティクルを追加
-            //-------------------------------
-            // ラインにパーティクルを追加し、Y座標を更新
-            line.add(i);
-        }
-
-        // パーティクル行を全パーティクルラインに追加
-        allParticleLine.add(line);
-    }
-
-    /*
-     * パーティクルをレンダリングバッファに格納
-     */
-    private void enqueRendererBuff(ArrayList<ArrayList<Integer>> allParticleLine, float diameter) {
-
-        // ループ数 = ライン数 - 1
-        int lastLineIndex = allParticleLine.size() - 1;
-        for (int lineIndex = 0; lineIndex < lastLineIndex; lineIndex++) {
-
-            // 下ライン／上ライン
-            ArrayList<Integer> bottomLine = allParticleLine.get(lineIndex);
-            ArrayList<Integer> topLine = allParticleLine.get(lineIndex + 1);
-
-            // 下ライン／上ラインを底辺とした三角形グループをバッファに格納
-            enqueParticleBaseBottomLine(bottomLine, topLine, diameter);
-            enqueParticleBaseTopLine(bottomLine, topLine, diameter);
-        }
-    }
-
-    /*
-     * 下ラインを底辺とする3角形グループバッファの生成
-     *
-     * 　下辺が底辺、上辺が頂点となるように、三角形グループ単位でバッファに格納する
-     *
-     *  【バッファ生成イメージ】
-     * 　＜パーティクルイメージ＞
-     *    ⑩　⑪
-     *　　 ①　②　③
-     *
-     *  【バッファ格納イメージ】
-     *    [0] [1] [2] [3] [4] [5]
-     *　　 ①  ②  ⑩   ②  ③  ⑪
-     */
-    private void enqueParticleBaseBottomLine(ArrayList<Integer> bottomLine, ArrayList<Integer> topLine, float diameter) {
-
-        // ライン先頭に格納されている「パーティクルシステム側のIndex」
-        int bottomFirstParticleIndex = bottomLine.get(0);
-        // ライン末尾Index「バッファ側のIndex」
-        int bottomLastIndex = bottomLine.size() - 1;
-
-        //--------------------------------------
-        // 1ライン分、三角形グループをバッファに格納
-        //--------------------------------------
-        for (int refPosition = 0; refPosition < bottomLastIndex; refPosition++) {
-
-            // 参照Index（パーティクルシステム側のIndex）
-            int refIndex = bottomFirstParticleIndex + refPosition;
-
-            // 参照中パーティクルのX位置
-            float posX = mParticleSystem.getParticlePositionX(refIndex);
-            float nextPosX = mParticleSystem.getParticlePositionX(refIndex + 1);
-
-            // 粒子が隣り合っていない（一定以上の距離がある）なら、グルーピングしない(描画対象外)
-            if ((nextPosX - posX) > diameter) {
-                continue;
-            }
-
-            // 上ラインから、三角形の頂点たりうるパーティクルを取得
-            int refTopParticleIndex = getApexInTopLine(topLine, posX, nextPosX);
-            if (refTopParticleIndex == NOT_FOUND_TRIANGLE_APEX) {
-                // 該当なしなら、グルーピングしない(描画対象外)
-                continue;
-            }
-
-            // 3頂点を描画バッファに格納
-            mRenderParticleOrderBuff.add(refIndex);        // 底辺-左
-            mRenderParticleOrderBuff.add(refIndex + 1);    // 底辺-右
-            mRenderParticleOrderBuff.add(refTopParticleIndex);  // 頂点
-        }
-    }
-
-    /*
-     * 上ラインを底辺とする3角形グループバッファの生成
-     *
-     * 　上辺が底辺、下辺が頂点となるように、三角形グループ単位でバッファに格納する
-     *
-     *  【バッファ生成イメージ】
-     * 　＜パーティクルイメージ＞
-     *    ⑩　⑪  ⑫
-     *　　 ①　②　③
-     *
-     *  【バッファ格納イメージ】
-     *    [0] [1] [2] [3] [4] [5]
-     *　　 ⑫  ⑪  ③   ⑪  ⑫  ②
-     */
-    private void enqueParticleBaseTopLine(ArrayList<Integer> bottomLine, ArrayList<Integer> topLine, float diameter) {
-
-        // ライン末尾に格納されている「パーティクルシステム側のIndex」
-        int topLastIndex = topLine.size() - 1;
-        int topLastParticleIndex = topLine.get(topLastIndex);
-
-        //--------------------------------------
-        // 1ライン分、三角形グループをバッファに格納
-        //--------------------------------------
-        for (int refPosition = 0; refPosition < topLastIndex; refPosition++, topLastParticleIndex--) {
-
-            // 参照Index（パーティクルシステム側のIndex）
-            float posX = mParticleSystem.getParticlePositionX(topLastParticleIndex - 1);
-            float nextPosX = mParticleSystem.getParticlePositionX(topLastParticleIndex);
-
-            // 粒子が隣り合っていないなら、グルーピングしない(描画対象外)
-            if ((nextPosX - posX) > diameter) {
-                continue;
-            }
-
-            // 下ラインから、三角形の頂点たりうるパーティクルを取得
-            int refBottomParticleIndex = getApexInBottomLine(bottomLine, posX, nextPosX);
-            if (refBottomParticleIndex == NOT_FOUND_TRIANGLE_APEX) {
-                // 該当なしなら、グルーピングしない(描画対象外)
-                continue;
-            }
-
-            // 3頂点をバッファに格納
-            mRenderParticleOrderBuff.add(topLastParticleIndex);
-            mRenderParticleOrderBuff.add(topLastParticleIndex - 1);
-            mRenderParticleOrderBuff.add(refBottomParticleIndex);
-        }
-    }
-
-    /*
-     * 上ラインから三角形の頂点を取得
-     */
-    private int getApexInTopLine(ArrayList<Integer> topLine, float posX, float nextPosX) {
-
-        int topFirstParticleIndex = topLine.get(0);
-        int upLastIndex = topLine.size() - 1;
-
-        // 上辺側に、三角形の頂点たりうる粒子があるかチェック(左からチェック)
-        for (int topRefPosition = 0; topRefPosition <= upLastIndex; topRefPosition++) {
-
-            // 参照パーティクルのX位置
-            int refTopParticleIndex = topFirstParticleIndex + topRefPosition;
-            float topPosX = mParticleSystem.getParticlePositionX(refTopParticleIndex);
-
-            // 底辺とするパーティクルのどちらかの真上にあれば、三角形の頂点として採用する
-            if ((topPosX == posX) || (topPosX == nextPosX)) {
-                return refTopParticleIndex;
-            }
-        }
-
-        // 該当なし
-        return NOT_FOUND_TRIANGLE_APEX;
-    }
-
-    /*
-     * 下ラインから三角形の頂点を取得
-     */
-    private int getApexInBottomLine(ArrayList<Integer> bottomLine, float posX, float nextPosX) {
-
-        // ライン末尾に格納されたパーティクルIndex
-        int lastIndex = bottomLine.size() - 1;
-        int bottomLastIndex = bottomLine.get(lastIndex);
-
-        // 下ライン側に、三角形の頂点たりうる粒子があるかチェック(右からチェック)
-        for (int bottomRefPosition = 0; bottomRefPosition <= lastIndex; bottomRefPosition++, bottomLastIndex--) {
-
-            // 参照中パーティクルIndexのX位置座標
-            float bottomPosX = mParticleSystem.getParticlePositionX(bottomLastIndex);
-
-            // 底辺とするパーティクルのどちらかの真下にあれば、三角形の頂点として採用する
-            if ((bottomPosX == nextPosX) || (bottomPosX == posX)) {
-                return bottomLastIndex;
-            }
-        }
-
-        // 該当なし
-        return NOT_FOUND_TRIANGLE_APEX;
-    }
-
-    /*
-     * レンダリング用UVバッファの生成
-     */
-    private void generateUVRendererBuff() {
-
-        //-------------------------------------------------
-        // パーティクルグループ内の粒子で最小位置と最大位置を取得する
-        //-------------------------------------------------
-        // 先頭のパーティクルを暫定で最大値・最小値とする
-        float minParticleX = mParticleSystem.getParticlePositionX(0);
-        float maxParticleX = minParticleX;
-        float minParticleY = mParticleSystem.getParticlePositionY(0);
-        float maxParticleY = minParticleY;
-
-        // 全パーティクルの中で、X/Y座標の最大値最小値を算出
-        int particleNum = mParticleSystem.getParticleCount();
-        for (int i = 1; i < particleNum; i++) {
-            // X座標
-            float posX = mParticleSystem.getParticlePositionX(i);
-            minParticleX = Math.min(posX, minParticleX);
-            maxParticleX = Math.max(posX, maxParticleX);
-
-            // Y座標
-            float posY = mParticleSystem.getParticlePositionY(i);
-            minParticleY = Math.min(posY, minParticleY);
-            maxParticleY = Math.max(posY, maxParticleY);
-        }
-
-        // 横幅・縦幅を算出
-        float particleMaxWidth  = Math.abs(maxParticleX - minParticleX);
-        float particleMaxHeight = Math.abs(maxParticleY - minParticleY);
-
-        //-------------------------------
-        // UV座標をバッファに格納
-        //-------------------------------
-        // UV座標の最大・最小・横幅・縦幅
-        final float minUvX = mPolygonListManage.getUvMinX();
-        final float maxUvY = mPolygonListManage.getUvMaxY();
-        final float UvMaxWidth  = mPolygonListManage.getUvWidth();
-        final float UvMaxHeight = mPolygonListManage.getUvHeight();
-
-        // 各パーティクル位置に対応するUV座標を計算し、リストに格納する
-        ArrayList<Vec2> uvCoordinate = new ArrayList<>();
-        for (int i : mRenderParticleOrderBuff) {
-            // パーティクル座標
-            float x = mParticleSystem.getParticlePositionX(i);
-            float y = mParticleSystem.getParticlePositionY(i);
-
-            // UV座標
-            float vecx = minUvX + (((x - minParticleX) / particleMaxWidth) * UvMaxWidth);
-            float vecy = maxUvY - (((y - minParticleY) / particleMaxHeight) * UvMaxHeight);
-
-            // レンダリング用UVバッファに格納
-            uvCoordinate.add( new Vec2(vecx, vecy) );
-        }
-
-        //---------------------------------
-        // UV座標をバッファに格納
-        //---------------------------------
-        mRenderUVBuff = getUVBuffer( uvCoordinate );
-    }
-
-    /*
-     * 境界パーティクルバッファを取得
-     *   全パーティクルの中で、外側に面しているパーティクルをバッファに格納する
-     */
-    private ArrayList<Integer> generateBorderParticleBuff(ArrayList<ArrayList<Integer>> allParticleLine) {
-        // 境界パーティクルバッファ
-        ArrayList<Integer> borderBuff = new ArrayList<>();
-
-        int lineNum = allParticleLine.size();
-        int lastLineIndex = lineNum - 1;
-
-        //--------------------
-        // 最下ラインと最上ライン
-        //--------------------
-        // 全てのパーティクルが境界
-        ArrayList<Integer> bottomLine = allParticleLine.get(0);
-        ArrayList<Integer> topLine = allParticleLine.get(lastLineIndex);
-        borderBuff.addAll(bottomLine);
-        borderBuff.addAll(topLine);
-
-        //--------------------------------------------
-        // 最下ラインと最上ラインの間のライン
-        // （パーティクルの2ライン目から最終ラインの前のラインまで）
-        //--------------------------------------------
-        // ライン上の両サイドにあるパーティクルが境界パーティクルとなる
-        for (int i = 1; i < lastLineIndex; i++) {
-            ArrayList<Integer> line = allParticleLine.get(i);
-            int lastIndex = line.size() - 1;
-
-            // ラインの両サイドにあるパーティクル
-            int leftParticleIndex  = line.get(0);
-            int rightParticleIndex = line.get(lastIndex);
-            // 格納
-            borderBuff.add(leftParticleIndex);
-            borderBuff.add(rightParticleIndex);
-        }
-
-        return borderBuff;
     }
 
     /*
@@ -711,7 +245,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // フレーム描画初期化処理
         //--------------------
         boolean initFin = initDrawFrame(gl);
-        if (!initFin) {
+        if ( !initFin ) {
             // 初期化未完了なら、何もしない
             return;
         }
@@ -735,18 +269,17 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // 物体関連
         //------------------
         // 弾 !パーティクルよりも先に描画すること（パーティクル内部に弾が描画されることがあるため）
-        mBulletManager.bulletManage(gl, mParticleSystem ,mParticleData);
+        mBulletManager.bulletManage(gl, mParticleData);
 
         //------------------
         // パーティクル
         //------------------
-        ParticleGroup particleGroup = mParticleData.getParticleGroup();
         // パーティクル再生成
-        regenerationParticle(gl, particleGroup);
+        regenerationParticle(gl);
         // パーティクル描画更新
-        updateParticleDraw(gl, particleGroup);
+        mParticleData.draw(gl);
         // パーティクルタッチ追随処理
-        traceTouchParticle(gl, particleGroup);
+        mParticleData.traceTouchParticle(gl, mBulletManager.onBullet());
     }
 
     /*
@@ -789,10 +322,8 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //---------------
         // パーティクル
         //---------------
-        // パーティクルシステム生成
-        setupParticleSystem();
         // パーティクル生成
-        createFluidBody(gl, mWorldPosMid[0], mWorldPosMid[1]);
+        mParticleData.createParticleBody(gl, mWorldPosMid[0], mWorldPosMid[1]);
 
         //---------------
         // 壁
@@ -858,9 +389,37 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     }
 
     /*
+     * テクスチャ生成
+     */
+    private int getTexture(GL10 gl10, int resourceId) {
+
+        //------------------
+        // 生成済み判定
+        //------------------
+        // 指定リソースのテクスチャが既にあれば、それを返して終了
+        Integer textureId = mMapResourceTexture.get(resourceId);
+        if (textureId != null) {
+            return textureId;
+        }
+
+        //------------------
+        // テクスチャ生成
+        //------------------
+        textureId = Conversion.makeTexture( gl10, resourceId, mGLSurfaceView.getContext() );
+
+        //-------------------
+        // テクスチャを保持
+        //-------------------
+        // リソースIDとテクスチャIDをMapとして保持する
+        mMapResourceTexture.put(resourceId, textureId);
+
+        return textureId;
+    }
+
+    /*
      * パーティクル再生成
      */
-    private void regenerationParticle(GL10 gl, ParticleGroup particleGroup) {
+    private void regenerationParticle(GL10 gl) {
 
         switch (mRegenerationState) {
 
@@ -875,8 +434,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             //---------------
             case PARTICLE_REGENE_STATE_DELETE:
                 // パーティクルグループを削除(粒子とグループは次の周期で削除される)
-                particleGroup.destroyParticles();
-                mRenderParticleOrderBuff.clear();
+                mParticleData.destroyParticle();
 
                 // 再生成のシーケンスを生成に更新(次の周期で生成するため)
                 mRegenerationState = PARTICLE_REGENE_STATE_CREATE;
@@ -888,7 +446,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             //---------------
             case PARTICLE_REGENE_STATE_CREATE:
                 // パーティクル生成
-                createFluidBody(gl, mWorldPosMid[0], mWorldPosMid[1]);
+                mParticleData.createParticleBody(gl, mWorldPosMid[0], mWorldPosMid[1]);
                 // オーバーラップ物体を生成
                 mOverlapBody = createBoxBody(1f, 1f, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody);
                 // オーバーラップ物体ありに更新
@@ -910,83 +468,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             default:
                 break;
         }
-    }
-
-    /*
-     * パーティクルの描画情報の更新(頂点バッファ/UVバッファ)
-     */
-    private void updateParticleDraw(GL10 gl, ParticleGroup particleGroup) {
-
-        // 粒子がない場合、何もしない
-        if (particleGroup.getParticleCount() == 0) {
-            return;
-        }
-
-        //---------------
-        // レンダリング
-        //---------------
-        // マトリクス記憶
-        gl.glPushMatrix();
-        {
-            // テクスチャの指定
-            int textureId = mParticleData.getTextureId();
-            gl.glActiveTexture(GL10.GL_TEXTURE0);
-            gl.glBindTexture(GL10.GL_TEXTURE_2D, textureId);
-
-            // 現時点のパーティクル座標から頂点バッファを計算
-            FloatBuffer vertexBuffer = getVertexBuffer();
-
-            // バッファを渡して描画
-            gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, mRenderUVBuff);
-            gl.glVertexPointer(2, GL10.GL_FLOAT, 0, vertexBuffer);
-            gl.glDrawArrays(GL10.GL_TRIANGLES, 0, mRenderPointNum);
-        }
-        // マトリクスを戻す
-        gl.glPopMatrix();
-    }
-
-    /*
-     * 頂点座標バッファの取得
-     */
-    private FloatBuffer getVertexBuffer() {
-
-        // 頂点座標配列
-        int buffSize = mRenderPointNum * 2;
-        float[] vertices = new float[buffSize];
-
-        // レンダリングバッファのパーティクルの座標を配列に格納
-        int count = 0;
-        for (int index : mRenderParticleOrderBuff) {
-            vertices[count] = mParticleSystem.getParticlePositionX(index);
-            count++;
-            vertices[count] = mParticleSystem.getParticlePositionY(index);
-            count++;
-        }
-
-        // FloatBufferに変換
-        return Conversion.convertFloatBuffer(vertices);
-    }
-
-    /*
-     * UV座標バッファの取得
-     */
-    private FloatBuffer getUVBuffer( ArrayList<Vec2> uvCoordinate ) {
-
-        // UV座標配列
-        int buffSize = mRenderPointNum * 2;
-        float[] uv = new float[buffSize];
-
-        // レンダリングUVバッファのUV座標を配列に格納
-        int count = 0;
-        for (Vec2 Coordinate : uvCoordinate) {
-            uv[count] = Coordinate.getX();
-            count++;
-            uv[count] = Coordinate.getY();
-            count++;
-        }
-
-        // FloatBufferに変換
-        return Conversion.convertFloatBuffer(uv);
     }
 
     /*
@@ -1047,34 +528,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     }
 
     /*
-     * テクスチャ生成
-     */
-    private int getTexture(GL10 gl10, int resourceId) {
-
-        //------------------
-        // 生成済み判定
-        //------------------
-        // 指定リソースのテクスチャが既にあれば、それを返して終了
-        Integer textureId = mMapResourceTexture.get(resourceId);
-        if (textureId != null) {
-            return textureId;
-        }
-
-        //------------------
-        // テクスチャ生成
-        //------------------
-        textureId = Conversion.makeTexture( gl10, resourceId, mGLSurfaceView.getContext() );
-
-        //-------------------
-        // テクスチャを保持
-        //-------------------
-        // リソースIDとテクスチャIDをMapとして保持する
-        mMapResourceTexture.put(resourceId, textureId);
-
-        return textureId;
-    }
-
-    /*
      * onTouch
      */
     public synchronized boolean onTouch(View v, MotionEvent event) {
@@ -1090,163 +543,8 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             //-------------------
             // パーティクルタッチ
             //-------------------
-            return touchParticle(event);
-
+            return mParticleData.touchParticle(event);
         }
-    }
-
-    /*
-     * パーティクルタッチ処理
-     */
-    private boolean touchParticle(MotionEvent event) {
-
-        switch (event.getAction()) {
-
-            // タッチ解除
-            case MotionEvent.ACTION_UP:
-                // 粒子用：状態更新
-                mParticleTouchInfo.setStatus(ParticleTouchInfo.ParticleTouchStatus.OUTSIDE);
-                mParticleTouchInfo.setTouchPosX( ParticleTouchInfo.INVALID_TOUCH_POS );
-                mParticleTouchInfo.setTouchPosY( ParticleTouchInfo.INVALID_TOUCH_POS );
-                break;
-
-            // タッチ移動
-            case MotionEvent.ACTION_DOWN:
-            case MotionEvent.ACTION_MOVE:
-                // 粒子用：タッチ中の位置を更新
-                // !world座標への変換は、必要なタイミングで実施する（この時点ではGL10がないため）
-                mParticleTouchInfo.setTouchPosX(event.getX());
-                mParticleTouchInfo.setTouchPosY(event.getY());
-
-                break;
-
-            default:
-                break;
-        }
-
-        return true;
-    }
-
-    /*
-     * パーティクルタッチ追随処理
-     *   パーティクルに対するタッチ判定を行い、タッチされていればパーティクルを追随させる
-     */
-    private void traceTouchParticle(GL10 gl, ParticleGroup particleGroup) {
-
-        //----------------
-        // 処理なし
-        //----------------
-        // パーティクルなし
-        if (particleGroup.getParticleCount() == 0) {
-            return;
-        }
-        // 銃弾発射中
-        boolean onBullet = mBulletManager.onBullet();
-        if ( onBullet ){
-            return;
-        }
-        // 未タッチ
-        if (mParticleTouchInfo.touchPosX == mParticleTouchInfo.INVALID_TOUCH_POS) {
-            return;
-        }
-
-        //------------------------
-        // パーティクル追随判定
-        //------------------------
-        // 現在のタッチ状態
-        ParticleTouchInfo.ParticleTouchStatus currentStatus = getCurrentTouchStatus(gl);
-
-        // 前回のタッチ状態が「境界」「追随」でなければ
-        if ((mParticleTouchInfo.status != ParticleTouchInfo.ParticleTouchStatus.BORDER) &&
-            (mParticleTouchInfo.status != ParticleTouchInfo.ParticleTouchStatus.TRACE)) {
-            // 現状のタッチ状態を更新して終了
-            mParticleTouchInfo.status = currentStatus;
-            return;
-        }
-
-        // 今回のタッチ状態が「外側」以外の場合
-        if (currentStatus != ParticleTouchInfo.ParticleTouchStatus.OUTSIDE) {
-            // 現状のタッチ状態を更新して終了
-            mParticleTouchInfo.status = currentStatus;
-            return;
-        }
-
-        //------------------------
-        // パーティクル追随
-        //------------------------
-        // 境界のパーティクルをタッチ位置に追随させる
-        // （タッチ座標から少しずらした位置に、パーティクルの位置を変更する）
-        float tracePosX = mParticleTouchInfo.touchPosWorldX + 0.1f;
-        float tracePosY = mParticleTouchInfo.touchPosWorldY + 0.1f;
-        mParticleSystem.setParticlePosition(mParticleTouchInfo.borderIndex, tracePosX, tracePosY);
-
-        // 現状のタッチ状態を更新
-        mParticleTouchInfo.status = ParticleTouchInfo.ParticleTouchStatus.TRACE;
-    }
-
-    /*
-     * 現在のパーティクルに対するタッチ状態を更新
-     */
-    private ParticleTouchInfo.ParticleTouchStatus getCurrentTouchStatus(GL10 gl) {
-
-        //----------------------
-        // タッチ判定範囲
-        //----------------------
-        // タッチ範囲
-        // ！パーティクル半径 * 2　としておく（タッチを簡単にできるようにするため）
-        float range = mParticleData.getParticleRadius() * 2;
-
-        // タッチ判定範囲を算出
-        float[] touchPos = Conversion.convertPointScreenToWorld(mParticleTouchInfo.touchPosX, mParticleTouchInfo.touchPosY, gl, mGLSurfaceView);
-        float touchMinX = touchPos[0] - range;
-        float touchMaxX = touchPos[0] + range;
-        float touchMinY = touchPos[1] - range;
-        float touchMaxY = touchPos[1] + range;
-
-        // タッチ位置のworld座標を保持
-        mParticleTouchInfo.touchPosWorldX = touchPos[0];
-        mParticleTouchInfo.touchPosWorldY = touchPos[1];
-
-        //----------------------
-        // タッチ判定
-        //----------------------
-        // 判定前はパーティクルの外側
-        ParticleTouchInfo.ParticleTouchStatus status = ParticleTouchInfo.ParticleTouchStatus.OUTSIDE;
-
-        // 全パーティクルを対象にタッチ判定
-        int particleNum = mParticleData.getParticleGroup().getParticleCount();
-        int index;
-        for (index = 0; index < particleNum; index++) {
-            // パーティクル位置
-            float x = mParticleSystem.getParticlePositionX(index);
-            float y = mParticleSystem.getParticlePositionY(index);
-
-            // タッチ範囲にパーティクルあるか
-            if ( (x >= touchMinX) && (x <= touchMaxX) && (y >= touchMinY) && (y <= touchMaxY) ) {
-                // タッチ状態：パーティクル内部
-                status = ParticleTouchInfo.ParticleTouchStatus.INSIDE;
-                break;
-            }
-        }
-
-        //---------------------------
-        // タッチしているパーティクルなし
-        //---------------------------
-        if( status == ParticleTouchInfo.ParticleTouchStatus.OUTSIDE ){
-            return status;
-        }
-
-        //---------------------------
-        // タッチしているパーティクルあり
-        //---------------------------
-        if ( mParticleData.isBorderParticle(index) ) {
-            // タッチ中のパーティクルを保持
-            mParticleTouchInfo.setBorderIndex(index);
-            // タッチ状態：パーティクル境界
-            status = ParticleTouchInfo.ParticleTouchStatus.BORDER;
-        }
-
-        return status;
     }
 
     /*
@@ -1281,7 +579,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //-----------
         if( onBullet ){
             // 保持している境界パーティクルの位置情報を更新
-            mParticleData.updateBorderParticlePosY( mParticleSystem );
+            mParticleData.updateBorderParticlePosY();
             // 画面下部座標値を渡し、発射位置を設定
             mBulletManager.setShootPosY( mWorldPosMin[1] );
         }
@@ -1315,10 +613,10 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         mParticleData.setSoftnessFactor( softness );
 
         //-------------------------
-        // パーティクル生成
+        // パーティクル再生成
         //-------------------------
         // パーティクルシステムの生成
-        setupParticleSystem();
+        mParticleData.setParticleSystem();
         // 中心に再生成
         regenerationAtCenter();
     }
