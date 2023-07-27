@@ -59,8 +59,8 @@ public class ParticleManager {
     //---------------
     // リソースID
     //---------------
-    public static final int TEXTURE_ID = R.drawable.texture_test_cat;
-    public static final int POLYGON_XML_ID = R.xml.test_cat_plist;
+    public static final int TEXTURE_ID = R.drawable.e_cat_3;
+    public static final int POLYGON_XML_ID = R.xml.e_cat_3;
     // 生成済みテクスチャ
     private final HashMap<Integer, Integer> mMapResourceTexture;
 

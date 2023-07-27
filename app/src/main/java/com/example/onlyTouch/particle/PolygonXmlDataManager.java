@@ -52,7 +52,7 @@ public class PolygonXmlDataManager {
 
     // 座標縮小値
     // !この値が大きい程、パーティクルも大きくなる
-    private static final int LEVELING_SHAPE_SIZE_VALUE = 8;
+    private static final int LEVELING_SHAPE_SIZE_VALUE = 10;
 
     // 図形情報とポリゴンxmlの対応リスト
     private final HashMap<Integer, PolygonParseData> mMapPolygon;
@@ -305,10 +305,10 @@ public class PolygonXmlDataManager {
 
     /*
      *　UV座標の以下の情報を保持する。
-     *  ・UV座標上での最小値（X座標）
-     *  ・UV座標上での最大値（Y座標）
-     *  ・UV座標上での最大幅
-     *  ・UV座標上での最大高さ
+     *  ・頂点座標の最小値（X座標）
+     *  ・頂点座標の最小値（Y座標）
+     *  ・図形の最大幅
+     *  ・図形の最大高さ
      */
     private void setUVData(float minX, float minY, float width, float height){
 
@@ -316,9 +316,15 @@ public class PolygonXmlDataManager {
         float uvMinX = (minX - mTexturePXMinX) / mTexturePXWidth;
         float uvMinY = (minY - mTexturePXMinY) / mTexturePXHeight;
 
+        uvMinX = 0;
+        uvMinY = 0;
+
         // X・Y座標上で最大の値を、UV座標に変換
         float uvMaxX = (minX + width  - mTexturePXMinX) / mTexturePXWidth;
         float uvMaxY = (minY + height - mTexturePXMinY) / mTexturePXHeight;
+
+        uvMaxX = 1;
+        uvMaxY = 1;
 
         // 保持
         mUVMinX = uvMinX;
@@ -351,6 +357,9 @@ public class PolygonXmlDataManager {
         // 画像の中央を原点とした時の画像の最小位置
         mTexturePXMinX = (mTexturePXWidth / 2.0f) * -1;
         mTexturePXMinY = (mTexturePXHeight / 2.0f) * -1;
+
+        Log.i("描画不具合", "mTexturePXMinX=" + mTexturePXMinX);
+        Log.i("描画不具合", "mTexturePXMinY=" + mTexturePXMinY);
     }
 
 
