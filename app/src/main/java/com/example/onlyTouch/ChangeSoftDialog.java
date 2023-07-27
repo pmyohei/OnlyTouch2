@@ -7,8 +7,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 
-import com.example.onlyTouch.opengl.ParticleWorldRenderer;
-import com.example.onlyTouch.particle.ParticleData;
+import com.example.onlyTouch.particle.ParticleManager;
 
 /*
  * 柔らかさ変更ダイアログ
@@ -53,13 +52,13 @@ public class ChangeSoftDialog extends DialogFragment implements View.OnClickList
 
         // 設定中の柔らかさを選択中状態にする
         switch (mChoiceSoftness) {
-            case ParticleData.SOFTNESS_SOFT:
+            case ParticleManager.SOFTNESS_SOFT:
                 ((RadioButton) dialog.findViewById(R.id.radio_soft)).setChecked(true);
                 break;
-            case ParticleData.SOFTNESS_NORMAL:
+            case ParticleManager.SOFTNESS_NORMAL:
                 ((RadioButton) dialog.findViewById(R.id.radio_normal)).setChecked(true);
                 break;
-            case ParticleData.SOFTNESS_LITTEL_HARD:
+            case ParticleManager.SOFTNESS_LITTEL_HARD:
                 ((RadioButton) dialog.findViewById(R.id.radio_little_hard)).setChecked(true);
                 break;
             default:
@@ -124,19 +123,19 @@ public class ChangeSoftDialog extends DialogFragment implements View.OnClickList
         switch(view.getId()) {
             case R.id.radio_soft:
                 if (checked) {
-                    mChoiceSoftness = ParticleData.SOFTNESS_SOFT;
+                    mChoiceSoftness = ParticleManager.SOFTNESS_SOFT;
                 }
                 break;
 
             case R.id.radio_normal:
                 if (checked) {
-                    mChoiceSoftness = ParticleData.SOFTNESS_NORMAL;
+                    mChoiceSoftness = ParticleManager.SOFTNESS_NORMAL;
                 }
                 break;
 
             case R.id.radio_little_hard:
                 if (checked) {
-                    mChoiceSoftness = ParticleData.SOFTNESS_LITTEL_HARD;
+                    mChoiceSoftness = ParticleManager.SOFTNESS_LITTEL_HARD;
                 }
                 break;
 

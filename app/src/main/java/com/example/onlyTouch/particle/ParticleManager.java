@@ -23,9 +23,9 @@ import java.util.HashMap;
 import javax.microedition.khronos.opengles.GL10;
 
 /*
- * パーティクル情報
+ * パーティクル管理
  */
-public class ParticleData {
+public class ParticleManager {
 
     // 位置が急上昇したパーティクルなし
     public final int NOTHING_TOO_RISE = -1;
@@ -48,9 +48,9 @@ public class ParticleData {
 
     // パーティクルの柔らかさ
     private int mSoftness;
-    public static final int SOFTNESS_SOFT = 0;          // SOFT
-    public static final int SOFTNESS_NORMAL = 1;        // デフォルト値
-    public static final int SOFTNESS_LITTEL_HARD = 2;   // LITTLE HARD
+    public static final int SOFTNESS_SOFT = 0;
+    public static final int SOFTNESS_NORMAL = 1;
+    public static final int SOFTNESS_LITTEL_HARD = 2;
 
     //---------------------------
     // パーティクルの柔らかさ決定因子
@@ -100,7 +100,7 @@ public class ParticleData {
     /*
      * コンストラクタ
      */
-    public ParticleData(ParticleGLSurfaceView glSurfaceView, World world) {
+    public ParticleManager(ParticleGLSurfaceView glSurfaceView, World world) {
 
         // タッチ画面のビューコンテナ
         mGLSurfaceView = glSurfaceView;
@@ -122,7 +122,7 @@ public class ParticleData {
         // パーティクルシステムをデフォルトで設定
         setParticleSystem();
         // ポリゴンリストデータ管理クラス
-        mPolygonListManage = new PolygonXmlDataManager( glSurfaceView.getContext(), ParticleData.POLYGON_XML_ID, ParticleData.TEXTURE_ID);
+        mPolygonListManage = new PolygonXmlDataManager( glSurfaceView.getContext(), ParticleManager.POLYGON_XML_ID, ParticleManager.TEXTURE_ID);
     }
 
     /*
@@ -179,7 +179,6 @@ public class ParticleData {
 
     /*
      * パーティクルシステムの生成
-     *   !パラメータ：柔らかさの決定因子
      */
     public void setParticleSystem() {
 
@@ -205,9 +204,8 @@ public class ParticleData {
 
     /*
      * パーティクルグループ定義の設定
-     * @para パーティクル横幅、パーティクル縦幅、生成位置(x/y)
      */
-    private ParticleGroup setupParticleGroup(float posX, float posY) {
+    private ParticleGroup createParticleGroup(float posX, float posY) {
 
         //----------------------
         // ParticleGroup定義
@@ -218,8 +216,8 @@ public class ParticleData {
         particleGroupDef.setPosition(posX, posY);
         particleGroupDef.setLifetime(0);
 
-        // PolygonXMLデータを取得
-        PolygonXmlDataManager.PolygonParseData polygonXmlData = mPolygonListManage.parsePoligonXmlShapes(mGLSurfaceView.getContext(), ParticleData.POLYGON_XML_ID);
+        // PolygonXMLデータから形状情報を取得
+        PolygonXmlDataManager.PolygonParseData polygonXmlData = mPolygonListManage.parsePoligonXmlShapes(mGLSurfaceView.getContext(), ParticleManager.POLYGON_XML_ID);
         // 形状設定
         particleGroupDef.setPolygonShapesFromVertexList(polygonXmlData.mCoordinateBuff, polygonXmlData.mVertexeNumBuff, polygonXmlData.mShapeNum);
 
@@ -239,7 +237,7 @@ public class ParticleData {
     public void createParticleBody(GL10 gl, float posX, float posY) {
 
         // パーティクルグループ生成
-        mParticleGroup = setupParticleGroup(posX, posY);
+        mParticleGroup = createParticleGroup(posX, posY);
 
         //========================
         // ！粒子座標取得用！
@@ -269,7 +267,7 @@ public class ParticleData {
         // パーティクル情報を保持
         //-----------------------
         // テクスチャID
-        mTextureId = getTexture(gl, ParticleData.TEXTURE_ID);
+        mTextureId = getTexture(gl, ParticleManager.TEXTURE_ID);
         // 境界パーティクルバッファ
         ArrayList<Integer> border = generateBorderParticleBuff(allParticleLine);
 
@@ -783,17 +781,13 @@ public class ParticleData {
      * パーティクルタッチ追随処理
      *   パーティクルに対するタッチ判定を行い、タッチされていればパーティクルを追随させる
      */
-    public void traceTouchParticle(GL10 gl, boolean onBullet) {
+    public void traceTouchParticle(GL10 gl) {
 
         //----------------
         // 処理なし
         //----------------
         // パーティクルなし
         if (mParticleGroup.getParticleCount() == 0) {
-            return;
-        }
-        // 銃弾発射中
-        if (onBullet) {
             return;
         }
         // 未タッチ

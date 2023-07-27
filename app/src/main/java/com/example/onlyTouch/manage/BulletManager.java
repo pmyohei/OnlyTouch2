@@ -7,7 +7,7 @@ import android.view.MotionEvent;
 import com.example.onlyTouch.convert.Conversion;
 import com.example.onlyTouch.object.Bullet;
 import com.example.onlyTouch.opengl.ParticleGLSurfaceView;
-import com.example.onlyTouch.particle.ParticleData;
+import com.example.onlyTouch.particle.ParticleManager;
 import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.World;
 
@@ -63,7 +63,7 @@ public class BulletManager {
      *  弾の管理(生成・削除)
      */
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public void bulletManage(GL10 gl, ParticleData particleData) {
+    public void bulletManage(GL10 gl, ParticleManager particleManager) {
 
         // 大砲offなら何もしない
         if ( !mOnBullet ) {
@@ -71,9 +71,9 @@ public class BulletManager {
         }
 
         // 位置が急上昇した境界パーティクルを取得
-        int tooRiseIndex = particleData.tooRiseBorderParticle();
+        int tooRiseIndex = particleManager.tooRiseBorderParticle();
         // 保持している境界パーティクルの位置情報を更新
-        particleData.updateBorderParticlePosY();
+        particleManager.updateBorderParticlePosY();
 
         //-------------
         // 弾の描画
@@ -85,8 +85,8 @@ public class BulletManager {
             // 弾の減速対応
             // (境界パーティクルに掠った際、パーティクルが急上昇するのを防ぐための対応)
             //---------------
-            if (tooRiseIndex != particleData.NOTHING_TOO_RISE) {
-                float borderY = particleData.getParticleSystem().getParticlePositionY(tooRiseIndex);
+            if (tooRiseIndex != particleManager.NOTHING_TOO_RISE) {
+                float borderY = particleManager.getParticleSystem().getParticlePositionY(tooRiseIndex);
                 float bulletY = bullet.getBody().getPositionY();
 
                 // 急上昇した境界パーティクルよりも上に位置する弾は減速させる

@@ -11,7 +11,7 @@ import com.example.onlyTouch.R;
 import com.example.onlyTouch.convert.Conversion;
 import com.example.onlyTouch.manage.BulletManager;
 import com.example.onlyTouch.object.DrawBackGround;
-import com.example.onlyTouch.particle.ParticleData;
+import com.example.onlyTouch.particle.ParticleManager;
 import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.BodyDef;
 import com.google.fpl.liquidfun.BodyType;
@@ -75,7 +75,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     //----------------
     // パーティクル
     //----------------
-    private final ParticleData mParticleData;
+    private final ParticleManager mParticleManager;
     private int mRegenerationState;
 
     // パーティクル再生成シーケンス
@@ -144,10 +144,10 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //-----------------
         // パーティクルの設定
         //-----------------
-        mParticleData = new ParticleData( glSurfaceView, mWorld );
+        mParticleManager = new ParticleManager( glSurfaceView, mWorld );
         mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
         // 適切な粒子反復を算出
-        mParticleIterations = liquidfun.b2CalculateParticleIterations(gravity, ParticleData.DEFAULT_RADIUS, TIME_STEP);
+        mParticleIterations = liquidfun.b2CalculateParticleIterations(gravity, ParticleManager.DEFAULT_RADIUS, TIME_STEP);
 
         //-----------------
         // 銃弾
@@ -269,17 +269,20 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // 物体関連
         //------------------
         // 弾 !パーティクルよりも先に描画すること（パーティクル内部に弾が描画されることがあるため）
-        mBulletManager.bulletManage(gl, mParticleData);
+        mBulletManager.bulletManage(gl, mParticleManager);
 
         //------------------
         // パーティクル
         //------------------
-        // パーティクル再生成
+        // パーティクル再生成制御
         regenerationParticle(gl);
         // パーティクル描画更新
-        mParticleData.draw(gl);
+        mParticleManager.draw(gl);
+
         // パーティクルタッチ追随処理
-        mParticleData.traceTouchParticle(gl, mBulletManager.onBullet());
+        if( !mBulletManager.onBullet() ){
+            mParticleManager.traceTouchParticle(gl);
+        }
     }
 
     /*
@@ -323,7 +326,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // パーティクル
         //---------------
         // パーティクル生成
-        mParticleData.createParticleBody(gl, mWorldPosMid[0], mWorldPosMid[1]);
+        mParticleManager.createParticleBody(gl, mWorldPosMid[0], mWorldPosMid[1]);
 
         //---------------
         // 壁
@@ -434,7 +437,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             //---------------
             case PARTICLE_REGENE_STATE_DELETE:
                 // パーティクルグループを削除(粒子とグループは次の周期で削除される)
-                mParticleData.destroyParticle();
+                mParticleManager.destroyParticle();
 
                 // 再生成のシーケンスを生成に更新(次の周期で生成するため)
                 mRegenerationState = PARTICLE_REGENE_STATE_CREATE;
@@ -446,7 +449,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             //---------------
             case PARTICLE_REGENE_STATE_CREATE:
                 // パーティクル生成
-                mParticleData.createParticleBody(gl, mWorldPosMid[0], mWorldPosMid[1]);
+                mParticleManager.createParticleBody(gl, mWorldPosMid[0], mWorldPosMid[1]);
                 // オーバーラップ物体を生成
                 mOverlapBody = createBoxBody(1f, 1f, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody);
                 // オーバーラップ物体ありに更新
@@ -543,7 +546,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
             //-------------------
             // パーティクルタッチ
             //-------------------
-            return mParticleData.touchParticle(event);
+            return mParticleManager.touchParticle(event);
         }
     }
 
@@ -579,7 +582,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //-----------
         if( onBullet ){
             // 保持している境界パーティクルの位置情報を更新
-            mParticleData.updateBorderParticlePosY();
+            mParticleManager.updateBorderParticlePosY();
             // 画面下部座標値を渡し、発射位置を設定
             mBulletManager.setShootPosY( mWorldPosMin[1] );
         }
@@ -610,13 +613,13 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     public void changeParticleSoftness(int softness){
 
         // 柔らかさ因子の変更
-        mParticleData.setSoftnessFactor( softness );
+        mParticleManager.setSoftnessFactor( softness );
 
         //-------------------------
         // パーティクル再生成
         //-------------------------
         // パーティクルシステムの生成
-        mParticleData.setParticleSystem();
+        mParticleManager.setParticleSystem();
         // 中心に再生成
         regenerationAtCenter();
     }
@@ -625,7 +628,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
      * パーティクルの柔らかさ取得
      */
     public int getSoftness(){
-        return mParticleData.getSoftness();
+        return mParticleManager.getSoftness();
     }
 
     /*
@@ -648,7 +651,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // 粒子反復
         //-----------
         // 適切な粒子反復を算出 !worldのstepで利用
-        float radius = mParticleData.getParticleRadius();
+        float radius = mParticleManager.getParticleRadius();
         mParticleIterations = liquidfun.b2CalculateParticleIterations( gravityScaleY, radius, TIME_STEP );
     }
 
