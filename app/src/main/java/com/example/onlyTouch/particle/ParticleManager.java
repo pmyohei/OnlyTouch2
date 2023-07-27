@@ -27,9 +27,6 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class ParticleManager {
 
-    // 位置が急上昇したパーティクルなし
-    public final int NOTHING_TOO_RISE = -1;
-
     //-------------------------
     // 柔らかさ関連パラメータ
     //-------------------------
@@ -80,6 +77,9 @@ public class ParticleManager {
     //---------------------------
     // パーティクル
     //---------------------------
+    // 位置が急上昇したパーティクルなし
+    public final int NOTHING_TOO_RISE = -1;
+
     // 境界パーティクルIndexとY座標
     private HashMap<Integer, Float> mBorderParticle;
     // パーティクルタッチ情報
@@ -182,23 +182,32 @@ public class ParticleManager {
      */
     public void setParticleSystem() {
 
+        //------------
+        // 設定値
+        //------------
         // 柔らかさの決定因子
         float radius = mParticleRadius;
         float dencity = mParticleDencity;
         float elasticStrength = mParticleElasticStrength;
+        // 固定値
+        final float DAMPING_STRENGTH = 0.2f;
+        final float GRAVITY_SCALE = 0.4f;
+        final float LIFETIME_GRANULARITY = 0.0001f;
 
+        //------------------------
+        // パーティクルシステム
+        //------------------------
         // パーティクルシステム定義
         ParticleSystemDef particleSystemDef = new ParticleSystemDef();
         particleSystemDef.setRadius(radius);
         particleSystemDef.setDensity(dencity);
         particleSystemDef.setElasticStrength(elasticStrength);
-        particleSystemDef.setDampingStrength(0.2f);
-        particleSystemDef.setGravityScale(0.4f);
+        particleSystemDef.setDampingStrength(DAMPING_STRENGTH);
+        particleSystemDef.setGravityScale(GRAVITY_SCALE);
         particleSystemDef.setDestroyByAge(true);
-        particleSystemDef.setLifetimeGranularity(0.0001f);
-//        particleSystemDef.setMaxCount(729);
+        particleSystemDef.setLifetimeGranularity(LIFETIME_GRANULARITY);
 
-        // パーティクルシステムの生成
+        // パーティクルシステム生成
         mParticleSystem = mWorld.createParticleSystem(particleSystemDef);
     }
 
@@ -236,7 +245,9 @@ public class ParticleManager {
      */
     public void createParticleBody(GL10 gl, float posX, float posY) {
 
+        //-----------------------------
         // パーティクルグループ生成
+        //-----------------------------
         mParticleGroup = createParticleGroup(posX, posY);
 
         //========================
@@ -251,28 +262,24 @@ public class ParticleManager {
         //========================
 
 
-        // 行単位のパーティクルバッファを作成
-        ArrayList<ArrayList<Integer>> allParticleLine = new ArrayList<>();
-        generateParticleLineBuff(mParticleGroup, allParticleLine);
-
-        // パーティクルの直径
-        float diameter = mParticleRadius * 2;
-        // OpenGLに渡す三角形グルーピングバッファを作成
-        enqueRendererBuff(allParticleLine, diameter);
-
+        //-------------
+        // バッファ
+        //-------------
+        // 行単位のパーティクルバッファを生成
+        ArrayList<ArrayList<Integer>> allParticleLine = generateParticleLineBuff(mParticleGroup);
+        // OpenGLに渡す三角形グルーピングバッファをエンキュー
+        enqueRendererBuff(allParticleLine);
         // レンダリング用UVバッファを生成
         generateUVRendererBuff();
 
         //-----------------------
         // パーティクル情報を保持
         //-----------------------
-        // テクスチャID
+        // テクスチャ生成
         mTextureId = getTexture(gl, ParticleManager.TEXTURE_ID);
-        // 境界パーティクルバッファ
-        ArrayList<Integer> border = generateBorderParticleBuff(allParticleLine);
 
         // 境界パーティクル保持情報を初期化
-        initBorderParticle(mParticleSystem, border);
+        initBorderParticle(allParticleLine);
     }
 
     /*
@@ -309,7 +316,7 @@ public class ParticleManager {
      *  @para I:パーティクルグループ
      *  @para O:全パーティクルライン
      */
-    private void generateParticleLineBuff(ParticleGroup particleGroup, ArrayList<ArrayList<Integer>> allParticleLine) {
+    private ArrayList<ArrayList<Integer>> generateParticleLineBuff(ParticleGroup particleGroup) {
 
         // 1ライン分格納先
         ArrayList<Integer> line = new ArrayList<>();
@@ -320,6 +327,9 @@ public class ParticleManager {
 
         // 先頭パーティクルのY座標を格納中ラインのY座標とする
         float linePosY = mParticleSystem.getParticlePositionY(bufferIndex);
+
+        // 格納先リスト
+        ArrayList<ArrayList<Integer>> allParticleLine = new ArrayList<>();
 
         //------------------------
         // 全パーティクルを格納
@@ -354,12 +364,17 @@ public class ParticleManager {
 
         // パーティクル行を全パーティクルラインに追加
         allParticleLine.add(line);
+
+        return allParticleLine;
     }
 
     /*
      * パーティクルをレンダリングバッファに格納
      */
-    private void enqueRendererBuff(ArrayList<ArrayList<Integer>> allParticleLine, float diameter) {
+    private void enqueRendererBuff(ArrayList<ArrayList<Integer>> allParticleLine) {
+
+        // パーティクルの直径
+        float particleDiameter = mParticleRadius * 2;
 
         // ループ数 = ライン数 - 1
         int lastLineIndex = allParticleLine.size() - 1;
@@ -370,8 +385,8 @@ public class ParticleManager {
             ArrayList<Integer> topLine = allParticleLine.get(lineIndex + 1);
 
             // 下ライン／上ラインを底辺とした三角形グループをバッファに格納
-            enqueParticleBaseBottomLine(bottomLine, topLine, diameter);
-            enqueParticleBaseTopLine(bottomLine, topLine, diameter);
+            enqueParticleBaseBottomLine(bottomLine, topLine, particleDiameter);
+            enqueParticleBaseTopLine(bottomLine, topLine, particleDiameter);
         }
     }
 
@@ -591,7 +606,7 @@ public class ParticleManager {
      * 境界パーティクルバッファを取得
      *   全パーティクルの中で、外側に面しているパーティクルをバッファに格納する
      */
-    private ArrayList<Integer> generateBorderParticleBuff(ArrayList<ArrayList<Integer>> allParticleLine) {
+    private ArrayList<Integer> getBorderPgetarticleBuff(ArrayList<ArrayList<Integer>> allParticleLine) {
         // 境界パーティクルバッファ
         ArrayList<Integer> borderBuff = new ArrayList<>();
 
@@ -631,23 +646,29 @@ public class ParticleManager {
     /*
      * 境界パーティクル情報初期化
      */
-    public void initBorderParticle(ParticleSystem ps, ArrayList<Integer> border) {
+    public void initBorderParticle(ArrayList<ArrayList<Integer>> allParticleLine) {
 
+        // 境界パーティクルをリストとして取得
+        ArrayList<Integer> border = getBorderPgetarticleBuff(allParticleLine);
+
+        //----------------------
+        // 境界パーティクル情報の生成
+        //----------------------
         mBorderParticle = new HashMap<Integer, Float>();
 
         for (int particleIndex : border) {
             // 境界パーティクルのY座標
-            float posY = ps.getParticlePositionY(particleIndex);
+            float posY = mParticleSystem.getParticlePositionY(particleIndex);
             // indexとY座標をペアで保持
             mBorderParticle.put(particleIndex, posY);
         }
     }
 
     /*
-     * 境界パーティクルが急上昇したかどうか
+     * 位置が急上昇した境界パーティクルの取得
      *  　本メソッドがコールされたタイミングで、位置が急上昇したパーティクルがあればそれを返す
      */
-    public int tooRiseBorderParticle() {
+    public int getTooRiseBorderParticle() {
 
         // 急上昇判定値
         final float TOO_RISE = 1.8f;
@@ -673,7 +694,8 @@ public class ParticleManager {
     }
 
     /*
-     * 境界パーティクルのY座標を保持
+     * 保持している境界パーティクルのY座標を更新
+     *   !実物の位置を更新しているわけではない。
      */
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void updateBorderParticlePosY() {

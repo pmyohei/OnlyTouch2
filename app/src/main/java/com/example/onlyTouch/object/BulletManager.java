@@ -5,7 +5,6 @@ import android.support.annotation.RequiresApi;
 import android.view.MotionEvent;
 
 import com.example.onlyTouch.convert.Conversion;
-import com.example.onlyTouch.object.Bullet;
 import com.example.onlyTouch.opengl.ParticleGLSurfaceView;
 import com.example.onlyTouch.particle.ParticleManager;
 import com.google.fpl.liquidfun.Body;
@@ -71,7 +70,7 @@ public class BulletManager {
         }
 
         // 位置が急上昇した境界パーティクルを取得
-        int tooRiseIndex = particleManager.tooRiseBorderParticle();
+        int tooRiseIndex = particleManager.getTooRiseBorderParticle();
         // 保持している境界パーティクルの位置情報を更新
         particleManager.updateBorderParticlePosY();
 
