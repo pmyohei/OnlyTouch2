@@ -122,7 +122,7 @@ public class ParticleManager {
         // パーティクルシステムをデフォルトで設定
         setParticleSystem();
         // ポリゴンリストデータ管理クラス
-        mPolygonListManage = new PolygonXmlDataManager( glSurfaceView.getContext(), ParticleManager.POLYGON_XML_ID, ParticleManager.TEXTURE_ID);
+        mPolygonListManage = new PolygonXmlDataManager(glSurfaceView.getContext(), ParticleManager.POLYGON_XML_ID, ParticleManager.TEXTURE_ID);
     }
 
     /*
@@ -252,12 +252,12 @@ public class ParticleManager {
 
         //========================
         // ！粒子座標取得用！
-//        int size = particleGroup.getParticleCount();
+//        int size = mParticleGroup.getParticleCount();
 //        Log.i("PolygonList()=", "" + size);
 //        for (int i = 0; i < size; i++) {
 //            float x = mParticleSystem.getParticlePositionX(i);
 //            float y = mParticleSystem.getParticlePositionY(i);
-//            Log.i("PolygonList", "" + i + "\t" + x + "\t" + y);
+//            Log.i("パーティクル座標", "" + i + "\t" + x + "\t" + y);
 //        }
         //========================
 
@@ -299,7 +299,7 @@ public class ParticleManager {
         //------------------
         // テクスチャ生成
         //------------------
-        textureId = Conversion.makeTexture( gl10, resourceId, mGLSurfaceView.getContext() );
+        textureId = Conversion.makeTexture(gl10, resourceId, mGLSurfaceView.getContext());
 
         //-------------------
         // テクスチャを保持
@@ -604,9 +604,9 @@ public class ParticleManager {
 
     /*
      * 境界パーティクルバッファを取得
-     *   全パーティクルの中で、外側に面しているパーティクルをバッファに格納する
+     *   全パーティクルの中で、外側に面しているパーティクル（境界パーティクル）をバッファに格納する
      */
-    private ArrayList<Integer> getBorderPgetarticleBuff(ArrayList<ArrayList<Integer>> allParticleLine) {
+    private ArrayList<Integer> getBorderParticle(ArrayList<ArrayList<Integer>> allParticleLine) {
         // 境界パーティクルバッファ
         ArrayList<Integer> borderBuff = new ArrayList<>();
 
@@ -616,7 +616,7 @@ public class ParticleManager {
         //--------------------
         // 最下ラインと最上ライン
         //--------------------
-        // 全てのパーティクルが境界
+        // ライン上の全パーティクルが境界パーティクル
         ArrayList<Integer> bottomLine = allParticleLine.get(0);
         ArrayList<Integer> topLine = allParticleLine.get(lastLineIndex);
         borderBuff.addAll(bottomLine);
@@ -628,18 +628,102 @@ public class ParticleManager {
         //--------------------------------------------
         // ライン上の両サイドにあるパーティクルが境界パーティクルとなる
         for (int i = 1; i < lastLineIndex; i++) {
-            ArrayList<Integer> line = allParticleLine.get(i);
-            int lastIndex = line.size() - 1;
+            ArrayList<Integer> targetTopLine = allParticleLine.get(i - 1);
+            ArrayList<Integer> betweenLine = allParticleLine.get(i);
+            ArrayList<Integer> targetBottomLine = allParticleLine.get(i + 1);
 
-            // ラインの両サイドにあるパーティクル
-            int leftParticleIndex = line.get(0);
-            int rightParticleIndex = line.get(lastIndex);
-            // 格納
-            borderBuff.add(leftParticleIndex);
-            borderBuff.add(rightParticleIndex);
+            //----------------------------
+            // 両端
+            //----------------------------
+            storeLineEdges(betweenLine, borderBuff);
+
+            //----------------------------------------
+            // 上下端
+            //----------------------------------------
+            storeRowEdges(betweenLine, targetTopLine, targetBottomLine, borderBuff);
         }
 
         return borderBuff;
+    }
+
+    /*
+     * 境界パーティクルバッファ格納：ラインの両端
+     */
+    private void storeLineEdges(ArrayList<Integer> line, ArrayList<Integer> storeBuff) {
+
+        int lastIndex = line.size() - 1;
+
+        //----------------------------
+        // ラインの両サイドにあるパーティクル
+        //----------------------------
+        int leftParticleIndex = line.get(0);
+        int rightParticleIndex = line.get(lastIndex);
+        // 格納
+        storeBuff.add(leftParticleIndex);
+        storeBuff.add(rightParticleIndex);
+    }
+
+    /*
+     * 境界パーティクルバッファ格納：上下端
+     */
+    private void storeRowEdges(ArrayList<Integer> line, ArrayList<Integer> topLine, ArrayList<Integer> bottomLine, ArrayList<Integer> storeBuff) {
+
+        int lastIndex = line.size() - 1;
+
+        // !ラインの両端は格納済みのため、両端は除いて判定と格納を行う
+        for( int i = 1; i < lastIndex; i++ ){
+
+            // 上下端判定
+            int particleIndex = line.get(i);
+            boolean isRowEdges = isRowEdges( topLine, bottomLine, particleIndex );
+            if( isRowEdges ){
+                // 上下端（上下どちらかにパーティクルがない場合）、境界とみなす
+                storeBuff.add(particleIndex);
+            }
+        }
+    }
+
+    /*
+     * 上下端判定
+     *    指定パーティクルが上下端の存在であるかを判定
+     * 　　（上下ライン上で、指定パーティクルと同一列にパーティクルがあるかどうかで判定）
+     *    true：上下どちらかでも同一列にパーティクルなし（外側にあるパーティクルとみなす）
+     */
+    private boolean isRowEdges(ArrayList<Integer> topLine, ArrayList<Integer> bottomLine, int particleIndex) {
+
+        // 判定パーティクルのＸ座標
+        float posX = mParticleSystem.getParticlePositionX( particleIndex );
+
+        //------------------
+        // 上ライン
+        //------------------
+        // 初期値は同一列になしとする
+        boolean noneTop = true;
+        for( int i : topLine ){
+            float verticlePosX = mParticleSystem.getParticlePositionX( i );
+            if( posX == verticlePosX ){
+                // 同一列にあり
+                noneTop = false;
+                break;
+            }
+        }
+
+        //------------------
+        // 下ライン
+        //------------------
+        // 初期値は同一列になしとする
+        boolean noneBottom = true;
+        for( int i : bottomLine ){
+            float verticlePosX = mParticleSystem.getParticlePositionX( i );
+            if( posX == verticlePosX ){
+                // 同一列にあり
+                noneBottom = false;
+                break;
+            }
+        }
+
+        // 上下ラインどちらかでもなければ、true(上下端とみなす)を返す
+        return ( noneTop || noneBottom );
     }
 
 
@@ -649,7 +733,7 @@ public class ParticleManager {
     public void initBorderParticle(ArrayList<ArrayList<Integer>> allParticleLine) {
 
         // 境界パーティクルをリストとして取得
-        ArrayList<Integer> border = getBorderPgetarticleBuff(allParticleLine);
+        ArrayList<Integer> border = getBorderParticle(allParticleLine);
 
         //----------------------
         // 境界パーティクル情報の生成
