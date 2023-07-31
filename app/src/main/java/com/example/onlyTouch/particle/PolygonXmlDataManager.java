@@ -20,8 +20,8 @@ import java.util.HashMap;
 public class PolygonXmlDataManager {
 
     // テクスチャサイズ情報 px単位
-    private float mTexturePXMinX;
-    private float mTexturePXMinY;
+    private float mTexturePXHalfX;
+    private float mTexturePXHalfY;
     private float mTexturePXWidth;
     private float mTexturePXHeight;
 
@@ -47,8 +47,8 @@ public class PolygonXmlDataManager {
     //-----------------------------
     private float mUVMinX;           // xmlの座標上で、最小の値をUV座標に変換したもの(x座標)
     private float mUVMaxY;           // xmlの座標上で、最大の値をUV座標に変換したもの(y座標)
-    private float mUVWidth;          // xmlの座標上で、最大widthをUV座標の単位にしたもの
-    private float mUVHeight;         // xmlの座標上で、最大heightをUV座標の単位にしたもの
+    private float mUVMaxWidth;          // xmlの座標上で、最大widthをUV座標の単位にしたもの
+    private float mUVMaxHeight;         // xmlの座標上で、最大heightをUV座標の単位にしたもの
 
     // 座標縮小値
     // !この値が大きい程、パーティクルも大きくなる
@@ -68,8 +68,8 @@ public class PolygonXmlDataManager {
         // 初期値はUV座標全体に画像がある場合とする
         mUVMinX = 0.0f;
         mUVMaxY = 1.0f;
-        mUVWidth = 1;
-        mUVHeight = 1;
+        mUVMaxWidth = 1;
+        mUVMaxHeight = 1;
 
         //--------------
         // リスト
@@ -77,14 +77,35 @@ public class PolygonXmlDataManager {
         // 図形情報とポリゴンxmlの対応リスト
         mMapPolygon = new HashMap<Integer, PolygonParseData>();
 
-
         // テクスチャ情報の設定
         setTextureData( context, textureID );
         // 解析処理
         parsePoligonXmlShapes( context, polygonXml );
-
     }
 
+    /*
+     *　テクスチャサイズ情報の設定
+     */
+    private void setTextureData( Context context, int textureID ){
+
+        // 指定リソースのBitmapオブジェクトを生成
+        Resources resource = context.getResources();
+        Bitmap bitmap = BitmapFactory.decodeResource(resource, textureID);
+
+        final float bitmapWidth = bitmap.getWidth();
+        final float bitmapHeight = bitmap.getHeight();
+        final float scale = resource.getDisplayMetrics().density;
+
+        //----------------------------
+        // テクスチャ（画像）のpxサイズ
+        //----------------------------
+        // 画像のピクセルサイズ
+        mTexturePXWidth = bitmapWidth / scale;
+        mTexturePXHeight = bitmapHeight / scale;
+        // 画像のピクセルサイズの半分
+        mTexturePXHalfX = mTexturePXWidth / 2.0f;
+        mTexturePXHalfY = mTexturePXHeight / 2.0f;
+    }
 
 
     /*
@@ -106,7 +127,6 @@ public class PolygonXmlDataManager {
         ArrayList<Float> vertexCoordinateValue = new ArrayList<Float>();
         ArrayList<Integer> vertexNumValue = new ArrayList<Integer>();
         int shapeNum = -1;
-
 
         // 解析対象のタグ
         final String TAG_FIXTURE      = "fixture";
@@ -206,8 +226,8 @@ public class PolygonXmlDataManager {
             Log.d("XmlPullParserSample", "Error");
         }
 
-
         // xml上の座標値を縮小する
+        //!xmlの座標値は間隔が広い（このままパーティクルグループを作成すると大きいサイズとなってしまう）ため、一定比率縮小する
         downsizingVertexCoordinate( vertexCoordinateValue );
 
         //----------------------
@@ -241,7 +261,6 @@ public class PolygonXmlDataManager {
 
     /*
      *　座標値の縮小
-     *   xmlの座標値は間隔が広いため、一定比率縮小する
      */
     private void downsizingVertexCoordinate(ArrayList<Float> vertexCoordinateValue ){
 
@@ -274,14 +293,14 @@ public class PolygonXmlDataManager {
         //--------------------
         // 図形の最大幅と最大高さ
         //--------------------
-        float width  = maxX - minX;
-        float height = maxY - minY;
+        float polygonMaxWidth  = maxX - minX;
+        float polygonMaxHeight = maxY - minY;
 
         //--------------------
         // 座標値の縮小
         //--------------------
         // 縮小率の算出
-        float longerSide = Math.max( width, height );
+        float longerSide = Math.max( polygonMaxWidth, polygonMaxHeight );
         float rate       = LEVELING_SHAPE_SIZE_VALUE / longerSide;
 
         // 座標を縮小する
@@ -298,70 +317,32 @@ public class PolygonXmlDataManager {
         }
 
         //--------------------
-        // UV座標の情報を保持
+        // UV座標
         //--------------------
-        setUVData(minX, minY, width, height);
-    }
+        // 図形座標をUV座標に変換
+        float[] uvMinPos = convertUVPos(minX, minY);
+        float[] uvMaxPos = convertUVPos(maxX, maxY);
 
-    /*
-     *　UV座標の以下の情報を保持する。
-     *  ・頂点座標の最小値（X座標）
-     *  ・頂点座標の最小値（Y座標）
-     *  ・図形の最大幅
-     *  ・図形の最大高さ
-     */
-    private void setUVData(float minX, float minY, float width, float height){
-
-        // X・Y座標上で最小の値を、UV座標に変換
-        float uvMinX = (minX - mTexturePXMinX) / mTexturePXWidth;
-        float uvMinY = (minY - mTexturePXMinY) / mTexturePXHeight;
-
-        uvMinX = 0;
-        uvMinY = 0;
-
-        // X・Y座標上で最大の値を、UV座標に変換
-        float uvMaxX = (minX + width  - mTexturePXMinX) / mTexturePXWidth;
-        float uvMaxY = (minY + height - mTexturePXMinY) / mTexturePXHeight;
-
-        uvMaxX = 1;
-        uvMaxY = 1;
-
-        // 保持
-        mUVMinX = uvMinX;
-        mUVMaxY = uvMaxY;
-
+        // 必要なデータを保持
+        mUVMinX = uvMinPos[0];
+        mUVMaxY = uvMaxPos[1];
         // UV座標上の最大幅・高さ
-        mUVWidth = uvMaxX - uvMinX;
-        mUVHeight = uvMaxY - uvMinY;
+        mUVMaxWidth = uvMaxPos[0] - uvMinPos[0];
+        mUVMaxHeight = uvMaxPos[1] - uvMinPos[1];
     }
 
     /*
-     *　テクスチャサイズ情報の設定
+     * 図形座標をUV座標へ変換
      */
-    private void setTextureData( Context context, int textureID ){
+    private float[] convertUVPos(float posX, float posY){
 
-        // 指定リソースのBitmapオブジェクトを生成
-        Resources resource = context.getResources();
-        Bitmap bitmap = BitmapFactory.decodeResource(resource, textureID);
+        // 図形座標をUV座標に変換
+        float[] uvPos = new float[2];
+        uvPos[0] = (posX + mTexturePXHalfX) / mTexturePXWidth;
+        uvPos[1] = (posY + mTexturePXHalfY) / mTexturePXHeight;
 
-        final float bitmapWidth = bitmap.getWidth();
-        final float bitmapHeight = bitmap.getHeight();
-        final float scale = resource.getDisplayMetrics().density;
-
-        //----------------------------
-        // テクスチャ（画像）のpxサイズ
-        //----------------------------
-        // 画像のピクセルサイズ
-        mTexturePXWidth = bitmapWidth / scale;
-        mTexturePXHeight = bitmapHeight / scale;
-        // 画像の中央を原点とした時の画像の最小位置
-        mTexturePXMinX = (mTexturePXWidth / 2.0f) * -1;
-        mTexturePXMinY = (mTexturePXHeight / 2.0f) * -1;
-
-        Log.i("描画不具合", "mTexturePXMinX=" + mTexturePXMinX);
-        Log.i("描画不具合", "mTexturePXMinY=" + mTexturePXMinY);
+        return uvPos;
     }
-
 
     /*
      * setter/getter
@@ -369,13 +350,14 @@ public class PolygonXmlDataManager {
     public float getUvMinX() {
         return mUVMinX;
     }
-    public float getUvWidth() {
-        return mUVWidth;
+    public float getUvMaxWidth() {
+        return mUVMaxWidth;
     }
     public float getUvMaxY() {
         return mUVMaxY;
     }
-    public float getUvHeight() {
-        return mUVHeight;
+    public float getUvMaxHeight() {
+        return mUVMaxHeight;
     }
+
 }

@@ -59,8 +59,8 @@ public class ParticleManager {
     //---------------
     // リソースID
     //---------------
-    public static final int TEXTURE_ID = R.drawable.e_cat_3;
-    public static final int POLYGON_XML_ID = R.xml.e_cat_3;
+    public static final int TEXTURE_ID = R.drawable.e_cat_kinchaku_1;
+    public static final int POLYGON_XML_ID = R.xml.e_cat_kinchaku_1;
     // 生成済みテクスチャ
     private final HashMap<Integer, Integer> mMapResourceTexture;
 
@@ -578,8 +578,8 @@ public class ParticleManager {
         // UV座標の最大・最小・横幅・縦幅
         final float minUvX = mPolygonListManage.getUvMinX();
         final float maxUvY = mPolygonListManage.getUvMaxY();
-        final float UvMaxWidth = mPolygonListManage.getUvWidth();
-        final float UvMaxHeight = mPolygonListManage.getUvHeight();
+        final float UvMaxWidth = mPolygonListManage.getUvMaxWidth();
+        final float UvMaxHeight = mPolygonListManage.getUvMaxHeight();
 
         // 各パーティクル位置に対応するUV座標を計算し、リストに格納する
         ArrayList<Vec2> uvCoordinate = new ArrayList<>();
