@@ -7,7 +7,6 @@ import android.support.annotation.RequiresApi;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.example.onlyTouch.R;
 import com.example.onlyTouch.convert.Conversion;
 import com.example.onlyTouch.object.BulletManager;
 import com.example.onlyTouch.object.DrawBackGround;
@@ -313,8 +312,8 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //---------------
         // 背景
         //---------------
-        int textureID = getTexture(gl, R.drawable.texture_background);
-        mDrawBackGround = new DrawBackGround( mWorldPosMin, mWorldPosMax, textureID );
+        int textureID = getTexture(gl, DrawBackGround.BG_TEXTURE_RES);
+        mDrawBackGround = new DrawBackGround( mGLSurfaceView.getContext(), mWorldPosMin, mWorldPosMax, textureID );
 
         //---------------
         // メニュー
