@@ -4,7 +4,6 @@ import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -76,13 +75,13 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     // パーティクル
     //----------------
     private final ParticleManager mParticleManager;
-    private int mRegenerationState;
+    private int mParticleGenerationFlow;
 
-    // パーティクル再生成シーケンス
-    public static final int PARTICLE_REGENE_STATE_NOTHING = 0;
-    public static final int PARTICLE_REGENE_STATE_DELETE  = 1;
-    public static final int PARTICLE_REGENE_STATE_CREATE  = 2;
-    public static final int PARTICLE_REGENE_STATE_OVERLAP = 3;
+    // パーティクル生成フロー
+    public static final int PARTICLE_GENERATION_FLOW_NOTHING = 0;
+    public static final int PARTICLE_GENERATION_FLOW_DELETE = 1;
+    public static final int PARTICLE_GENERATION_FLOW_CREATE = 2;
+    public static final int PARTICLE_GENERATION_FLOW_OVERLAP = 3;
 
     //----------------
     // Body
@@ -135,17 +134,18 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //--------------
         // 物理世界生成
         //--------------
-        // デフォルトの重力
+        // world生成
         mGravity = GRAVITY_DEFAULT;
         int gravity = mGravityScale.get(mGravity);
-        // world生成
         mWorld = new World(0, gravity);
 
         //-----------------
         // パーティクルの設定
         //-----------------
         mParticleManager = new ParticleManager( glSurfaceView, mWorld );
-        mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
+        // パーティクル生成状態を「生成」とし、新規生成されるようにする
+        mParticleGenerationFlow = PARTICLE_GENERATION_FLOW_CREATE;
+
         // 適切な粒子反復を算出
         mParticleIterations = liquidfun.b2CalculateParticleIterations(gravity, ParticleManager.DEFAULT_RADIUS, TIME_STEP);
 
@@ -276,7 +276,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // パーティクル
         //------------------
         // パーティクル再生成制御
-        regenerationParticle(gl);
+        generationParticleFlow(gl);
         // パーティクル描画更新
         mParticleManager.draw(gl);
 
@@ -326,8 +326,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //---------------
         // パーティクル
         //---------------
-        // パーティクル生成
-        mParticleManager.createParticleBody(gl, mWorldPosMid[0], mWorldPosMid[1]);
+        // !パーティクル生成は、パーティクル生成シーケンス上で行うため、ここでは実施しない
 
         //---------------
         // 壁
@@ -421,51 +420,70 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     }
 
     /*
-     * パーティクル再生成
+     * パーティクル生成フロー制御
      */
-    private void regenerationParticle(GL10 gl) {
+    private void generationParticleFlow(GL10 gl) {
 
-        switch (mRegenerationState) {
+        //------------------------
+        // パーティクル生成シーケンス
+        //------------------------
+        switch (mParticleGenerationFlow) {
 
             //-----------------------
             // 処理なし
             //-----------------------
-            case PARTICLE_REGENE_STATE_NOTHING:
+            case PARTICLE_GENERATION_FLOW_NOTHING:
                 break;
 
             //---------------
             // パーティクル削除
             //---------------
-            case PARTICLE_REGENE_STATE_DELETE:
+            case PARTICLE_GENERATION_FLOW_DELETE:
                 // パーティクルグループを削除(粒子とグループは次の周期で削除される)
                 mParticleManager.destroyParticle();
 
                 // 再生成のシーケンスを生成に更新(次の周期で生成するため)
-                mRegenerationState = PARTICLE_REGENE_STATE_CREATE;
+                mParticleGenerationFlow = PARTICLE_GENERATION_FLOW_CREATE;
 
                 break;
 
             //---------------
             // パーティクル生成
             //---------------
-            case PARTICLE_REGENE_STATE_CREATE:
+            case PARTICLE_GENERATION_FLOW_CREATE:
+
+                //-----------------
                 // パーティクル生成
-                mParticleManager.createParticleBody(gl, mWorldPosMid[0], mWorldPosMid[1]);
+                //-----------------
+                // 画面の中心
+                final float screenMiddlePosX = mWorldPosMid[0];
+                final float screenMiddlePosY = mWorldPosMid[1];
+
+                // パーティクル生成
+                mParticleManager.createParticleBody(gl, screenMiddlePosX, screenMiddlePosY);
+
+                //----------------------
+                // オーバーラップ物体
+                //----------------------
+                // サイズ
+                final float OVERLAP_BODY_WIDTH = 1.4f;
+                final float OVERLAP_BODY_HEIGHT = 1.4f;
                 // オーバーラップ物体を生成
-                mOverlapBody = createBoxBody(1f, 1f, mWorldPosMid[0], mWorldPosMid[1], 0, BodyType.staticBody);
+                mOverlapBody = createBoxBody(OVERLAP_BODY_WIDTH, OVERLAP_BODY_HEIGHT, screenMiddlePosX, screenMiddlePosY, 0, BodyType.staticBody);
                 // オーバーラップ物体ありに更新
-                mRegenerationState = PARTICLE_REGENE_STATE_OVERLAP;
+                mParticleGenerationFlow = PARTICLE_GENERATION_FLOW_OVERLAP;
 
                 break;
 
             //-----------------------
             // オーバーラップ物体あり
             //-----------------------
-            case PARTICLE_REGENE_STATE_OVERLAP:
+            case PARTICLE_GENERATION_FLOW_OVERLAP:
                 // オーバーラップ物体を削除
                 mWorld.destroyBody(mOverlapBody);
+
                 // オーバーラップシーケンス終了。重複物体を削除した状態。
-                mRegenerationState = PARTICLE_REGENE_STATE_NOTHING;
+                mParticleGenerationFlow = PARTICLE_GENERATION_FLOW_NOTHING;
 
                 break;
 
@@ -595,7 +613,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
      */
     public void regenerationAtCenter(){
         // 状態を更新し、次の周期で再生成されるようにする
-        mRegenerationState = PARTICLE_REGENE_STATE_DELETE;
+        mParticleGenerationFlow = PARTICLE_GENERATION_FLOW_DELETE;
     }
 
     /*
