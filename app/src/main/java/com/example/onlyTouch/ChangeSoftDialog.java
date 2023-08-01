@@ -52,13 +52,13 @@ public class ChangeSoftDialog extends DialogFragment implements View.OnClickList
 
         // 設定中の柔らかさを選択中状態にする
         switch (mChoiceSoftness) {
-            case ParticleManager.SOFTNESS_SOFT:
+            case ParticleManager.SOFTNESS_VERY_SOFT:
                 ((RadioButton) dialog.findViewById(R.id.radio_soft)).setChecked(true);
                 break;
             case ParticleManager.SOFTNESS_NORMAL:
                 ((RadioButton) dialog.findViewById(R.id.radio_normal)).setChecked(true);
                 break;
-            case ParticleManager.SOFTNESS_LITTEL_HARD:
+            case ParticleManager.SOFTNESS_LITTLE_HARD:
                 ((RadioButton) dialog.findViewById(R.id.radio_little_hard)).setChecked(true);
                 break;
             default:
@@ -123,7 +123,7 @@ public class ChangeSoftDialog extends DialogFragment implements View.OnClickList
         switch(view.getId()) {
             case R.id.radio_soft:
                 if (checked) {
-                    mChoiceSoftness = ParticleManager.SOFTNESS_SOFT;
+                    mChoiceSoftness = ParticleManager.SOFTNESS_VERY_SOFT;
                 }
                 break;
 
@@ -135,7 +135,7 @@ public class ChangeSoftDialog extends DialogFragment implements View.OnClickList
 
             case R.id.radio_little_hard:
                 if (checked) {
-                    mChoiceSoftness = ParticleManager.SOFTNESS_LITTEL_HARD;
+                    mChoiceSoftness = ParticleManager.SOFTNESS_LITTLE_HARD;
                 }
                 break;
 

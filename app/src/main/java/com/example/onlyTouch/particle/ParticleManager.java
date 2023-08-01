@@ -19,6 +19,7 @@ import com.google.fpl.liquidfun.World;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -45,9 +46,9 @@ public class ParticleManager {
 
     // パーティクルの柔らかさ
     private int mSoftness;
-    public static final int SOFTNESS_SOFT = 0;
+    public static final int SOFTNESS_VERY_SOFT = 0;
     public static final int SOFTNESS_NORMAL = 1;
-    public static final int SOFTNESS_LITTEL_HARD = 2;
+    public static final int SOFTNESS_LITTLE_HARD = 2;
 
     //---------------------------
     // パーティクルの柔らかさ決定因子
@@ -59,8 +60,15 @@ public class ParticleManager {
     //---------------
     // リソースID
     //---------------
-    public static final int TEXTURE_ID = R.drawable.e_cat_kinchaku_1;
-    public static final int POLYGON_XML_ID = R.xml.e_cat_kinchaku_1;
+    public static final int PARTICLE_TEXTURE_RES = R.drawable.e_cat_kinchaku_1;
+    private static final Map<Integer, Integer> mSoftnessPolygonXML = new HashMap<>();
+    static {
+        mSoftnessPolygonXML.put(SOFTNESS_VERY_SOFT,     R.xml.e_cat_kinchaku_very_soft);
+        mSoftnessPolygonXML.put(SOFTNESS_NORMAL,        R.xml.e_cat_kinchaku_normal);
+        mSoftnessPolygonXML.put(SOFTNESS_LITTLE_HARD,   R.xml.e_cat_kinchaku_little_hard);
+    }
+
+
     // 生成済みテクスチャ
     private final HashMap<Integer, Integer> mMapResourceTexture;
 
@@ -122,7 +130,7 @@ public class ParticleManager {
         // パーティクルシステムをデフォルトで設定
         setParticleSystem();
         // ポリゴンリストデータ管理クラス
-        mPolygonListManage = new PolygonXmlDataManager(glSurfaceView.getContext(), ParticleManager.POLYGON_XML_ID, ParticleManager.TEXTURE_ID);
+        mPolygonListManage = new PolygonXmlDataManager(glSurfaceView.getContext(), mSoftnessPolygonXML.get(mSoftness), ParticleManager.PARTICLE_TEXTURE_RES);
     }
 
     /*
@@ -226,7 +234,8 @@ public class ParticleManager {
         particleGroupDef.setLifetime(0);
 
         // PolygonXMLデータから形状情報を取得
-        PolygonXmlDataManager.PolygonParseData polygonXmlData = mPolygonListManage.parsePoligonXmlShapes(mGLSurfaceView.getContext(), ParticleManager.POLYGON_XML_ID);
+        int polygonXml = mSoftnessPolygonXML.get( mSoftness );
+        PolygonXmlDataManager.PolygonParseData polygonXmlData = mPolygonListManage.parsePoligonXmlShapes(mGLSurfaceView.getContext(), polygonXml);
         // 形状設定
         particleGroupDef.setPolygonShapesFromVertexList(polygonXmlData.mCoordinateBuff, polygonXmlData.mVertexeNumBuff, polygonXmlData.mShapeNum);
 
@@ -276,7 +285,7 @@ public class ParticleManager {
         // パーティクル情報を保持
         //-----------------------
         // テクスチャ生成
-        mTextureId = getTexture(gl, ParticleManager.TEXTURE_ID);
+        mTextureId = getTexture(gl, ParticleManager.PARTICLE_TEXTURE_RES);
 
         // 境界パーティクル保持情報を初期化
         initBorderParticle(allParticleLine);
@@ -722,7 +731,7 @@ public class ParticleManager {
             }
         }
 
-        // 上下ラインどちらかでもなければ、true(上下端とみなす)を返す
+        // 上下ラインどちらかにもなければ、true(上下端とみなす)を返す
         return ( noneTop || noneBottom );
     }
 
@@ -822,7 +831,7 @@ public class ParticleManager {
 
         // 指定に応じて、パラメータを設定
         switch (softness) {
-            case SOFTNESS_SOFT:
+            case SOFTNESS_VERY_SOFT:
                 radius = SOFT_RADIUS;
                 dencity = SOFT_DENCITY;
                 elasticStrength = SOFT_ELASTIC_STRENGTH;
@@ -834,7 +843,7 @@ public class ParticleManager {
                 elasticStrength = DEFAULT_ELASTIC_STRENGTH;
                 break;
 
-            case SOFTNESS_LITTEL_HARD:
+            case SOFTNESS_LITTLE_HARD:
                 radius = LITTLE_HARD_RADIUS;
                 dencity = LITTLE_HARD_DENCITY;
                 elasticStrength = LITTLE_HARD_ELASTIC_STRENGTH;
