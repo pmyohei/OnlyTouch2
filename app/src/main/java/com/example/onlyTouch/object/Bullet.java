@@ -19,7 +19,7 @@ public class Bullet {
     // 定数
     //-----------------
     // レンダリングのテクスチャリソースID
-    public static final int TEXTURE_RESOUCE_ID = R.drawable.texture_bullet_color;
+    public static final int TEXTURE_RESOUCE_ID = R.drawable.texture_bullet;
     // 弾半径
     private final float BULLET_RADIUS = 0.4f;
 
