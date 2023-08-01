@@ -4,6 +4,7 @@ import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -240,6 +241,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onDrawFrame(GL10 gl) {
+
         //--------------------
         // フレーム描画初期化処理
         //--------------------

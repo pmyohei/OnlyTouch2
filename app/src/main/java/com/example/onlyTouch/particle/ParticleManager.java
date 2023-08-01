@@ -63,6 +63,7 @@ public class ParticleManager {
     public static final int PARTICLE_TEXTURE_RES = R.drawable.e_cat_kinchaku_1;
     private static final Map<Integer, Integer> mSoftnessPolygonXML = new HashMap<>();
     static {
+        // 柔らかさとポリゴンxmlの対応
         mSoftnessPolygonXML.put(SOFTNESS_VERY_SOFT,     R.xml.e_cat_kinchaku_very_soft);
         mSoftnessPolygonXML.put(SOFTNESS_NORMAL,        R.xml.e_cat_kinchaku_normal);
         mSoftnessPolygonXML.put(SOFTNESS_LITTLE_HARD,   R.xml.e_cat_kinchaku_little_hard);
