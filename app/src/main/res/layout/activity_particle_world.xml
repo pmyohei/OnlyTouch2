@@ -142,6 +142,7 @@
             android:layout_marginTop="0dp"
             android:paddingStart="20dp"
             android:paddingBottom="14dp"
+            android:alpha="0.8"
             app:layout_constraintTop_toBottomOf="@id/root_explanation"
             app:layout_constraintStart_toStartOf="parent">
 
