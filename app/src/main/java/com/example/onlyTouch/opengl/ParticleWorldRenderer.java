@@ -184,12 +184,6 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         PolygonShape shape = new PolygonShape();
         shape.setAsBox(width, height, center.getX(), center.getY(), 0);    // para 3,4：ローカル座標におけるボックスの中心
 
-//        if( angle != 0 ){
-//            shape.setAsBox(width, height, width/2, height/2, 0);    // para 3,4：ローカル座標におけるボックスの中心
-//        } else {
-//            shape.setAsBox(width, height, 0, 0, 0);    // para 3,4：ローカル座標におけるボックスの中心
-//        }
-
         // 生成
         final float DENSITY = 10f;
         Body body = mWorld.createBody(bodyDef);
