@@ -30,4 +30,15 @@
     <string name="dialog_change_gravity_nothing">No Gravity</string>
     <string name="dialog_change_gravity_drop">Drop</string>
 
+
+
+    <!-- Admod（アプリID） -->
+    <string name="admob_app_id">ca-app-pub-8046295810838892~2391315578</string>
+
+    <!-- リリース時とテスト時で切り替える -->
+    <!--  テストID（バナー広告）  -->
+    <string name="admob_unit_id_test">ca-app-pub-3940256099942544/6300978111</string>
+    <!-- リリース用 -->
+    <string name="admob_unit_id">ca-app-pub-8046295810838892/9363918033</string>
+
 </resources>

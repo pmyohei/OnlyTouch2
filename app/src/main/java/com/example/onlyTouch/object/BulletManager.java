@@ -1,8 +1,9 @@
 package com.example.onlyTouch.object;
 
 import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.view.MotionEvent;
+
+import androidx.annotation.RequiresApi;
 
 import com.example.onlyTouch.convert.Conversion;
 import com.example.onlyTouch.opengl.ParticleGLSurfaceView;

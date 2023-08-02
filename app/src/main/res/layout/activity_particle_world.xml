@@ -9,22 +9,22 @@
 
     <!-- フレーム1 -->
     <!-- 物理空間 -->
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/gl_view_root"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- フレーム2 -->
     <!-- 画面下部UI -->
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom">
 
         <!-- 左：各種操作メニューの説明  -->
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/root_explanation"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -154,9 +154,9 @@
                 app:layout_constraintStart_toEndOf="@+id/explanation_home_icon"
                 app:layout_constraintTop_toTopOf="@+id/explanation_home_icon" />
 
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/touch_message"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -199,11 +199,11 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/text_message" />
 
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
 
         <!-- 右：操作アイコン -->
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/cl_menu"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -211,7 +211,7 @@
             app:layout_constraintEnd_toEndOf="parent">
 
             <!-- 展開後メニュー -->
-            <android.support.constraint.ConstraintLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/cl_menu_expanded"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -273,10 +273,10 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/ib_center" />
 
-            </android.support.constraint.ConstraintLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <!-- 展開前メニュー -->
-            <android.support.constraint.ConstraintLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/cl_menu_collapsed"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -297,8 +297,8 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-            </android.support.constraint.ConstraintLayout>
-        </android.support.constraint.ConstraintLayout>
-    </android.support.constraint.ConstraintLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>

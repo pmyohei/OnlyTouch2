@@ -3,7 +3,7 @@ package com.example.onlyTouch.opengl;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 import android.view.MotionEvent;
 import android.view.View;
 
