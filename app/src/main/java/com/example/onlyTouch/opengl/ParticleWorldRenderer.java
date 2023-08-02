@@ -15,6 +15,7 @@ import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.BodyDef;
 import com.google.fpl.liquidfun.BodyType;
 import com.google.fpl.liquidfun.PolygonShape;
+import com.google.fpl.liquidfun.Vec2;
 import com.google.fpl.liquidfun.World;
 import com.google.fpl.liquidfun.liquidfun;
 
@@ -170,7 +171,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     /*
      * 四角形Bodyの生成
      */
-    public Body createBoxBody(float width, float height, float posx, float posy, float angle, BodyType type) {
+    public Body createBoxBody(float width, float height, Vec2 pos, Vec2 center, BodyType type) {
 
         //----------------
         // Body生成
@@ -178,10 +179,17 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // 定義
         BodyDef bodyDef = new BodyDef();
         bodyDef.setType(type);
-        bodyDef.setPosition(posx, posy);
+        bodyDef.setPosition(pos.getX(), pos.getY());
         // 形状
         PolygonShape shape = new PolygonShape();
-        shape.setAsBox(width, height, 0, 0, angle);    // para 3,4：ボックスの中心
+        shape.setAsBox(width, height, center.getX(), center.getY(), 0);    // para 3,4：ローカル座標におけるボックスの中心
+
+//        if( angle != 0 ){
+//            shape.setAsBox(width, height, width/2, height/2, 0);    // para 3,4：ローカル座標におけるボックスの中心
+//        } else {
+//            shape.setAsBox(width, height, 0, 0, 0);    // para 3,4：ローカル座標におけるボックスの中心
+//        }
+
         // 生成
         final float DENSITY = 10f;
         Body body = mWorld.createBody(bodyDef);
@@ -353,13 +361,18 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         float menuWidth = (worldCollapsedMenuBottomRight[0] - worldCollapsedMenuTopLeft[0]) / 2;
         float collapsedHeight = (worldCollapsedMenuTopLeft[1] - worldCollapsedMenuBottomRight[1]) / 2;
 
-        // menu折りたたみ位置
-        float collapsedMenuPosRight = worldCollapsedMenuTopLeft[0] + menuWidth;
+        // menuサイズ：半分
+        float menuHalfWidth = menuWidth / 2f;
+        float collapsedHalfHeight = collapsedHeight / 2f;
+
+        // 位置・ボックスの中心
+        Vec2 pos = new Vec2( worldCollapsedMenuTopLeft[0] + menuHalfWidth, mWorldPosMin[1] + collapsedHalfHeight );
+        Vec2 center = new Vec2( menuHalfWidth, collapsedHalfHeight );
 
         //-------------------------------
         // 生成
         //-------------------------------
-        createBoxBody(menuWidth, collapsedHeight, collapsedMenuPosRight, worldCollapsedMenuBottomRight[1] + collapsedHeight * 2, 0, BodyType.staticBody);
+        createBoxBody(menuWidth, collapsedHeight, pos, center, BodyType.staticBody);
     }
 
     /*
@@ -381,14 +394,23 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //---------------
         // 壁の生成
         //---------------
+        Vec2 boxCenter = new Vec2( 0, 0 );
+        // サイズ：短い方
+        final float WALL_SIZE = 1f;
+        // 位置
+        Vec2 topPos    = new Vec2( mWorldPosMid[0], mWorldPosMax[1] );
+        Vec2 leftPos   = new Vec2( mWorldPosMin[0] - WALL_SIZE, mWorldPosMid[1] );
+        Vec2 rightPos  = new Vec2( mWorldPosMax[0] + WALL_SIZE, mWorldPosMid[1] );
+        Vec2 bottomPos = new Vec2( bottom_posX, mWorldPosMin[1] - WALL_SIZE );
+
         // 天井
-        createBoxBody(mWorldPosMax[0], 1, mWorldPosMid[0], mWorldPosMax[1], 0, BodyType.staticBody);
+        createBoxBody(mWorldPosMax[0], WALL_SIZE, topPos, boxCenter, BodyType.staticBody);
         // 左
-        createBoxBody(1, mWorldPosMax[1], mWorldPosMin[0] - 1, mWorldPosMid[1], 0, BodyType.staticBody);
+        createBoxBody(WALL_SIZE, mWorldPosMax[1], leftPos, boxCenter, BodyType.staticBody);
         // 右
-        createBoxBody(1, mWorldPosMax[1], mWorldPosMax[0] + 1, mWorldPosMid[1], 0, BodyType.staticBody);
+        createBoxBody(WALL_SIZE, mWorldPosMax[1], rightPos, boxCenter, BodyType.staticBody);
         // 床(メニューの存在を考慮)
-        createBoxBody(bottom_width, 1, bottom_posX, mWorldPosMin[1] - 1, 0, BodyType.staticBody);
+        createBoxBody(bottom_width, WALL_SIZE, bottomPos, boxCenter, BodyType.staticBody);
     }
 
     /*
@@ -468,8 +490,12 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
                 // サイズ
                 final float OVERLAP_BODY_WIDTH = 1.4f;
                 final float OVERLAP_BODY_HEIGHT = 1.4f;
+
                 // オーバーラップ物体を生成
-                mOverlapBody = createBoxBody(OVERLAP_BODY_WIDTH, OVERLAP_BODY_HEIGHT, screenMiddlePosX, screenMiddlePosY, 0, BodyType.staticBody);
+                Vec2 pos = new Vec2( screenMiddlePosX, screenMiddlePosY );
+                Vec2 center = new Vec2( OVERLAP_BODY_WIDTH / 2, OVERLAP_BODY_HEIGHT / 2 );
+                mOverlapBody = createBoxBody(OVERLAP_BODY_WIDTH, OVERLAP_BODY_HEIGHT, pos, center, BodyType.staticBody);
+
                 // オーバーラップ物体ありに更新
                 mParticleGenerationFlow = PARTICLE_GENERATION_FLOW_OVERLAP;
 
