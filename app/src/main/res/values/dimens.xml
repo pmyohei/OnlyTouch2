@@ -7,7 +7,9 @@
     <dimen name="menu_explanation_margin">6dp</dimen>
     <dimen name="menu_explanation_line_spacing">12dp</dimen>
     <dimen name="menu_explanation_alpha">0.5</dimen>
-    <dimen name="menu_explanation_tx">16sp</dimen>
+    <dimen name="menu_explanation_max_tx">24sp</dimen>
+    <dimen name="menu_explanation_min_tx">14sp</dimen>
+    <dimen name="menu_explanation_tx_height">32dp</dimen>
 
     <!--  dialog -->
     <dimen name="dialog_width">240dp</dimen>

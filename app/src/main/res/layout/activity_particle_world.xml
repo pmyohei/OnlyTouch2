@@ -26,12 +26,13 @@
         <!-- 左：各種操作メニューの説明  -->
         <android.support.constraint.ConstraintLayout
             android:id="@+id/root_explanation"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:alpha="0.8"
             android:paddingStart="16dp"
-            android:visibility="invisible"
+            android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@+id/touch_message"
+            app:layout_constraintEnd_toStartOf="@+id/cl_menu"
             app:layout_constraintStart_toStartOf="parent">
 
             <ImageView
@@ -44,12 +45,16 @@
 
             <TextView
                 android:id="@+id/explanation_gravity"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/menu_explanation_tx_height"
                 android:layout_marginStart="@dimen/menu_explanation_margin"
                 android:text="@string/fluid_bottom_menu_contents_gravity"
-                android:textSize="@dimen/menu_explanation_tx"
+                app:autoSizeMaxTextSize="@dimen/menu_explanation_max_tx"
+                app:autoSizeMinTextSize="@dimen/menu_explanation_min_tx"
+                app:autoSizeStepGranularity="2sp"
+                app:autoSizeTextType="uniform"
                 app:layout_constraintBottom_toBottomOf="@+id/explanation_gravity_icon"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/explanation_gravity_icon"
                 app:layout_constraintTop_toTopOf="@+id/explanation_gravity_icon" />
 
@@ -64,12 +69,16 @@
 
             <TextView
                 android:id="@+id/explanation_soft"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/menu_explanation_tx_height"
                 android:layout_marginStart="@dimen/menu_explanation_margin"
                 android:text="@string/fluid_bottom_menu_contents_soft"
-                android:textSize="@dimen/menu_explanation_tx"
+                app:autoSizeMaxTextSize="@dimen/menu_explanation_max_tx"
+                app:autoSizeMinTextSize="@dimen/menu_explanation_min_tx"
+                app:autoSizeStepGranularity="2sp"
+                app:autoSizeTextType="uniform"
                 app:layout_constraintBottom_toBottomOf="@+id/explanation_soft_icon"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/explanation_soft_icon"
                 app:layout_constraintTop_toTopOf="@+id/explanation_soft_icon" />
 
@@ -84,12 +93,16 @@
 
             <TextView
                 android:id="@+id/explanation_bullet"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/menu_explanation_tx_height"
                 android:layout_marginStart="@dimen/menu_explanation_margin"
                 android:text="@string/fluid_bottom_menu_contents_bullet"
-                android:textSize="@dimen/menu_explanation_tx"
+                app:autoSizeMaxTextSize="@dimen/menu_explanation_max_tx"
+                app:autoSizeMinTextSize="@dimen/menu_explanation_min_tx"
+                app:autoSizeStepGranularity="2sp"
+                app:autoSizeTextType="uniform"
                 app:layout_constraintBottom_toBottomOf="@+id/explanation_bullet_icon"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/explanation_bullet_icon"
                 app:layout_constraintTop_toTopOf="@+id/explanation_bullet_icon" />
 
@@ -104,12 +117,16 @@
 
             <TextView
                 android:id="@+id/explanation_center"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/menu_explanation_tx_height"
                 android:layout_marginStart="@dimen/menu_explanation_margin"
                 android:text="@string/fluid_bottom_menu_contents_center"
-                android:textSize="@dimen/menu_explanation_tx"
+                app:autoSizeMaxTextSize="@dimen/menu_explanation_max_tx"
+                app:autoSizeMinTextSize="@dimen/menu_explanation_min_tx"
+                app:autoSizeStepGranularity="2sp"
+                app:autoSizeTextType="uniform"
                 app:layout_constraintBottom_toBottomOf="@+id/explanation_center_icon"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/explanation_center_icon"
                 app:layout_constraintTop_toTopOf="@+id/explanation_center_icon" />
 
@@ -124,12 +141,16 @@
 
             <TextView
                 android:id="@+id/explanation_home"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/menu_explanation_tx_height"
                 android:layout_marginStart="@dimen/menu_explanation_margin"
                 android:text="@string/fluid_bottom_menu_contents_home"
-                android:textSize="@dimen/menu_explanation_tx"
+                app:autoSizeMaxTextSize="@dimen/menu_explanation_max_tx"
+                app:autoSizeMinTextSize="@dimen/menu_explanation_min_tx"
+                app:autoSizeStepGranularity="2sp"
+                app:autoSizeTextType="uniform"
                 app:layout_constraintBottom_toBottomOf="@+id/explanation_home_icon"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/explanation_home_icon"
                 app:layout_constraintTop_toTopOf="@+id/explanation_home_icon" />
 
@@ -137,36 +158,48 @@
 
         <android.support.constraint.ConstraintLayout
             android:id="@+id/touch_message"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
-            android:paddingStart="20dp"
-            android:paddingBottom="14dp"
             android:alpha="0.8"
-            app:layout_constraintTop_toBottomOf="@id/root_explanation"
-            app:layout_constraintStart_toStartOf="parent">
+            android:paddingStart="20dp"
+            android:paddingEnd="100dp"
+            android:paddingBottom="14dp"
+            app:layout_constraintEnd_toStartOf="@+id/cl_menu"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/root_explanation">
 
             <TextView
                 android:id="@+id/text_message"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/fluid_bottom_title"
-                android:textSize="16sp"
-                android:textStyle="bold"
+                android:layout_width="match_parent"
+                android:layout_height="32dp"
                 android:layout_marginTop="20dp"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
+                android:gravity="bottom"
+                android:text="@string/fluid_bottom_title"
+                android:textStyle="bold"
+                app:autoSizeMaxTextSize="38sp"
+                app:autoSizeMinTextSize="14sp"
+                app:autoSizeStepGranularity="2sp"
+                app:autoSizeTextType="uniform"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/text_sub_message"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/fluid_bottom_message"
-                android:textSize="16sp"
+                android:layout_width="match_parent"
+                android:layout_height="32dp"
+                android:layout_marginTop="4dp"
                 android:layout_marginBottom="8dp"
-                app:layout_constraintTop_toBottomOf="@+id/text_message"
+                android:gravity="bottom"
+                android:text="@string/fluid_bottom_message"
+                app:autoSizeMaxTextSize="38sp"
+                app:autoSizeMinTextSize="14sp"
+                app:autoSizeStepGranularity="2sp"
+                app:autoSizeTextType="uniform"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
+                app:layout_constraintTop_toBottomOf="@+id/text_message" />
 
         </android.support.constraint.ConstraintLayout>
 
