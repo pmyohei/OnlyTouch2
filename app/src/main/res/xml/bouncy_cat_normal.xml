@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- created with http://www.physicseditor.de -->
 <bodydef version="1.0">
     <bodies numBodies="1">
 
@@ -14,7 +13,7 @@
                 filter_maskBits="65535"
                 isSensor="false"
                 type="POLYGON"
-                numPolygons="10"
+                numPolygons="9"
                 >
 
 
@@ -74,23 +73,15 @@
 
                 </polygon>
 
-                <polygon numVertexes="3">
-
-                    <vertex x="-75.0000" y="7.0000" />
-
-                    <vertex x="-64.0000" y="38.0000" />
-
-                    <vertex x="-74.0000" y="35.0000" />
-
-                </polygon>
-
-                <polygon numVertexes="3">
+                <polygon numVertexes="4">
 
                     <vertex x="-75.0000" y="7.0000" />
 
                     <vertex x="-47.0000" y="46.0000" />
 
-                    <vertex x="-64.0000" y="38.0000" />
+                    <vertex x="-64.0000" y="43.0000" />
+
+                    <vertex x="-74.0000" y="35.0000" />
 
                 </polygon>
 
