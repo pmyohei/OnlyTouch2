@@ -76,7 +76,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     // パーティクル
     //----------------
     private final ParticleManager mParticleManager;
-    private int mParticleGenerationFlow;
+    private int mParticleCreateFlow;
 
     // パーティクル生成フロー
     public static final int PARTICLE_GENERATION_FLOW_NOTHING = 0;
@@ -145,7 +145,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //-----------------
         mParticleManager = new ParticleManager( glSurfaceView, mWorld );
         // パーティクル生成状態を「生成」とし、新規生成されるようにする
-        mParticleGenerationFlow = PARTICLE_GENERATION_FLOW_CREATE;
+        mParticleCreateFlow = PARTICLE_GENERATION_FLOW_CREATE;
 
         // 適切な粒子反復を算出
         mParticleIterations = liquidfun.b2CalculateParticleIterations(gravity, ParticleManager.DEFAULT_RADIUS, TIME_STEP);
@@ -271,14 +271,17 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         //------------------
         // 物体関連
         //------------------
-        // 弾 !パーティクルよりも先に描画すること（パーティクル内部に弾が描画されることがあるため）
-        mBulletManager.bulletManage(gl, mParticleManager);
+        // パーティクル生成フローの途中でなければ、銃弾処理を行う
+        if( mParticleCreateFlow == PARTICLE_GENERATION_FLOW_NOTHING ){
+            // 弾 !パーティクルよりも先に描画すること（パーティクル内部に弾が描画されることがあるため）
+            mBulletManager.bulletManage(gl, mParticleManager);
+        }
 
         //------------------
         // パーティクル
         //------------------
         // パーティクル再生成制御
-        generationParticleFlow(gl);
+        createParticleFlow(gl);
         // パーティクル描画更新
         mParticleManager.draw(gl);
 
@@ -438,12 +441,12 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
     /*
      * パーティクル生成フロー制御
      */
-    private void generationParticleFlow(GL10 gl) {
+    private void createParticleFlow(GL10 gl) {
 
         //------------------------
         // パーティクル生成シーケンス
         //------------------------
-        switch (mParticleGenerationFlow) {
+        switch (mParticleCreateFlow) {
 
             //-----------------------
             // 処理なし
@@ -459,7 +462,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
                 mParticleManager.destroyParticle();
 
                 // 再生成のシーケンスを生成に更新(次の周期で生成するため)
-                mParticleGenerationFlow = PARTICLE_GENERATION_FLOW_CREATE;
+                mParticleCreateFlow = PARTICLE_GENERATION_FLOW_CREATE;
 
                 break;
 
@@ -491,7 +494,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
                 mOverlapBody = createBoxBody(OVERLAP_BODY_WIDTH, OVERLAP_BODY_HEIGHT, pos, center, BodyType.staticBody);
 
                 // オーバーラップ物体ありに更新
-                mParticleGenerationFlow = PARTICLE_GENERATION_FLOW_OVERLAP;
+                mParticleCreateFlow = PARTICLE_GENERATION_FLOW_OVERLAP;
 
                 break;
 
@@ -503,7 +506,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
                 mWorld.destroyBody(mOverlapBody);
 
                 // オーバーラップシーケンス終了。重複物体を削除した状態。
-                mParticleGenerationFlow = PARTICLE_GENERATION_FLOW_NOTHING;
+                mParticleCreateFlow = PARTICLE_GENERATION_FLOW_NOTHING;
 
                 break;
 
@@ -633,7 +636,7 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
      */
     public void regenerationAtCenter(){
         // 状態を更新し、次の周期で再生成されるようにする
-        mParticleGenerationFlow = PARTICLE_GENERATION_FLOW_DELETE;
+        mParticleCreateFlow = PARTICLE_GENERATION_FLOW_DELETE;
     }
 
     /*
