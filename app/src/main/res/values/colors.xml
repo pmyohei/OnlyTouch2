@@ -31,22 +31,4 @@
     <color name="radio_button_selected_bg">#eb6c9f</color>
     <color name="radio_button_not_selected_bg">#F7CAC9</color>
 
-
-
-
-    <!-- 削除予定 -->
-    <color name="menu_create">#FEEEDC</color>
-    <color name="menu_picture">#BDE1DA</color>
-    <color name="menu_collection">#F5B5A7</color>
-    <color name="menu_play">#d3d5ec</color>
-    <color name="menu_information">#FFFFFF</color>
-
-    <color name="menu_create_dark">#B9FCC78C</color>
-    <color name="menu_picture_dark">#98D0C5</color>
-    <color name="menu_collection_dark">#F0927C</color>
-    <color name="menu_play_dark">#B9BCE1</color>
-
-    <color name="menu_text">#FEEEDC</color>
-
-
 </resources>
