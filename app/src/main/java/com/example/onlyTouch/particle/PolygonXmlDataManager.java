@@ -30,25 +30,43 @@ public class PolygonXmlDataManager {
     //   PoligonXML から解析した図形情報
     //-----------------------------
     public class PolygonParseData {
+        //-----------------------------
+        // xml解析データ
+        //-----------------------------
         public ByteBuffer mCoordinateBuff;     // 図形の座標バッファ
         public ByteBuffer mVertexeNumBuff;     // 図形毎の頂点数
-        public int        mShapeNum;           // 図形の数
+        public int mShapeNum;           // 図形の数
 
-        public PolygonParseData(ByteBuffer coordinateBuff, ByteBuffer vertexeNumBuff, int shapeNum ){
+        //-----------------------------
+        // UV座標
+        //   解析した図形に対応するUV座標データ
+        //-----------------------------
+        public float mUVMinX;               // xmlの座標上で、最小の値をUV座標に変換したもの(x座標)
+        public float mUVMaxY;               // xmlの座標上で、最大の値をUV座標に変換したもの(y座標)
+        public float mUVMaxWidth;           // xmlの座標上で、最大widthをUV座標の単位にしたもの
+        public float mUVMaxHeight;          // xmlの座標上で、最大heightをUV座標の単位にしたもの
+
+        public PolygonParseData(ByteBuffer coordinateBuff, ByteBuffer vertexeNumBuff, int shapeNum) {
+            // xml解析データ
             mCoordinateBuff = coordinateBuff;
             mVertexeNumBuff = vertexeNumBuff;
             mShapeNum = shapeNum;
+
+            // 初期値はUV座標全体に画像がある場合とする
+            mUVMinX = 0.0f;
+            mUVMaxY = 1.0f;
+            mUVMaxWidth = 1;
+            mUVMaxHeight = 1;
         }
     }
 
     //-----------------------------
-    // UV座標
-    //   解析した図形に対応するUV座標データ
+    // 図形頂点の最大値／最小値 格納位置
     //-----------------------------
-    private float mUVMinX;           // xmlの座標上で、最小の値をUV座標に変換したもの(x座標)
-    private float mUVMaxY;           // xmlの座標上で、最大の値をUV座標に変換したもの(y座標)
-    private float mUVMaxWidth;          // xmlの座標上で、最大widthをUV座標の単位にしたもの
-    private float mUVMaxHeight;         // xmlの座標上で、最大heightをUV座標の単位にしたもの
+    private final int VERTEX_POS_MIN_X = 0;
+    private final int VERTEX_POS_MIN_Y = 1;
+    private final int VERTEX_POS_MAX_X = 2;
+    private final int VERTEX_POS_MAX_Y = 3;
 
     // 座標縮小値
     // !この値が大きい程、パーティクルも大きくなる
@@ -61,15 +79,7 @@ public class PolygonXmlDataManager {
     /*
      * コンストラクタ
      */
-    public PolygonXmlDataManager( Context context, int polygonXml, int textureID ){
-        //--------------
-        // UV座標
-        //--------------
-        // 初期値はUV座標全体に画像がある場合とする
-        mUVMinX = 0.0f;
-        mUVMaxY = 1.0f;
-        mUVMaxWidth = 1;
-        mUVMaxHeight = 1;
+    public PolygonXmlDataManager(Context context, int polygonXml, int textureID) {
 
         //--------------
         // リスト
@@ -78,15 +88,15 @@ public class PolygonXmlDataManager {
         mMapPolygon = new HashMap<Integer, PolygonParseData>();
 
         // テクスチャ情報の設定
-        setTextureData( context, textureID );
+        setTextureData(context, textureID);
         // 解析処理
-        parsePoligonXmlShapes( context, polygonXml );
+        parsePoligonXmlShapes(context, polygonXml);
     }
 
     /*
      *　テクスチャサイズ情報の設定
      */
-    private void setTextureData( Context context, int textureID ){
+    private void setTextureData(Context context, int textureID) {
 
         // 指定リソースのBitmapオブジェクトを生成
         Resources resource = context.getResources();
@@ -113,7 +123,7 @@ public class PolygonXmlDataManager {
      *　　指定されたPoligonXMLから図形情報を解析。
      * 　 解析した図形データをParticleGroupDefにパーティクルの形状として設定する。
      */
-    public PolygonParseData parsePoligonXmlShapes(Context context, int polygonXml){
+    public PolygonParseData parsePoligonXmlShapes(Context context, int polygonXml) {
 
         // 解析済みであれば、解析結果を返して終了
         PolygonParseData polygonXmlData = mMapPolygon.get(polygonXml);
@@ -129,13 +139,13 @@ public class PolygonXmlDataManager {
         int shapeNum = -1;
 
         // 解析対象のタグ
-        final String TAG_FIXTURE      = "fixture";
-        final String TAG_POLYGON      = "polygon";
-        final String TAG_VERTEX       = "vertex";
+        final String TAG_FIXTURE = "fixture";
+        final String TAG_POLYGON = "polygon";
+        final String TAG_VERTEX  = "vertex";
         final String ATTR_NUMPOLYGONS = "numPolygons";
         final String ATTR_NUMVERTEXES = "numVertexes";
-        final String ATTR_VERTEX_X    = "x";
-        final String ATTR_VERTEX_Y    = "y";
+        final String ATTR_VERTEX_X = "x";
+        final String ATTR_VERTEX_Y = "y";
 
         // 解析処理
         //!エラー対応不十分
@@ -155,19 +165,19 @@ public class PolygonXmlDataManager {
                 //---------------
                 // 開始タグをみつけるまで、なにもしない
                 eventType = parser.next();
-                if(eventType != XmlPullParser.START_TAG) {
+                if (eventType != XmlPullParser.START_TAG) {
                     continue;
                 }
 
                 //---------------------------
                 // fixtureタグ：図形数情報の取得
                 //---------------------------
-                if( parser.getName().equals( TAG_FIXTURE ) ){
+                if (parser.getName().equals(TAG_FIXTURE)) {
                     // 図形数の取得
                     int attrIntValue = parser.getAttributeIntValue(null, ATTR_NUMPOLYGONS, -1);
 
                     // 取得に失敗した場合は、パース終了
-                    if( attrIntValue == -1 ){
+                    if (attrIntValue == -1) {
                         return null;
                     }
 
@@ -179,10 +189,10 @@ public class PolygonXmlDataManager {
                 //-----------------------------------
                 // polygonタグ：各図形の頂点数情報の取得
                 //-----------------------------------
-                if( parser.getName().equals(TAG_POLYGON) ) {
+                if (parser.getName().equals(TAG_POLYGON)) {
                     // 図形の頂点数の取得
                     int attrIntValue = parser.getAttributeIntValue(null, ATTR_NUMVERTEXES, -1);
-                    if( attrIntValue == -1 ){
+                    if (attrIntValue == -1) {
                         // 取得に失敗した場合は、パース終了
                         return null;
                     }
@@ -195,12 +205,12 @@ public class PolygonXmlDataManager {
                 //---------------------------
                 // vertexタグ：頂点座標情報の取得
                 //---------------------------
-                if( parser.getName().equals( TAG_VERTEX ) ) {
+                if (parser.getName().equals(TAG_VERTEX)) {
                     //--------------
                     // x座標
                     //--------------
                     float attrFloatValue = parser.getAttributeFloatValue(null, ATTR_VERTEX_X, 0xFFFF);
-                    if( attrFloatValue == 0xFFFF ){
+                    if (attrFloatValue == 0xFFFF) {
                         // 取得に失敗した場合は、パース終了
                         return null;
                     }
@@ -212,7 +222,7 @@ public class PolygonXmlDataManager {
                     // y座標
                     //--------------
                     attrFloatValue = parser.getAttributeFloatValue(null, ATTR_VERTEX_Y, 0xFFFF);
-                    if( attrFloatValue == 0xFFFF ){
+                    if (attrFloatValue == 0xFFFF) {
                         // 取得に失敗した場合は、パース終了
                         return null;
                     }
@@ -226,9 +236,13 @@ public class PolygonXmlDataManager {
             Log.d("XmlPullParserSample", "Error");
         }
 
+        //------------------------
         // xml上の座標値を縮小する
+        //------------------------
+        // xmlの図形頂点情報から、最大値・最小値を取得
+        float[] vertexMixMax = getMinMaxVertexCoordinate(vertexCoordinateValue);
         //!xmlの座標値は間隔が広い（このままパーティクルグループを作成すると大きいサイズとなってしまう）ため、一定比率縮小する
-        downsizingVertexCoordinate( vertexCoordinateValue );
+        downsizingVertexCoordinate(vertexCoordinateValue, vertexMixMax);
 
         //----------------------
         // ByteBuffer 格納
@@ -238,23 +252,25 @@ public class PolygonXmlDataManager {
         // ！リトルエンディアン指定すること！
         ByteBuffer vertexes = ByteBuffer.allocateDirect(Float.SIZE * vertexCoordinateValue.size());
         vertexes.order(ByteOrder.LITTLE_ENDIAN);
-        for( Float pos: vertexCoordinateValue ){
+        for (Float pos : vertexCoordinateValue) {
             vertexes.putFloat(pos);
         }
 
         // 各図形の頂点数をバイトバッファに格納
         ByteBuffer vertexesNum = ByteBuffer.allocateDirect(Integer.SIZE * vertexNumValue.size());
         vertexesNum.order(ByteOrder.LITTLE_ENDIAN);
-        for( Integer num: vertexNumValue ){
+        for (Integer num : vertexNumValue) {
             vertexesNum.putInt(num);
         }
 
         //----------------------
         // リストに保持
         //----------------------
-        // 生成済みとする
-        PolygonParseData newPolygonXmlData = new PolygonParseData( vertexes, vertexesNum, shapeNum );
-        mMapPolygon.put( polygonXml, newPolygonXmlData);
+        // 解析データを生成
+        PolygonParseData newPolygonXmlData = new PolygonParseData(vertexes, vertexesNum, shapeNum);
+        // UVデータを設定
+        setUVData( newPolygonXmlData, vertexMixMax );
+        mMapPolygon.put(polygonXml, newPolygonXmlData);
 
         return newPolygonXmlData;
     }
@@ -262,7 +278,7 @@ public class PolygonXmlDataManager {
     /*
      *　座標値の縮小
      */
-    private void downsizingVertexCoordinate(ArrayList<Float> vertexCoordinateValue ){
+    private float[] getMinMaxVertexCoordinate(ArrayList<Float> vertexCoordinateValue) {
 
         //-----------------------
         // 座標の最大値／最小値の算出
@@ -275,60 +291,82 @@ public class PolygonXmlDataManager {
 
         // 最大値と最小値の更新
         int num = vertexCoordinateValue.size();
-        for(int i = 2; i < num; i++){
+        for (int i = 2; i < num; i++) {
             float value = vertexCoordinateValue.get(i);
 
             // 座標内の最小値と最大値の更新
-            if( (i % 2) == 0 ){
+            if ((i % 2) == 0) {
                 // X座標
                 minX = (Math.min(value, minX));
                 maxX = (Math.max(value, maxX));
-            }else{
+            } else {
                 // Y座標
                 minY = (Math.min(value, minY));
                 maxY = (Math.max(value, maxY));
             }
         }
 
+        // 最大値・最小値を返す
+        float[] data = new float[4];
+        data[VERTEX_POS_MIN_X] = minX;
+        data[VERTEX_POS_MIN_Y] = minY;
+        data[VERTEX_POS_MAX_X] = maxX;
+        data[VERTEX_POS_MAX_Y] = maxY;
+
+        return data;
+    }
+
+    /*
+     *　座標値の縮小
+     */
+    private void downsizingVertexCoordinate(ArrayList<Float> vertexCoordinateValue, float[] vertexMixMax) {
+
         //--------------------
         // 図形の最大幅と最大高さ
         //--------------------
-        float polygonMaxWidth  = maxX - minX;
-        float polygonMaxHeight = maxY - minY;
+        float polygonMaxWidth = vertexMixMax[VERTEX_POS_MAX_X] - vertexMixMax[VERTEX_POS_MIN_X];
+        float polygonMaxHeight = vertexMixMax[VERTEX_POS_MAX_Y] - vertexMixMax[VERTEX_POS_MIN_Y];
 
         //--------------------
         // 座標値の縮小
         //--------------------
         // 縮小率の算出
-        float longerSide = Math.max( polygonMaxWidth, polygonMaxHeight );
-        float rate       = LEVELING_SHAPE_SIZE_VALUE / longerSide;
+        float longerSide = Math.max(polygonMaxWidth, polygonMaxHeight);
+        float rate = LEVELING_SHAPE_SIZE_VALUE / longerSide;
 
         // 座標を縮小する
-        for (int i = 0; i < num; i++){
+        int num = vertexCoordinateValue.size();
+        for (int i = 0; i < num; i++) {
             float value = vertexCoordinateValue.get(i);
 
-            if( (i % 2) == 0 ){
+            if ((i % 2) == 0) {
                 // X座標
                 vertexCoordinateValue.set(i, value * rate);
-            }else{
+            } else {
                 // Y座標
                 vertexCoordinateValue.set(i, value * rate);
             }
         }
+    }
+
+    /*
+     *　
+     */
+    private void setUVData( PolygonParseData polygonXmlData , float[] vertexMixMax ){
 
         //--------------------
         // UV座標
         //--------------------
         // 図形座標をUV座標に変換
-        float[] uvMinPos = convertUVPos(minX, minY);
-        float[] uvMaxPos = convertUVPos(maxX, maxY);
+        float[] uvMinPos = convertUVPos(vertexMixMax[VERTEX_POS_MIN_X], vertexMixMax[VERTEX_POS_MIN_Y]);
+        float[] uvMaxPos = convertUVPos(vertexMixMax[VERTEX_POS_MAX_X], vertexMixMax[VERTEX_POS_MAX_Y]);
 
         // 必要なデータを保持
-        mUVMinX = uvMinPos[0];
-        mUVMaxY = uvMaxPos[1];
+        polygonXmlData.mUVMinX = uvMinPos[0];
+        polygonXmlData.mUVMaxY = uvMaxPos[1];
         // UV座標上の最大幅・高さ
-        mUVMaxWidth = uvMaxPos[0] - uvMinPos[0];
-        mUVMaxHeight = uvMaxPos[1] - uvMinPos[1];
+        polygonXmlData.mUVMaxWidth = uvMaxPos[0] - uvMinPos[0];
+        polygonXmlData.mUVMaxHeight = uvMaxPos[1] - uvMinPos[1];
     }
 
     /*
@@ -342,22 +380,6 @@ public class PolygonXmlDataManager {
         uvPos[1] = (posY + mTexturePXHalfY) / mTexturePXHeight;
 
         return uvPos;
-    }
-
-    /*
-     * setter/getter
-     */
-    public float getUvMinX() {
-        return mUVMinX;
-    }
-    public float getUvMaxWidth() {
-        return mUVMaxWidth;
-    }
-    public float getUvMaxY() {
-        return mUVMaxY;
-    }
-    public float getUvMaxHeight() {
-        return mUVMaxHeight;
     }
 
 }

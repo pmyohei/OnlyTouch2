@@ -223,7 +223,7 @@ public class ParticleManager {
     /*
      * パーティクルグループ定義の設定
      */
-    private ParticleGroup createParticleGroup(float posX, float posY) {
+    private ParticleGroup createParticleGroup(float posX, float posY, PolygonXmlDataManager.PolygonParseData polygonXmlData) {
 
         //----------------------
         // ParticleGroup定義
@@ -234,14 +234,10 @@ public class ParticleManager {
         particleGroupDef.setPosition(posX, posY);
         particleGroupDef.setLifetime(0);
 
-        // PolygonXMLデータから形状情報を取得
-        int polygonXml = mSoftnessPolygonXML.get( mSoftness );
-        PolygonXmlDataManager.PolygonParseData polygonXmlData = mPolygonListManage.parsePoligonXmlShapes(mGLSurfaceView.getContext(), polygonXml);
         // 形状設定
         particleGroupDef.setPolygonShapesFromVertexList(polygonXmlData.mCoordinateBuff, polygonXmlData.mVertexeNumBuff, polygonXmlData.mShapeNum);
 
         // !エラー判定必要
-
 
         //----------------------
         // ParticleGroup生成
@@ -258,7 +254,11 @@ public class ParticleManager {
         //-----------------------------
         // パーティクルグループ生成
         //-----------------------------
-        mParticleGroup = createParticleGroup(posX, posY);
+        // PolygonXMLデータから形状情報を取得
+        int polygonXml = mSoftnessPolygonXML.get( mSoftness );
+        PolygonXmlDataManager.PolygonParseData polygonXmlData = mPolygonListManage.parsePoligonXmlShapes(mGLSurfaceView.getContext(), polygonXml);
+
+        mParticleGroup = createParticleGroup(posX, posY, polygonXmlData);
 
         //========================
         // ！粒子座標取得用！
@@ -277,9 +277,9 @@ public class ParticleManager {
         // 行単位のパーティクルバッファを生成
         ArrayList<ArrayList<Integer>> allParticleLine = generateParticleLineBuff(mParticleGroup);
         // OpenGLに渡す三角形グルーピングバッファをエンキュー
-        enqueRendererBuff(allParticleLine);
+        enqueRendererBuff( allParticleLine );
         // レンダリング用UVバッファを生成
-        generateUVRendererBuff();
+        generateUVRendererBuff( polygonXmlData );
 
         //-----------------------
         // パーティクル情報を保持
@@ -552,7 +552,7 @@ public class ParticleManager {
     /*
      * レンダリング用UVバッファの生成
      */
-    private void generateUVRendererBuff() {
+    private void generateUVRendererBuff( PolygonXmlDataManager.PolygonParseData polygonXmlData ) {
 
         //-------------------------------------------------
         // パーティクルグループ内の粒子で最小位置と最大位置を取得する
@@ -585,10 +585,10 @@ public class ParticleManager {
         // UV座標をバッファに格納
         //-------------------------------
         // UV座標の最大・最小・横幅・縦幅
-        final float minUvX = mPolygonListManage.getUvMinX();
-        final float maxUvY = mPolygonListManage.getUvMaxY();
-        final float UvMaxWidth = mPolygonListManage.getUvMaxWidth();
-        final float UvMaxHeight = mPolygonListManage.getUvMaxHeight();
+        final float minUvX = polygonXmlData.mUVMinX;
+        final float maxUvY = polygonXmlData.mUVMaxY;
+        final float UvMaxWidth = polygonXmlData.mUVMaxWidth;
+        final float UvMaxHeight = polygonXmlData.mUVMaxHeight;
 
         // 各パーティクル位置に対応するUV座標を計算し、リストに格納する
         ArrayList<Vec2> uvCoordinate = new ArrayList<>();
