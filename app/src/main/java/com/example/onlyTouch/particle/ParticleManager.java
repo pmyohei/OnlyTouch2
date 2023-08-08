@@ -82,8 +82,12 @@ public class ParticleManager {
     private final ParticleGLSurfaceView mGLSurfaceView;
     private final PolygonXmlDataManager mPolygonListManage;
     private int mTextureId;
-    private ParticleSystem mParticleSystem;
+//    private ParticleSystem mParticleSystem;
     private ParticleGroup mParticleGroup;
+
+    // 柔らかさとParticleSystemの対応
+    private final Map<Integer, ParticleSystem> mSoftnessParticleSystem = new HashMap<>();
+    private ParticleSystem mCurrentParticleSystem;
 
     //---------------------------
     // パーティクル
@@ -139,54 +143,15 @@ public class ParticleManager {
     /*
      * getter/setter
      */
-    public void setParticleSystem(ParticleSystem particleSystem) {
-        mParticleSystem = particleSystem;
+    public ParticleSystem getCurrentParticleSystem() {
+        return mCurrentParticleSystem;
     }
-
-    public ParticleSystem getParticleSystem() {
-        return mParticleSystem;
-    }
-
-    public ParticleGroup getParticleGroup() {
-        return mParticleGroup;
-    }
-
-    public void setParticleGroup(ParticleGroup particleGroup) {
-        mParticleGroup = particleGroup;
-    }
-
-    public int getTextureId() {
-        return mTextureId;
-    }
-
     public float getParticleRadius() {
         return mParticleRadius;
     }
-
-    public void setParticleRadius(float particleRadius) {
-        mParticleRadius = particleRadius;
-    }
-
-    public void setTextureId(int textureId) {
-        mTextureId = textureId;
-    }
-
-    public float getParticleDencity() {
-        return mParticleDencity;
-    }
-
-    public float getParticleElasticStrength() {
-        return mParticleElasticStrength;
-    }
-
     public int getSoftness() {
         return mSoftness;
     }
-
-    public void setSoftness(int softness) {
-        mSoftness = softness;
-    }
-
 
     /*
      * パーティクルシステムの生成
@@ -208,18 +173,28 @@ public class ParticleManager {
         //------------------------
         // パーティクルシステム
         //------------------------
-        // パーティクルシステム定義
-        ParticleSystemDef particleSystemDef = new ParticleSystemDef();
-        particleSystemDef.setRadius(radius);
-        particleSystemDef.setDensity(dencity);
-        particleSystemDef.setElasticStrength(elasticStrength);
-        particleSystemDef.setDampingStrength(DAMPING_STRENGTH);
-        particleSystemDef.setGravityScale(GRAVITY_SCALE);
-        particleSystemDef.setDestroyByAge(true);
-        particleSystemDef.setLifetimeGranularity(LIFETIME_GRANULARITY);
+        // パーティクルシステム取得
+        ParticleSystem particleSystem = mSoftnessParticleSystem.get(mSoftness);
 
-        // パーティクルシステム生成
-        mParticleSystem = mWorld.createParticleSystem(particleSystemDef);
+        // 未生成なら
+        if( particleSystem == null ){
+            // パーティクルシステム定義
+            ParticleSystemDef particleSystemDef = new ParticleSystemDef();
+            particleSystemDef.setRadius(radius);
+            particleSystemDef.setDensity(dencity);
+            particleSystemDef.setElasticStrength(elasticStrength);
+            particleSystemDef.setDampingStrength(DAMPING_STRENGTH);
+            particleSystemDef.setGravityScale(GRAVITY_SCALE);
+            particleSystemDef.setDestroyByAge(true);
+            particleSystemDef.setLifetimeGranularity(LIFETIME_GRANULARITY);
+
+            // パーティクルシステム生成
+            particleSystem = mWorld.createParticleSystem(particleSystemDef);
+            mSoftnessParticleSystem.put( mSoftness, particleSystem );
+        }
+
+        // 現在のパーティクルシステムを保持
+        mCurrentParticleSystem = particleSystem;
     }
 
     /*
@@ -239,12 +214,10 @@ public class ParticleManager {
         // 形状設定
         particleGroupDef.setPolygonShapesFromVertexList(polygonXmlData.mCoordinateBuff, polygonXmlData.mVertexeNumBuff, polygonXmlData.mShapeNum);
 
-        // !エラー判定必要
-
         //----------------------
         // ParticleGroup生成
         //----------------------
-        return mParticleSystem.createParticleGroup(particleGroupDef);
+        return mCurrentParticleSystem.createParticleGroup(particleGroupDef);
     }
 
 
@@ -260,6 +233,7 @@ public class ParticleManager {
         int polygonXml = mSoftnessPolygonXML.get( mSoftness );
         PolygonXmlDataManager.PolygonParseData polygonXmlData = mPolygonListManage.parsePoligonXmlShapes(mGLSurfaceView.getContext(), polygonXml);
 
+        // 生成
         mParticleGroup = createParticleGroup(posX, posY, polygonXmlData);
 
         //========================
@@ -337,7 +311,7 @@ public class ParticleManager {
         int groupParticleNum = particleGroup.getParticleCount() - bufferIndex;
 
         // 先頭パーティクルのY座標を格納中ラインのY座標とする
-        float linePosY = mParticleSystem.getParticlePositionY(bufferIndex);
+        float linePosY = mCurrentParticleSystem.getParticlePositionY(bufferIndex);
 
         // 格納先リスト
         ArrayList<ArrayList<Integer>> allParticleLine = new ArrayList<>();
@@ -351,7 +325,7 @@ public class ParticleManager {
             // ライン切り替わり判定
             //-------------------
             // パーティクルのY座標
-            float y = mParticleSystem.getParticlePositionY(i);
+            float y = mCurrentParticleSystem.getParticlePositionY(i);
 
             // パーティクルが次のラインのものの場合
             // !0.01fは適当に定めた値（とりあえずこれ以上離れていればラインが変わったと判断する）
@@ -431,8 +405,8 @@ public class ParticleManager {
             int refIndex = bottomFirstParticleIndex + refPosition;
 
             // 参照中パーティクルのX位置
-            float posX = mParticleSystem.getParticlePositionX(refIndex);
-            float nextPosX = mParticleSystem.getParticlePositionX(refIndex + 1);
+            float posX = mCurrentParticleSystem.getParticlePositionX(refIndex);
+            float nextPosX = mCurrentParticleSystem.getParticlePositionX(refIndex + 1);
 
             // 粒子が隣り合っていない（一定以上の距離がある）なら、グルーピングしない(描画対象外)
             if ((nextPosX - posX) > diameter) {
@@ -479,8 +453,8 @@ public class ParticleManager {
         for (int refPosition = 0; refPosition < topLastIndex; refPosition++, topLastParticleIndex--) {
 
             // 参照Index（パーティクルシステム側のIndex）
-            float posX = mParticleSystem.getParticlePositionX(topLastParticleIndex - 1);
-            float nextPosX = mParticleSystem.getParticlePositionX(topLastParticleIndex);
+            float posX = mCurrentParticleSystem.getParticlePositionX(topLastParticleIndex - 1);
+            float nextPosX = mCurrentParticleSystem.getParticlePositionX(topLastParticleIndex);
 
             // 粒子が隣り合っていないなら、グルーピングしない(描画対象外)
             if ((nextPosX - posX) > diameter) {
@@ -514,7 +488,7 @@ public class ParticleManager {
 
             // 参照パーティクルのX位置
             int refTopParticleIndex = topFirstParticleIndex + topRefPosition;
-            float topPosX = mParticleSystem.getParticlePositionX(refTopParticleIndex);
+            float topPosX = mCurrentParticleSystem.getParticlePositionX(refTopParticleIndex);
 
             // 底辺とするパーティクルのどちらかの真上にあれば、三角形の頂点として採用する
             if ((topPosX == posX) || (topPosX == nextPosX)) {
@@ -539,7 +513,7 @@ public class ParticleManager {
         for (int bottomRefPosition = 0; bottomRefPosition <= lastIndex; bottomRefPosition++, bottomLastIndex--) {
 
             // 参照中パーティクルIndexのX位置座標
-            float bottomPosX = mParticleSystem.getParticlePositionX(bottomLastIndex);
+            float bottomPosX = mCurrentParticleSystem.getParticlePositionX(bottomLastIndex);
 
             // 底辺とするパーティクルのどちらかの真下にあれば、三角形の頂点として採用する
             if ((bottomPosX == nextPosX) || (bottomPosX == posX)) {
@@ -560,21 +534,21 @@ public class ParticleManager {
         // パーティクルグループ内の粒子で最小位置と最大位置を取得する
         //-------------------------------------------------
         // 先頭のパーティクルを暫定で最大値・最小値とする
-        float minParticleX = mParticleSystem.getParticlePositionX(0);
+        float minParticleX = mCurrentParticleSystem.getParticlePositionX(0);
         float maxParticleX = minParticleX;
-        float minParticleY = mParticleSystem.getParticlePositionY(0);
+        float minParticleY = mCurrentParticleSystem.getParticlePositionY(0);
         float maxParticleY = minParticleY;
 
         // 全パーティクルの中で、X/Y座標の最大値最小値を算出
-        int particleNum = mParticleSystem.getParticleCount();
+        int particleNum = mCurrentParticleSystem.getParticleCount();
         for (int i = 1; i < particleNum; i++) {
             // X座標
-            float posX = mParticleSystem.getParticlePositionX(i);
+            float posX = mCurrentParticleSystem.getParticlePositionX(i);
             minParticleX = Math.min(posX, minParticleX);
             maxParticleX = Math.max(posX, maxParticleX);
 
             // Y座標
-            float posY = mParticleSystem.getParticlePositionY(i);
+            float posY = mCurrentParticleSystem.getParticlePositionY(i);
             minParticleY = Math.min(posY, minParticleY);
             maxParticleY = Math.max(posY, maxParticleY);
         }
@@ -596,8 +570,8 @@ public class ParticleManager {
         ArrayList<Vec2> uvCoordinate = new ArrayList<>();
         for (int i : mRenderParticleOrderBuff) {
             // パーティクル座標
-            float x = mParticleSystem.getParticlePositionX(i);
-            float y = mParticleSystem.getParticlePositionY(i);
+            float x = mCurrentParticleSystem.getParticlePositionX(i);
+            float y = mCurrentParticleSystem.getParticlePositionY(i);
 
             // UV座標
             float vecx = minUvX + (((x - minParticleX) / particleMaxWidth) * UvMaxWidth);
@@ -703,7 +677,7 @@ public class ParticleManager {
     private boolean isRowEdges(ArrayList<Integer> topLine, ArrayList<Integer> bottomLine, int particleIndex) {
 
         // 判定パーティクルのＸ座標
-        float posX = mParticleSystem.getParticlePositionX( particleIndex );
+        float posX = mCurrentParticleSystem.getParticlePositionX( particleIndex );
 
         //------------------
         // 上ライン
@@ -711,7 +685,7 @@ public class ParticleManager {
         // 初期値は同一列になしとする
         boolean noneTop = true;
         for( int i : topLine ){
-            float verticlePosX = mParticleSystem.getParticlePositionX( i );
+            float verticlePosX = mCurrentParticleSystem.getParticlePositionX( i );
             if( posX == verticlePosX ){
                 // 同一列にあり
                 noneTop = false;
@@ -725,7 +699,7 @@ public class ParticleManager {
         // 初期値は同一列になしとする
         boolean noneBottom = true;
         for( int i : bottomLine ){
-            float verticlePosX = mParticleSystem.getParticlePositionX( i );
+            float verticlePosX = mCurrentParticleSystem.getParticlePositionX( i );
             if( posX == verticlePosX ){
                 // 同一列にあり
                 noneBottom = false;
@@ -753,7 +727,7 @@ public class ParticleManager {
 
         for (int particleIndex : border) {
             // 境界パーティクルのY座標
-            float posY = mParticleSystem.getParticlePositionY(particleIndex);
+            float posY = mCurrentParticleSystem.getParticlePositionY(particleIndex);
             // indexとY座標をペアで保持
             mBorderParticle.put(particleIndex, posY);
         }
@@ -776,7 +750,7 @@ public class ParticleManager {
 
             // 位置
             float preY = mBorderParticle.get(borderIndex);
-            float currentY = mParticleSystem.getParticlePositionY(borderIndex);
+            float currentY = mCurrentParticleSystem.getParticlePositionY(borderIndex);
 
             // 急上昇したとみなせる程、前回位置よりも上にある場合
             if ((currentY - preY) >= TOO_RISE) {
@@ -797,7 +771,7 @@ public class ParticleManager {
 
         // 保持中の境界パーティクルの位置情報をコール時点の情報に更新
         for (int borderIndex : mBorderParticle.keySet()) {
-            float currentY = mParticleSystem.getParticlePositionY(borderIndex);
+            float currentY = mCurrentParticleSystem.getParticlePositionY(borderIndex);
             mBorderParticle.replace(borderIndex, currentY);
         }
     }
@@ -940,7 +914,7 @@ public class ParticleManager {
         // （タッチ座標から少しずらした位置に、パーティクルの位置を変更する）
         float tracePosX = mParticleTouchInfo.mTouchPosWorldX + 0.1f;
         float tracePosY = mParticleTouchInfo.mTouchPosWorldY + 0.1f;
-        mParticleSystem.setParticlePosition(mParticleTouchInfo.mBorderIndex, tracePosX, tracePosY);
+        mCurrentParticleSystem.setParticlePosition(mParticleTouchInfo.mBorderIndex, tracePosX, tracePosY);
 
         // 現状のタッチ状態を更新
         mParticleTouchInfo.mStatus = ParticleTouchInfo.ParticleTouchStatus.TRACE;
@@ -979,8 +953,8 @@ public class ParticleManager {
         int index;
         for (index = 0; index < particleNum; index++) {
             // パーティクル位置
-            float x = mParticleSystem.getParticlePositionX(index);
-            float y = mParticleSystem.getParticlePositionY(index);
+            float x = mCurrentParticleSystem.getParticlePositionX(index);
+            float y = mCurrentParticleSystem.getParticlePositionY(index);
 
             // タッチ範囲にパーティクルあるか
             if ((x >= touchMinX) && (x <= touchMaxX) && (y >= touchMinY) && (y <= touchMaxY)) {
@@ -1064,9 +1038,9 @@ public class ParticleManager {
         // レンダリングバッファのパーティクルの座標を配列に格納
         int count = 0;
         for (int index : mRenderParticleOrderBuff) {
-            vertices[count] = mParticleSystem.getParticlePositionX(index);
+            vertices[count] = mCurrentParticleSystem.getParticlePositionX(index);
             count++;
-            vertices[count] = mParticleSystem.getParticlePositionY(index);
+            vertices[count] = mCurrentParticleSystem.getParticlePositionY(index);
             count++;
         }
 

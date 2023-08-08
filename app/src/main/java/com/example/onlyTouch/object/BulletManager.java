@@ -86,7 +86,7 @@ public class BulletManager {
             // (境界パーティクルに掠った際、パーティクルが急上昇するのを防ぐための対応)
             //---------------
             if (tooRiseIndex != particleManager.NOTHING_TOO_RISE) {
-                float borderY = particleManager.getParticleSystem().getParticlePositionY(tooRiseIndex);
+                float borderY = particleManager.getCurrentParticleSystem().getParticlePositionY(tooRiseIndex);
                 float bulletY = bullet.getBody().getPositionY();
 
                 // 急上昇した境界パーティクルよりも上に位置する弾は減速させる
