@@ -1,0 +1,24 @@
+<resources>
+    <!--  アプリ名  -->
+    <string name="app_name">Only Touch ～弾力ねこ～</string>
+
+    <!-- 流体画面下部 -->
+    <string name="fluid_bottom_menu_contents_gravity">重力</string>
+    <string name="fluid_bottom_menu_contents_soft">やわらかさ</string>
+    <string name="fluid_bottom_menu_contents_bullet">ショット↑</string>
+    <string name="fluid_bottom_menu_contents_center">画面の真ん中に</string>
+    <string name="fluid_bottom_menu_contents_home">ホーム</string>
+
+    <!-- dialog -->
+    <string name="dialog_change_gravity_title">重力</string>
+    <string name="dialog_change_soft_title">やわらかさ</string>
+
+    <string name="dialog_change_soft_too_soft">かなりやわめ</string>
+    <string name="dialog_change_soft_soft">やわめ</string>
+    <string name="dialog_change_soft_little_hard">ちょっと固め</string>
+
+    <string name="dialog_change_gravity_float">浮きあがる</string>
+    <string name="dialog_change_gravity_nothing">漂う</string>
+    <string name="dialog_change_gravity_drop">おっこちる</string>
+
+</resources>

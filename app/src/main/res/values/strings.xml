@@ -1,26 +1,26 @@
 <resources>
     <!-- Admod（アプリID） -->
-    <string name="admob_app_id">ca-app-pub-8046295810838892~2391315578</string>
+    <string name="admob_app_id" translatable="false">ca-app-pub-8046295810838892~2391315578</string>
 
     <!-- リリース時とテスト時で切り替える -->
     <!--  テストID（バナー広告）  -->
-    <string name="admob_unit_id_test">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="admob_unit_id_test" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
     <!-- リリース用 -->
-    <string name="admob_unit_id">ca-app-pub-8046295810838892/9363918033</string>
+    <string name="admob_unit_id" translatable="false">ca-app-pub-8046295810838892/9363918033</string>
 
     <!--  アプリ名  -->
     <string name="app_name">Only Touch</string>
 
     <!--  スプラッシュ画面  -->
-    <string name="splash">Usagi Project</string>
+    <string name="splash" translatable="false">Usagi Project</string>
 
     <!--  Home画面  -->
-    <string name="home_prompt_touch">Touch!</string>
-    <string name="home_prompt_touch_sub">Play with cat.</string>
+    <string name="home_prompt_touch" translatable="false">Touch!</string>
+    <string name="home_prompt_touch_sub" translatable="false">Play with cat.</string>
 
     <!-- 流体画面下部 -->
-    <string name="fluid_bottom_title">Play</string>
-    <string name="fluid_bottom_message">You can touch it !</string>
+    <string name="fluid_bottom_title" translatable="false">Play</string>
+    <string name="fluid_bottom_message" translatable="false">You can touch it !</string>
     <string name="fluid_bottom_menu_contents_gravity">Change the gravity.</string>
     <string name="fluid_bottom_menu_contents_soft">Change the softness.</string>
     <string name="fluid_bottom_menu_contents_bullet">Shoot bullets.</string>
@@ -28,8 +28,8 @@
     <string name="fluid_bottom_menu_contents_home">Return to home.</string>
 
     <!-- dialog -->
-    <string name="dialog_change_soft_title">Change Soft</string>
     <string name="dialog_change_gravity_title">Change Gravity</string>
+    <string name="dialog_change_soft_title">Change Soft</string>
 
     <string name="dialog_change_soft_too_soft">Very Soft</string>
     <string name="dialog_change_soft_soft">Soft</string>
