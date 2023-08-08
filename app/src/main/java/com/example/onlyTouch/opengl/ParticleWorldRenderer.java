@@ -643,6 +643,13 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
      * パーティクルの柔らかさの変更
      */
     public void setSoftness(int softness){
+
+        // 変更されていなければ、何もしない
+        int currentSoftness = mParticleManager.getSoftness();
+        if( softness == currentSoftness ){
+            return;
+        }
+
         // 指定された柔さでパーティクル再生成
         changeParticleSoftness( softness );
     }
