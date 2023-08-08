@@ -14,7 +14,7 @@
                 filter_maskBits="65535"
                 isSensor="false"
                 type="POLYGON"
-                numPolygons="8"
+                numPolygons="7"
                 >
 
 
@@ -88,21 +88,11 @@
 
                 </polygon>
 
-                <polygon numVertexes="3">
-
-                    <vertex x="-3.0000" y="51.0000" />
-
-                    <vertex x="51.0000" y="12.0000" />
-
-                    <vertex x="51.0000" y="31.0000" />
-
-                </polygon>
-
-                <polygon numVertexes="6">
-
-                    <vertex x="-59.0000" y="26.0000" />
+                <polygon numVertexes="7">
 
                     <vertex x="-59.0000" y="15.0000" />
+
+                    <vertex x="-53.0000" y="-11.0000" />
 
                     <vertex x="-44.0000" y="-27.0000" />
 
@@ -112,15 +102,17 @@
 
                     <vertex x="-51.0000" y="42.0000" />
 
+                    <vertex x="-59.0000" y="33.0000" />
+
                 </polygon>
 
                 <polygon numVertexes="3">
 
-                    <vertex x="-44.0000" y="-27.0000" />
+                    <vertex x="-3.0000" y="51.0000" />
 
-                    <vertex x="-59.0000" y="15.0000" />
+                    <vertex x="51.0000" y="12.0000" />
 
-                    <vertex x="-53.0000" y="-11.0000" />
+                    <vertex x="51.0000" y="31.0000" />
 
                 </polygon>
 

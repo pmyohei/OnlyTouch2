@@ -71,7 +71,6 @@ public class ParticleManager {
         mSoftnessPolygonXML.put(SOFTNESS_LITTLE_HARD,   R.xml.bouncy_cat_little_hard);
     }
 
-
     // 生成済みテクスチャ
     private final HashMap<Integer, Integer> mMapResourceTexture;
 
@@ -82,16 +81,15 @@ public class ParticleManager {
     private final ParticleGLSurfaceView mGLSurfaceView;
     private final PolygonXmlDataManager mPolygonListManage;
     private int mTextureId;
-//    private ParticleSystem mParticleSystem;
-    private ParticleGroup mParticleGroup;
-
-    // 柔らかさとParticleSystemの対応
-    private final Map<Integer, ParticleSystem> mSoftnessParticleSystem = new HashMap<>();
-    private ParticleSystem mCurrentParticleSystem;
 
     //---------------------------
     // パーティクル
     //---------------------------
+    // 柔らかさとParticleSystemの対応
+    private final Map<Integer, ParticleSystem> mSoftnessParticleSystem = new HashMap<>();
+    private ParticleSystem mCurrentParticleSystem;
+    private ParticleGroup mParticleGroup;
+
     // 位置が急上昇したパーティクルなし
     public final int NOTHING_TOO_RISE = -1;
 
