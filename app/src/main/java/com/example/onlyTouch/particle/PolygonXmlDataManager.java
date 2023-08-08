@@ -98,20 +98,19 @@ public class PolygonXmlDataManager {
      */
     private void setTextureData(Context context, int textureID) {
 
-        // 指定リソースのBitmapオブジェクトを生成
+        // 指定リソースのPixelサイズを取得
         Resources resource = context.getResources();
-        Bitmap bitmap = BitmapFactory.decodeResource(resource, textureID);
 
-        final float bitmapWidth = bitmap.getWidth();
-        final float bitmapHeight = bitmap.getHeight();
-        final float scale = resource.getDisplayMetrics().density;
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeResource(resource, textureID, options);
 
         //----------------------------
         // テクスチャ（画像）のpxサイズ
         //----------------------------
         // 画像のピクセルサイズ
-        mTexturePXWidth = bitmapWidth / scale;
-        mTexturePXHeight = bitmapHeight / scale;
+        mTexturePXWidth = options.outWidth;
+        mTexturePXHeight = options.outHeight;
         // 画像のピクセルサイズの半分
         mTexturePXHalfX = mTexturePXWidth / 2.0f;
         mTexturePXHalfY = mTexturePXHeight / 2.0f;
@@ -350,7 +349,7 @@ public class PolygonXmlDataManager {
     }
 
     /*
-     *　
+     *　UV情報の保持
      */
     private void setUVData( PolygonParseData polygonXmlData , float[] vertexMixMax ){
 

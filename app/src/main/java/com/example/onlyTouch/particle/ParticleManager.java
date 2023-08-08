@@ -2,6 +2,8 @@ package com.example.onlyTouch.particle;
 
 import android.os.Build;
 import androidx.annotation.RequiresApi;
+
+import android.util.Log;
 import android.view.MotionEvent;
 
 import com.example.onlyTouch.R;
