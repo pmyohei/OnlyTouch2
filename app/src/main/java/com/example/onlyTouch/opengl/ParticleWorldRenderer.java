@@ -4,6 +4,8 @@ import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.os.Build;
 import androidx.annotation.RequiresApi;
+
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -479,7 +481,11 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
                 final float screenMiddlePosY = mWorldPosMid[1];
 
                 // パーティクル生成
-                mParticleManager.createParticleBody(gl, screenMiddlePosX, screenMiddlePosY);
+                boolean isCreate = mParticleManager.createParticleBody(gl, screenMiddlePosX, screenMiddlePosY);
+                if( !isCreate ){
+                    // 生成エラーの場合、生成フローを先へは進めない
+                    break;
+                }
 
                 //----------------------
                 // オーバーラップ物体

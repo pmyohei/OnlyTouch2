@@ -173,25 +173,31 @@ public class ParticleManager {
         //------------------------
         // パーティクルシステム取得
         ParticleSystem particleSystem = mSoftnessParticleSystem.get(mSoftness);
+        if( particleSystem != null ){
+            // 現在のパーティクルシステムをとして保持
+            mCurrentParticleSystem = particleSystem;
+            return;
+        }
 
-        // 未生成なら
-        if( particleSystem == null ){
-            // パーティクルシステム定義
-            ParticleSystemDef particleSystemDef = new ParticleSystemDef();
-            particleSystemDef.setRadius(radius);
-            particleSystemDef.setDensity(dencity);
-            particleSystemDef.setElasticStrength(elasticStrength);
-            particleSystemDef.setDampingStrength(DAMPING_STRENGTH);
-            particleSystemDef.setGravityScale(GRAVITY_SCALE);
-            particleSystemDef.setDestroyByAge(true);
-            particleSystemDef.setLifetimeGranularity(LIFETIME_GRANULARITY);
+        // パーティクルシステム定義
+        ParticleSystemDef particleSystemDef = new ParticleSystemDef();
+        particleSystemDef.setRadius(radius);
+        particleSystemDef.setDensity(dencity);
+        particleSystemDef.setElasticStrength(elasticStrength);
+        particleSystemDef.setDampingStrength(DAMPING_STRENGTH);
+        particleSystemDef.setGravityScale(GRAVITY_SCALE);
+        particleSystemDef.setDestroyByAge(true);
+        particleSystemDef.setLifetimeGranularity(LIFETIME_GRANULARITY);
 
-            // パーティクルシステム生成
-            particleSystem = mWorld.createParticleSystem(particleSystemDef);
+        // パーティクルシステム生成
+        particleSystem = mWorld.createParticleSystem(particleSystemDef);
+        // 生成問題なし
+        if( particleSystem != null ){
+            // 生成済みマップに格納
             mSoftnessParticleSystem.put( mSoftness, particleSystem );
         }
 
-        // 現在のパーティクルシステムを保持
+        // 現在のパーティクルシステムとして保持
         mCurrentParticleSystem = particleSystem;
     }
 
@@ -222,7 +228,14 @@ public class ParticleManager {
     /*
      * パーティクル生成
      */
-    public void createParticleBody(GL10 gl, float posX, float posY) {
+    public boolean createParticleBody(GL10 gl, float posX, float posY) {
+
+        // パーティクルシステム未生成の場合
+        if( mCurrentParticleSystem == null ){
+            // 設定処理した上で、生成エラーを返す
+            setParticleSystem();
+            return false;
+        }
 
         //-----------------------------
         // パーティクルグループ生成
@@ -263,6 +276,8 @@ public class ParticleManager {
 
         // 境界パーティクル保持情報を初期化
         initBorderParticle(allParticleLine);
+
+        return true;
     }
 
     /*
