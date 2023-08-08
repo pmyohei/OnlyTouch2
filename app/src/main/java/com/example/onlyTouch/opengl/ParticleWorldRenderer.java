@@ -685,8 +685,10 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
      */
     public void setGravity(int gravity){
 
-        // 指定された重力を保持
-        mGravity = gravity;
+        // 変更されていなければ、何もしない
+        if( gravity == mGravity ){
+            return;
+        }
 
         //-----------
         // 重力の設定
@@ -702,6 +704,10 @@ public class ParticleWorldRenderer implements GLSurfaceView.Renderer, View.OnTou
         // 適切な粒子反復を算出 !worldのstepで利用
         float radius = mParticleManager.getParticleRadius();
         mParticleIterations = liquidfun.b2CalculateParticleIterations( gravityScaleY, radius, TIME_STEP );
+
+
+        // 指定された重力を保持
+        mGravity = gravity;
     }
 
     /*
