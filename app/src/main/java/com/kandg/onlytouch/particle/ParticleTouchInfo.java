@@ -1,4 +1,4 @@
-package com.example.onlyTouch.particle;
+package com.kandg.onlytouch.particle;
 
 /*
  * パーティクルタッチ情報

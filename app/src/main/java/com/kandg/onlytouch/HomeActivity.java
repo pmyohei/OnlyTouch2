@@ -1,10 +1,11 @@
-package com.example.onlyTouch;
+package com.kandg.onlytouch;
 
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 
+import com.kandg.onlytouch.R;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;

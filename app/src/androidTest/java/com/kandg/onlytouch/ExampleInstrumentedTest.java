@@ -1,4 +1,4 @@
-package com.example.onlyTouch;
+package com.kandg.onlytouch;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

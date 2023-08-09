@@ -1,7 +1,7 @@
-package com.example.onlyTouch.object;
+package com.kandg.onlytouch.object;
 
-import com.example.onlyTouch.R;
-import com.example.onlyTouch.convert.Conversion;
+import com.kandg.onlytouch.R;
+import com.kandg.onlytouch.convert.Conversion;
 import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.BodyDef;
 import com.google.fpl.liquidfun.BodyType;

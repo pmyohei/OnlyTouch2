@@ -1,13 +1,13 @@
-package com.example.onlyTouch.object;
+package com.kandg.onlytouch.object;
 
 import android.os.Build;
 import android.view.MotionEvent;
 
 import androidx.annotation.RequiresApi;
 
-import com.example.onlyTouch.convert.Conversion;
-import com.example.onlyTouch.opengl.ParticleGLSurfaceView;
-import com.example.onlyTouch.particle.ParticleManager;
+import com.kandg.onlytouch.convert.Conversion;
+import com.kandg.onlytouch.opengl.ParticleGLSurfaceView;
+import com.kandg.onlytouch.particle.ParticleManager;
 import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.World;
 

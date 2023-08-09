@@ -1,4 +1,4 @@
-package com.example.onlyTouch;
+package com.kandg.onlytouch;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -7,7 +7,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 
-import com.example.onlyTouch.particle.ParticleManager;
+import com.kandg.onlytouch.R;
+import com.kandg.onlytouch.particle.ParticleManager;
 
 /*
  * 柔らかさ変更ダイアログ

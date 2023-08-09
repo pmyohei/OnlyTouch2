@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.example.onlyTouch">
+    package="com.kandg.onlytouch">
 
     <application
         android:allowBackup="true"
@@ -13,13 +13,13 @@
         tools:ignore="LockedOrientationActivity">
 
         <activity
-            android:name="com.example.onlyTouch.ParticleWorldActivity"
+            android:name="com.kandg.onlytouch.ParticleWorldActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name="com.example.onlyTouch.HomeActivity"
+            android:name="com.kandg.onlytouch.HomeActivity"
             android:screenOrientation="portrait"/>
         <activity
-            android:name="com.example.onlyTouch.SplashActivity"
+            android:name="com.kandg.onlytouch.SplashActivity"
             android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>

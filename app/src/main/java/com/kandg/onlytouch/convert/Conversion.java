@@ -1,4 +1,4 @@
-package com.example.onlyTouch.convert;
+package com.kandg.onlytouch.convert;
 
 import android.content.Context;
 import android.content.res.Resources;

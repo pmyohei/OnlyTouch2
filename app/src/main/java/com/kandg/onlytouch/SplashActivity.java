@@ -1,4 +1,4 @@
-package com.example.onlyTouch;
+package com.kandg.onlytouch;
 
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
@@ -8,6 +8,8 @@ import android.content.Intent;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
+
+import com.kandg.onlytouch.R;
 
 /*
  * スプラッシュ画面

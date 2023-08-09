@@ -1,12 +1,12 @@
-package com.example.onlyTouch.object;
+package com.kandg.onlytouch.object;
 
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
-import com.example.onlyTouch.R;
-import com.example.onlyTouch.convert.Conversion;
+import com.kandg.onlytouch.R;
+import com.kandg.onlytouch.convert.Conversion;
 
 import java.nio.FloatBuffer;
 

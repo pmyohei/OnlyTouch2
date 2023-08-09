@@ -1,14 +1,13 @@
-package com.example.onlyTouch.particle;
+package com.kandg.onlytouch.particle;
 
 import android.os.Build;
 import androidx.annotation.RequiresApi;
 
-import android.util.Log;
 import android.view.MotionEvent;
 
-import com.example.onlyTouch.R;
-import com.example.onlyTouch.convert.Conversion;
-import com.example.onlyTouch.opengl.ParticleGLSurfaceView;
+import com.kandg.onlytouch.R;
+import com.kandg.onlytouch.convert.Conversion;
+import com.kandg.onlytouch.opengl.ParticleGLSurfaceView;
 import com.google.fpl.liquidfun.ParticleFlag;
 import com.google.fpl.liquidfun.ParticleGroup;
 import com.google.fpl.liquidfun.ParticleGroupDef;

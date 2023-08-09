@@ -1,18 +1,17 @@
-package com.example.onlyTouch.opengl;
+package com.kandg.onlytouch.opengl;
 
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.os.Build;
 import androidx.annotation.RequiresApi;
 
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.example.onlyTouch.convert.Conversion;
-import com.example.onlyTouch.object.BulletManager;
-import com.example.onlyTouch.object.DrawBackGround;
-import com.example.onlyTouch.particle.ParticleManager;
+import com.kandg.onlytouch.convert.Conversion;
+import com.kandg.onlytouch.object.BulletManager;
+import com.kandg.onlytouch.object.DrawBackGround;
+import com.kandg.onlytouch.particle.ParticleManager;
 import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.BodyDef;
 import com.google.fpl.liquidfun.BodyType;

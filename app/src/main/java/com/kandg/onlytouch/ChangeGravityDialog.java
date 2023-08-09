@@ -1,4 +1,4 @@
-package com.example.onlyTouch;
+package com.kandg.onlytouch;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -7,7 +7,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 
-import com.example.onlyTouch.opengl.ParticleWorldRenderer;
+import com.kandg.onlytouch.R;
+import com.kandg.onlytouch.opengl.ParticleWorldRenderer;
 
 /*
  * 重力変更ダイアログ

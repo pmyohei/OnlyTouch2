@@ -1,4 +1,4 @@
-package com.example.onlyTouch;
+package com.kandg.onlytouch;
 
 import org.junit.Test;
 

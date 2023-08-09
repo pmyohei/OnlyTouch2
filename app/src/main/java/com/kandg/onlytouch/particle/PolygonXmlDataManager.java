@@ -1,10 +1,7 @@
-package com.example.onlyTouch.particle;
+package com.kandg.onlytouch.particle;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import org.xmlpull.v1.XmlPullParser;

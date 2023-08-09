@@ -1,9 +1,8 @@
-package com.example.onlyTouch.opengl;
+package com.kandg.onlytouch.opengl;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
-import android.util.Log;
 
 /*
  * ビューコンテナ：パーティクルレンダリング用

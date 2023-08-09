@@ -1,4 +1,4 @@
-package com.example.onlyTouch;
+package com.kandg.onlytouch;
 
 import android.content.Intent;
 import android.graphics.Point;
@@ -6,17 +6,17 @@ import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
-import android.util.Log;
+
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
-import android.view.animation.LinearInterpolator;
 import android.view.animation.TranslateAnimation;
 
-import com.example.onlyTouch.opengl.ParticleGLSurfaceView;
-import com.example.onlyTouch.opengl.ParticleWorldRenderer;
+import com.kandg.onlytouch.R;
+import com.kandg.onlytouch.opengl.ParticleGLSurfaceView;
+import com.kandg.onlytouch.opengl.ParticleWorldRenderer;
 
 /*
  * 流体画面
