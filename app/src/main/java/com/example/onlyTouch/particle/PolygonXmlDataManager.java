@@ -20,10 +20,10 @@ import java.util.HashMap;
 public class PolygonXmlDataManager {
 
     // テクスチャサイズ情報 px単位
-    private float mTexturePXHalfX;
-    private float mTexturePXHalfY;
-    private float mTexturePXWidth;
-    private float mTexturePXHeight;
+//    private float mTexturePXHalfX;
+//    private float mTexturePXHalfY;
+//    private float mTexturePXWidth;
+//    private float mTexturePXHeight;
 
     //-----------------------------
     // PoligonXML 解析データ
@@ -35,7 +35,7 @@ public class PolygonXmlDataManager {
         //-----------------------------
         public ByteBuffer mCoordinateBuff;     // 図形の座標バッファ
         public ByteBuffer mVertexeNumBuff;     // 図形毎の頂点数
-        public int mShapeNum;           // 図形の数
+        public int mShapeNum;                  // 図形の数
 
         //-----------------------------
         // UV座標
@@ -88,7 +88,7 @@ public class PolygonXmlDataManager {
         mMapPolygon = new HashMap<Integer, PolygonParseData>();
 
         // テクスチャ情報の設定
-        setTextureData(context, textureID);
+//        setTextureData(context, textureID);
         // 解析処理
         parsePoligonXmlShapes(context, polygonXml);
     }
@@ -98,7 +98,7 @@ public class PolygonXmlDataManager {
      */
     private void setTextureData(Context context, int textureID) {
 
-        // 指定リソースのPixelサイズを取得
+/*        // 指定リソースのPixelサイズを取得
         Resources resource = context.getResources();
 
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -113,7 +113,7 @@ public class PolygonXmlDataManager {
         mTexturePXHeight = options.outHeight;
         // 画像のピクセルサイズの半分
         mTexturePXHalfX = mTexturePXWidth / 2.0f;
-        mTexturePXHalfY = mTexturePXHeight / 2.0f;
+        mTexturePXHalfY = mTexturePXHeight / 2.0f;*/
     }
 
 
@@ -373,10 +373,22 @@ public class PolygonXmlDataManager {
      */
     private float[] convertUVPos(float posX, float posY){
 
+        //--------------
+        // 画像サイズ
+        //--------------
+        // !図形xmlは、150px * 150pxの画像から生成している
+        final int TEXTURE_PX_WIDTH = 150;
+        final int TEXTURE_PX_HEIGHT = 150;
+        final float TEXTURE_PX_HALF_WIDTH = TEXTURE_PX_WIDTH / 2f;
+        final float TEXTURE_PX_HALF_HEIGHT = TEXTURE_PX_HEIGHT / 2f;
+
+        //--------------
+        // UV座標変換
+        //--------------
         // 図形座標をUV座標に変換
         float[] uvPos = new float[2];
-        uvPos[0] = (posX + mTexturePXHalfX) / mTexturePXWidth;
-        uvPos[1] = (posY + mTexturePXHalfY) / mTexturePXHeight;
+        uvPos[0] = (posX + TEXTURE_PX_HALF_WIDTH) / TEXTURE_PX_WIDTH;
+        uvPos[1] = (posY + TEXTURE_PX_HALF_HEIGHT) / TEXTURE_PX_HEIGHT;
 
         return uvPos;
     }
