@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdk 32
+    compileSdk 33
     defaultConfig {
         applicationId "com.kandg.onlytouch"
         minSdk 21
-        targetSdk 32
-        versionCode 2
-        versionName "1.1"
+        targetSdk 33
+        versionCode 4
+        versionName "1.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
