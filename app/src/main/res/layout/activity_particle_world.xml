@@ -36,12 +36,36 @@
             app:layout_constraintStart_toStartOf="parent">
 
             <ImageView
+                android:id="@+id/explanation_help_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/baseline_menu_exp_help"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/explanation_help"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/menu_explanation_tx_height"
+                android:layout_marginStart="@dimen/menu_explanation_margin"
+                android:text="@string/fluid_bottom_menu_contents_help"
+                app:autoSizeMaxTextSize="@dimen/menu_explanation_max_tx"
+                app:autoSizeMinTextSize="@dimen/menu_explanation_min_tx"
+                app:autoSizeStepGranularity="2sp"
+                app:autoSizeTextType="uniform"
+                app:layout_constraintBottom_toBottomOf="@+id/explanation_help_icon"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/explanation_help_icon"
+                app:layout_constraintTop_toTopOf="@+id/explanation_help_icon" />
+
+            <ImageView
                 android:id="@+id/explanation_gravity_icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/menu_explanation_line_spacing"
                 android:background="@drawable/baseline_menu_exp_gravity"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toBottomOf="@+id/explanation_help_icon" />
 
             <TextView
                 android:id="@+id/explanation_gravity"
@@ -224,6 +248,16 @@
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <ImageButton
+                    android:id="@+id/ib_help"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/menu_icon_margin"
+                    android:background="@drawable/baseline_menu_icon_help"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageButton
                     android:id="@+id/ib_gravity"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -231,7 +265,7 @@
                     android:background="@drawable/baseline_menu_icon_gravity"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toBottomOf="@id/ib_help" />
 
                 <ImageButton
                     android:id="@+id/ib_soft"

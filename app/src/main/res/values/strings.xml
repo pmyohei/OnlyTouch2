@@ -11,6 +11,13 @@
     <!--  アプリ名  -->
     <string name="app_name">Only Touch</string>
 
+    <!---->
+    <!-- 共有環境設定 SharedPreferences -->
+    <!---->
+    <string name="preference_file_key" translatable="false">com.kandg.onlytouch.PREFERENCE_FILE_KEY</string>
+    <string name="saved_first_start_key" translatable="false">first_start</string>
+
+
     <!--  スプラッシュ画面  -->
     <string name="splash" translatable="false">Usagi Project</string>
 
@@ -21,22 +28,33 @@
     <!-- 流体画面下部 -->
     <string name="fluid_bottom_title" translatable="false">Play</string>
     <string name="fluid_bottom_message" translatable="false">You can touch it !</string>
+    <string name="fluid_bottom_menu_contents_help">How to touch.</string>
     <string name="fluid_bottom_menu_contents_gravity">Change the gravity.</string>
     <string name="fluid_bottom_menu_contents_soft">Change the softness.</string>
     <string name="fluid_bottom_menu_contents_bullet">Shoot bullets.</string>
     <string name="fluid_bottom_menu_contents_center">Move to the center.</string>
     <string name="fluid_bottom_menu_contents_home">Return to home.</string>
 
+    <!-- ====== -->
     <!-- dialog -->
+    <!-- ====== -->
+    <!-- タイトル -->
+    <string name="dialog_how_to_touch_title">How to touch!</string>
     <string name="dialog_change_gravity_title">Change Gravity</string>
     <string name="dialog_change_soft_title">Change Soft</string>
 
+    <!-- 柔らかさ -->
     <string name="dialog_change_soft_too_soft">Very Soft</string>
     <string name="dialog_change_soft_soft">Soft</string>
     <string name="dialog_change_soft_little_hard">Little hard</string>
 
+    <!-- 重力 -->
     <string name="dialog_change_gravity_float">Float</string>
     <string name="dialog_change_gravity_nothing">No Gravity</string>
     <string name="dialog_change_gravity_drop">Drop</string>
+
+    <!-- Help -->
+    <string name="dialog_help_procedure_1">1.Touch!</string>
+    <string name="dialog_help_procedure_2">2.and slide!</string>
 
 </resources>

@@ -23,6 +23,7 @@
     <color name="dialog_bg">#FFFFFF</color>
     <color name="dialog_stroke">#F7CAC9</color>
     <color name="dialog_title_tx">#eb6c9f</color>
+    <color name="dialog_message_tx">#4f3a43</color>
 
     <!-- ラジオボタン -->
     <color name="radio_button_selected_tx">#ffffff</color>

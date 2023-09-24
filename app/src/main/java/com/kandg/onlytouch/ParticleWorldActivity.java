@@ -1,6 +1,8 @@
 package com.kandg.onlytouch;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
@@ -39,6 +41,11 @@ public class ParticleWorldActivity extends AppCompatActivity {
         // メニューの設定
         //---------------
         setMenu();
+
+        //---------------------
+        // アプリ初回起動のみの処理
+        //---------------------
+        onlyFirstStartApp();
     }
 
     /*
@@ -64,6 +71,15 @@ public class ParticleWorldActivity extends AppCompatActivity {
         //-------------------
         // 各種メニューリスナー
         //-------------------
+        // タッチのやり方
+        findViewById(R.id.ib_help).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // ダイアログを開く
+                showHowToHelpDialog();
+            }
+        });
+
         // 重力変更
         findViewById(R.id.ib_gravity).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,7 +89,7 @@ public class ParticleWorldActivity extends AppCompatActivity {
                 int currentValue = render.getGravity();
 
                 // ダイアログを開く
-                showChangeGravityDialog( currentValue );
+                showChangeGravityDialog(currentValue);
             }
         });
 
@@ -95,7 +111,7 @@ public class ParticleWorldActivity extends AppCompatActivity {
                 int currentValue = render.getSoftness();
 
                 // ダイアログを開く
-                showChangeSoftDialog( currentValue );
+                showChangeSoftDialog(currentValue);
             }
         });
 
@@ -122,6 +138,62 @@ public class ParticleWorldActivity extends AppCompatActivity {
         });
     }
 
+    /*
+     * アプリ初回起動のみの処理
+     */
+    private void onlyFirstStartApp() {
+
+        //------------------
+        // 初回起動情報の取得
+        //------------------
+        boolean isFirstStart = isFirstStart();
+        if( !isFirstStart ){
+            // 初期起動でなければ、何もしない
+            return;
+        }
+
+        //------------------
+        // 初回起動時処理
+        //------------------
+        // 初回起動情報の更新
+        savedFirstStartInfo();
+
+        // タッチの仕方のダイアログを表示
+        showHowToHelpDialog();
+    }
+
+    /*
+     * アプリ初回起動かどうか
+     */
+    private boolean isFirstStart() {
+
+        // 取得出来ない（初回起動）場合の値
+        final boolean defaultValue = true;
+
+        // アプリ初回起動の情報を取得
+        SharedPreferences sharedPref = getSharedPreferences( getString(R.string.preference_file_key), MODE_PRIVATE) ;
+        return sharedPref.getBoolean( getString(R.string.saved_first_start_key), defaultValue);
+    }
+
+    /*
+     * アプリ初回起動情報の保存（初回起動済みとして保存）
+     */
+    private void savedFirstStartInfo() {
+
+        // アプリ初回起動を「初回起動済み」として保存
+        SharedPreferences sharedPref = getSharedPreferences( getString(R.string.preference_file_key), MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean( getString(R.string.saved_first_start_key), false);
+        editor.apply();
+    }
+
+    /*
+     * タッチのやり方ダイアログを開く
+     */
+    private void showHowToHelpDialog() {
+        HowToTouchDialog dialog = HowToTouchDialog.newInstance();
+        dialog.show( getFragmentManager(), "HowToHelp" );
+    }
 
     /*
      * 重力変更ダイアログを開く

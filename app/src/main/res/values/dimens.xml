@@ -14,6 +14,7 @@
     <!--  dialog -->
     <dimen name="dialog_width">240dp</dimen>
     <dimen name="dialog_title_size">24sp</dimen>
+    <dimen name="dialog_message_size">20sp</dimen>
     <dimen name="dialog_partition_line">1dp</dimen>
 
     <!--  radio button -->
