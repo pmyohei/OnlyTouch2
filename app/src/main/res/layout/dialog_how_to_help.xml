@@ -21,8 +21,8 @@
 
     <ImageView
         android:id="@+id/iv_procedure_1"
-        android:layout_width="260px"
-        android:layout_height="260px"
+        android:layout_width="240px"
+        android:layout_height="240px"
         android:layout_marginTop="12dp"
         android:background="@drawable/help_procedure_1"
         app:layout_constraintTop_toBottomOf="@+id/tv_softTitle"
@@ -39,17 +39,28 @@
         android:textColor="@color/dialog_message_tx"
         android:textSize="@dimen/dialog_message_size"
         app:layout_constraintTop_toBottomOf="@+id/iv_procedure_1"
+        app:layout_constraintBottom_toTopOf="@+id/iv_arrow"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <ImageView
+        android:id="@+id/iv_arrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/baseline_bottom_arrow"
+        app:layout_constraintTop_toBottomOf="@+id/tv_procedure_1"
         app:layout_constraintBottom_toTopOf="@+id/iv_procedure_2"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <ImageView
         android:id="@+id/iv_procedure_2"
-        android:layout_width="320px"
-        android:layout_height="320px"
-        android:layout_marginTop="32dp"
+        android:layout_width="240px"
+        android:layout_height="240px"
+        android:layout_marginTop="20dp"
         android:background="@drawable/help_procedure_2"
-        app:layout_constraintTop_toBottomOf="@+id/tv_procedure_1"
+        app:layout_constraintTop_toBottomOf="@+id/iv_arrow"
         app:layout_constraintBottom_toTopOf="@+id/tv_procedure_2"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
