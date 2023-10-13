@@ -1,5 +1,7 @@
 package com.kandg.onlytouch.object;
 
+import static com.kandg.onlytouch.object.Bullet.BULLET_RADIUS;
+
 import android.os.Build;
 import android.view.MotionEvent;
 
@@ -23,8 +25,6 @@ public class BulletManager {
     //-----------------
     // 定数
     //-----------------
-    // 弾サイズ
-    private static final float BULLET_SIZE = 0.4f;
     // テクスチャ未生成
     private final int NO_TEXTURE = -1;
 
@@ -235,7 +235,7 @@ public class BulletManager {
      */
     public void setShootPosY( float screenBottomPosY ) {
         // 床があるため、画面最下部より少し高めの位置を設定する
-        mBulletShotWorldPosY = screenBottomPosY + (BULLET_SIZE * 2);
+        mBulletShotWorldPosY = screenBottomPosY + (BULLET_RADIUS * 2);
     }
 
 

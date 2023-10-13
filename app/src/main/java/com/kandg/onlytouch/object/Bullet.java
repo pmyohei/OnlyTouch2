@@ -21,7 +21,7 @@ public class Bullet {
     // レンダリングのテクスチャリソースID
     public static final int TEXTURE_RESOUCE_ID = R.drawable.texture_bullet;
     // 弾半径
-    private final float BULLET_RADIUS = 0.4f;
+    public static final float BULLET_RADIUS = 0.4f;
 
     //-----------------
     // 変数
@@ -55,13 +55,12 @@ public class Bullet {
 
         // 生成
         Body body = world.createBody(bodyDef);
-//        body.setGravityScale(2.0f);
         body.setGravityScale(1.0f);
 
         // フィクスチャをアタッチ
         CircleShape circle = new CircleShape();
         circle.setRadius(BULLET_RADIUS);
-        body.createFixture(circle, 0);
+        body.createFixture(circle, 10);
 
         mBody = body;
     }
@@ -94,7 +93,7 @@ public class Bullet {
      */
     public void shotUp() {
         // 発射：上方向の速度を設定
-        final int LINEAR_VEROCITY_Y = 200;
+        final int LINEAR_VEROCITY_Y = 300;
         mBody.setLinearVelocity(new Vec2(0, LINEAR_VEROCITY_Y));
     }
 
