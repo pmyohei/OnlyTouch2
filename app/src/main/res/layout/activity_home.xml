@@ -57,6 +57,22 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <TextView
+        android:id="@+id/tx_licenses"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="28dp"
+        android:layout_marginBottom="44dp"
+        android:text="@string/home_licenses"
+        android:textSize="24sp"
+        android:textColor="@color/home_tx"
+        android:textStyle="bold"
+        android:letterSpacing="0.2"
+        android:rotation="355"
+        android:onClick="onLicensesClicked"
+        app:layout_constraintBottom_toTopOf="@id/adView"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

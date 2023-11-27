@@ -5,6 +5,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 
+import com.google.android.gms.oss.licenses.OssLicensesMenuActivity;
 import com.kandg.onlytouch.R;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -59,6 +60,14 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
+
+    /*
+     * licenses押下時処理
+     */
+    public void onLicensesClicked(View view) {
+        Intent intent = new Intent(this, OssLicensesMenuActivity.class);
+        startActivity(intent);
     }
 }
 

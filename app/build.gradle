@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.google.android.gms.oss-licenses-plugin'
+
 
 android {
     compileSdk 33
@@ -6,8 +8,8 @@ android {
         applicationId "com.kandg.onlytouch"
         minSdk 21
         targetSdk 33
-        versionCode 6
-        versionName "1.5"
+        versionCode 7        // !2023/11/27 ライセンス表記対応
+        versionName "1.6"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -22,6 +24,7 @@ android {
     }
 
     flavorDimensions "environment"
+    namespace 'com.kandg.onlytouch'
 
 /*    productFlavors {
 
@@ -116,5 +119,7 @@ dependencies {
     //PagerSlidingTabStrip
     implementation 'com.jpardogo.materialtabstrip:library:1.0.9'
     // Admob
-    implementation 'com.google.android.gms:play-services-ads:22.2.0'
+    implementation 'com.google.android.gms:play-services-ads:22.5.0'
+    // oss-licenses
+    implementation 'com.google.android.gms:play-services-oss-licenses:17.0.1'
 }

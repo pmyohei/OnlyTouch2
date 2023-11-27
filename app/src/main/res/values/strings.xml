@@ -24,6 +24,7 @@
     <!--  Home画面  -->
     <string name="home_prompt_touch" translatable="false">Touch!</string>
     <string name="home_prompt_touch_sub" translatable="false">Play with cat.</string>
+    <string name="home_licenses" translatable="false">Licenses.</string>
 
     <!-- 流体画面下部 -->
     <string name="fluid_bottom_title" translatable="false">Play</string>
