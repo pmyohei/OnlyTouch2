@@ -1,0 +1,15 @@
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"DesignSurface\">\r\n    <option name=\"filePathToZoomLevelMap\">\r\n      <map>\r\n        <entry key=\"..\\:/Users/takahashi_yhi/AndroidStudioProjects/SwigTest/app/src/main/res/layout/activity_create.xml\" value=\"0.2604166666666667\" />\r\n        <entry key=\"..\\:/Users/takahashi_yhi/AndroidStudioProjects/SwigTest/app/src/main/res/layout/activity_create_draw.xml\" value=\"0.2604166666666667\" />\r\n        <entry key=\"..\\:/Users/takahashi_yhi/AndroidStudioProjects/SwigTest/app/src/main/res/layout/activity_create_selection.xml\" value=\"0.2604166666666667\" />\r\n        <entry key=\"..\\:/Users/takahashi_yhi/AndroidStudioProjects/SwigTest/app/src/main/res/layout/activity_fluid_design.xml\" value=\"0.2604166666666667\" />\r\n      </map>\r\n    </option>\r\n  </component>\r\n  <component name=\"ProjectRootManager\" version=\"2\" languageLevel=\"JDK_11\" default=\"true\" project-jdk-name=\"11\" project-jdk-type=\"JavaSDK\">\r\n    <output url=\"file://$PROJECT_DIR$/build/classes\" />\r\n  </component>\r\n  <component name=\"ProjectType\">\r\n    <option name=\"id\" value=\"Android\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+--- a/.idea/misc.xml	(revision 3a6d5cd30253d0de09681774cc9fdbd315cac94b)
++++ b/.idea/misc.xml	(date 1701134949477)
+@@ -1,4 +1,3 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+   <component name="DesignSurface">
+     <option name="filePathToZoomLevelMap">
