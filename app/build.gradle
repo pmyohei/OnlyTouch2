@@ -3,13 +3,13 @@ apply plugin: 'com.google.android.gms.oss-licenses-plugin'
 
 
 android {
-    compileSdk 33
+    compileSdk 34
     defaultConfig {
         applicationId "com.kandg.onlytouch"
         minSdk 21
-        targetSdk 33
-        versionCode 7        // !2023/11/27 ライセンス表記対応
-        versionName "1.6"
+        targetSdk 34
+        versionCode 8        // !2024/08/28 SDK34 対応
+        versionName "1.7"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
